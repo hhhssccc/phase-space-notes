@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 const source = fileURLToPath(new URL('../dist/', import.meta.url));
 const target = fileURLToPath(new URL('../.pages-dist/', import.meta.url));
 const base = '/phase-space-notes';
-const origin = 'https://hhhssccc.github.io';
 const textExtensions = new Set(['.html', '.css', '.js', '.xml', '.txt', '.json']);
 
 await rm(target, { recursive: true, force: true });
@@ -23,10 +22,9 @@ async function walk(directory) {
 async function prefixFile(path) {
   const original = await readFile(path, 'utf8');
   const updated = original
-    .replaceAll(`${origin}/`, `${origin}${base}/`)
-    .replace(/(\b(?:href|src|action)=["'])\/(?!\/)/g, `$1${base}/`)
-    .replace(/url\((["']?)\/(?!\/)/g, `url($1${base}/`)
-    .replace(/(["'])\/(articles|notes|tags|archive|about|search|rss\.xml|assets|figures|_astro)(?=[/"'])/g, `$1${base}/$2`);
+    .replace(/(\b(?:href|src|action)=["'])\/(?!\/|phase-space-notes(?:\/|["']))/g, `$1${base}/`)
+    .replace(/url\((["']?)\/(?!\/|phase-space-notes\/)/g, `url($1${base}/`)
+    .replace(/(["'])\/(?!phase-space-notes\/)(articles|notes|tags|archive|about|search|rss\.xml|assets|figures|_astro)(?=[/"'])/g, `$1${base}/$2`);
   if (updated !== original) await writeFile(path, updated);
 }
 
