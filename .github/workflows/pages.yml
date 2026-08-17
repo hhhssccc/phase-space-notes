@@ -1,4 +1,4 @@
-name: Publish preview
+name: Publish 渐近自由
 
 on:
   push:

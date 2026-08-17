@@ -35,7 +35,7 @@ npm run dev
 npm run build
 ```
 
-静态产物生成在 `dist/`。Vercel 可以零配置识别并部署。
+静态产物生成在 `dist/`。推送到 GitHub 后，由 GitHub Pages 自动构建并发布。
 
 ## 尚未配置
 

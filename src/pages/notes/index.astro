@@ -9,8 +9,12 @@ const entries = (await getCollection('articles', ({ data }) => !data.draft && da
 <BaseLayout title="笔记｜渐近自由" description="渐近自由的短札、推导卡片与问题记录。" pageKind="index">
   <div class="index-page">
     <header class="index-header"><p class="eyebrow">NOTES</p><h1>笔记</h1><p>短一些，但仍保留定义、假设和推导路径。它们常常会长成下一篇文章。</p></header>
-    <ol class="entry-list">
-      {entries.map((entry) => <li><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time><div><h2><a href={entryUrl(entry)}>{entry.data.title}</a></h2><p>{entry.data.description}</p><span class="entry-meta">{entry.data.category} · {readingMinutes(entry.body || '')} 分钟</span></div></li>)}
-    </ol>
+    {entries.length > 0 ? (
+      <ol class="entry-list">
+        {entries.map((entry) => <li><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time><div><h2><a href={entryUrl(entry)}>{entry.data.title}</a></h2><p>{entry.data.description}</p><span class="entry-meta">{entry.data.category} · {readingMinutes(entry.body || '')} 分钟</span></div></li>)}
+      </ol>
+    ) : (
+      <p class="empty-state">暂时没有公开笔记。</p>
+    )}
   </div>
 </BaseLayout>

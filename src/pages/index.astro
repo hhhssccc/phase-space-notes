@@ -22,7 +22,6 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
         <div class="home-mascot-stage">
           <img src={siteConfig.mascot.idle} width="334" height="560" alt={`${siteConfig.mascot.name}扶帽站立`} fetchpriority="high" />
         </div>
-        <figcaption>{siteConfig.mascot.name} · 观测中</figcaption>
       </figure>
     </section>
 
@@ -38,13 +37,15 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
       </ol>
     </section>
 
-    <section class="home-section" aria-labelledby="notes-title">
-      <div class="section-heading"><h2 id="notes-title">近期笔记</h2><a href="/notes/">全部笔记 →</a></div>
-      <ol class="note-list">
-        {notes.map((entry) => (
-          <li><time datetime={entry.data.date.toISOString()}>{String(entry.data.date.getMonth() + 1).padStart(2, '0')}.{String(entry.data.date.getDate()).padStart(2, '0')}</time><a href={entryUrl(entry)}>{entry.data.title}</a></li>
-        ))}
-      </ol>
-    </section>
+    {notes.length > 0 && (
+      <section class="home-section" aria-labelledby="notes-title">
+        <div class="section-heading"><h2 id="notes-title">近期笔记</h2><a href="/notes/">全部笔记 →</a></div>
+        <ol class="note-list">
+          {notes.map((entry) => (
+            <li><time datetime={entry.data.date.toISOString()}>{String(entry.data.date.getMonth() + 1).padStart(2, '0')}.{String(entry.data.date.getDate()).padStart(2, '0')}</time><a href={entryUrl(entry)}>{entry.data.title}</a></li>
+          ))}
+        </ol>
+      </section>
+    )}
   </div>
 </BaseLayout>

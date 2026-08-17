@@ -6,7 +6,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { remarkWikiLinks } from './src/plugins/remark-wikilinks.mjs';
 
-const site = process.env.SITE_URL || 'https://phase-space-notes.vercel.app';
+const site = process.env.SITE_URL || 'https://hhhssccc.github.io';
 const base = process.env.BASE_PATH || '/';
 
 export default defineConfig({

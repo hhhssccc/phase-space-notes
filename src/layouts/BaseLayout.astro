@@ -49,7 +49,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.u
     <title>{title}</title>
     <script is:inline>
       (() => {
-        const saved = localStorage.getItem('phase-space-theme') || 'system';
+        const saved = localStorage.getItem('asymptotic-freedom-theme') || 'system';
         document.documentElement.dataset.theme = saved;
       })();
     </script>
@@ -71,7 +71,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.u
       const resolvedDark = () => root.dataset.theme === 'dark' || (root.dataset.theme === 'system' && systemDark());
       const setTheme = (value: string) => {
         root.dataset.theme = value;
-        localStorage.setItem('phase-space-theme', value);
+        localStorage.setItem('asymptotic-freedom-theme', value);
       };
       document.querySelectorAll('[data-theme-cycle]').forEach((button) => {
         button.addEventListener('click', () => setTheme(resolvedDark() ? 'light' : 'dark'));

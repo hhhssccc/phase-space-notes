@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">Maxwell 妖分流快慢分子示意图</title>
+  <desc id="desc">一个小妖站在两间气室之间，根据分子速度开关小门，将快分子导向左室、慢分子导向右室。</desc>
+  <rect width="960" height="520" fill="#fbfaf6"/>
+  <g fill="none" stroke="#342c29" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="142" y="266" width="676" height="158"/>
+    <path d="M480 266v158"/>
+    <rect x="453" y="333" width="54" height="46" fill="#fbfaf6"/>
+    <circle cx="480" cy="116" r="48" fill="#fbfaf6"/>
+    <path d="M448 80l-16-28 34 15M512 80l16-28-34 15"/>
+    <path d="M460 112h1M499 112h1" stroke-width="8"/>
+    <path d="M462 137q18 17 36 0"/>
+    <path d="M480 164v84m0-48l-54 55m54-55l54 55m-54-7l-34 53m34-53l34 53"/>
+  </g>
+  <g fill="none" stroke="#8d2c2c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M214 334c74-70 152-88 236-28"/>
+    <path d="M426 289l28 19-33 8" fill="#8d2c2c"/>
+    <path d="M746 334c-74-70-152-88-236-28"/>
+    <path d="M534 289l-28 19 33 8" fill="#8d2c2c"/>
+  </g>
+  <g fill="#342c29" font-family="'Noto Sans SC','Microsoft YaHei',sans-serif" text-anchor="middle">
+    <text x="480" y="40" font-size="28">demon</text>
+    <text x="292" y="322" font-size="34">快</text>
+    <text x="668" y="322" font-size="34">慢</text>
+    <text x="480" y="411" font-size="28">小门</text>
+    <text x="300" y="474" font-size="30">左室</text>
+    <text x="660" y="474" font-size="30">右室</text>
+  </g>
+</svg>

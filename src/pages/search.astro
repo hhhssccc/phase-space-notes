@@ -18,7 +18,7 @@ const index = entries.map((entry) => ({
   <div class="index-page">
     <header class="index-header"><p class="eyebrow">SEARCH</p><h1>搜索</h1><p>搜索标题、摘要、标签与正文。索引在本地运行，不上传查询内容。</p></header>
     <label for="site-search">输入关键词</label>
-    <input class="search-box" id="site-search" type="search" inputmode="search" autocomplete="off" placeholder="例如：熵、相空间、诺特定理" autofocus />
+    <input class="search-box" id="site-search" type="search" inputmode="search" autocomplete="off" placeholder="例如：信息熵、粗粒化、Maxwell 妖" autofocus />
     <p class="search-status" data-search-status>输入关键词开始搜索。</p>
     <ol class="entry-list" data-search-results>
       {index.map((item, indexNumber) => <li class="search-result" data-search-item={indexNumber} hidden><span class="entry-meta">{item.category}</span><div><h2><a href={item.url}>{item.title}</a></h2><p>{item.description}</p><span class="entry-meta">{item.tags.join(' · ')}</span></div></li>)}
