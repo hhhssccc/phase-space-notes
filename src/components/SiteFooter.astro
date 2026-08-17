@@ -1,5 +1,6 @@
 ---
 import { siteConfig } from '../config/site';
+import { withBase } from '../lib/content';
 
 const year = new Date().getFullYear();
 ---
@@ -7,8 +8,8 @@ const year = new Date().getFullYear();
 <footer class="site-footer">
   <p>© {year} {siteConfig.author} · {siteConfig.name}</p>
   <nav aria-label="页脚导航">
-    <a href="/rss.xml">RSS</a>
-    <a href="/tags/">标签</a>
-    <a href="/about/">站点说明</a>
+    <a href={withBase('/rss.xml')}>RSS</a>
+    <a href={withBase('/tags/')}>标签</a>
+    <a href={withBase('/about/')}>站点说明</a>
   </nav>
 </footer>

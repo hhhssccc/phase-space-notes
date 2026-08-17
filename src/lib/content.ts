@@ -2,10 +2,17 @@ import type { CollectionEntry } from 'astro:content';
 
 export type ArticleEntry = CollectionEntry<'articles'>;
 
+export function withBase(path: string) {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${normalized}` || '/';
+}
+
 export function entryUrl(entry: ArticleEntry) {
-  return entry.data.type === 'note'
+  const path = entry.data.type === 'note'
     ? `/notes/${entry.id}/`
     : `/articles/${entry.id}/`;
+  return withBase(path);
 }
 
 export function byNewest(a: ArticleEntry, b: ArticleEntry) {

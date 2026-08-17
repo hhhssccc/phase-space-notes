@@ -31,7 +31,8 @@
 
 ## 3. 工程结构与权威来源
 
-- `content/`：全部文章与笔记的权威 Markdown 源文件，也可直接作为 Obsidian 内容目录。
+- `C:\Users\39948\Obsidian\reading-essays\<学科>\notes\`：用户长期写作与修订的编辑源稿。学科能够明确时，优先放入对应学科的 `notes/`，不要默认堆到 vault 根目录的 `notes/`。
+- `content/`：网站构建使用的发布副本。它是线上版本的直接输入；若内容带有 `blog_id` 对应的 reading-essays 编辑源稿，再次发布前必须先从编辑源稿同步，不能让两份正文各自演化。
 - `src/content.config.ts`：Frontmatter 数据结构的唯一工程定义。
 - `templates/article.md`：新文章起稿模板。
 - `src/config/site.ts`：站名、署名、导航、功能开关和角色资源接口。
@@ -153,7 +154,72 @@ sidenotes:
 - 参考文献章节使用 `## 参考文献`；条目至少包含作者、题名、年份和可核验的出版信息或链接。
 - 直接引文保持短且必要；以概述为主，并明确来源。
 
-## 10. 新文章发布流程
+## 10. 从 reading-essays 笔记到博客的工作流
+
+用户今后会在 `C:\Users\39948\Obsidian\reading-essays` 各学科的次级 `notes/` 文件夹中编写 Markdown，再由 Codex 发布。这个流程的目标是让用户只维护一份适合 Obsidian 阅读和修改的源稿，网站工程负责格式转换、验证与上线。
+
+### 10.1 编辑源稿的位置与命名
+
+- 学科明确时放在 `reading-essays/<学科>/notes/`；例如统计物理文章放在 `reading-essays/统计物理/notes/`。
+- 只有跨学科且无法确定主归属时，才使用 vault 根目录的 `notes/`。
+- 遵守 reading-essays 的命名约定：笔记文件名使用英文下划线，例如 `information_entropy_and_everything.md`。
+- 附件优先放在该笔记目录下的 `assets/` 子目录，使用相对 Markdown 图片路径，保证 Obsidian 可以离线预览。
+- 不扫描并自动发布整个 `notes/` 目录；只处理用户明确点名的文件。
+
+### 10.2 编辑源稿 Frontmatter
+
+reading-essays 笔记继续遵守它自己的 Vault 合同，使用 `type: note`。博客映射使用额外的 `blog_*` 字段：
+
+```yaml
+---
+title: 信息、熵与一切
+type: note
+status: active
+created: 2026-08-17
+updated: 2026-08-17
+blog_id: information-entropy-and-everything
+blog_type: essay
+blog_category: 信息论与统计力学
+blog_tags: [信息熵, Shannon 熵, 粗粒化]
+blog_featured: true
+blog_description: 用于文章列表与社交元数据的一句话说明。
+blog_abstract: 用于文章标题下方摘要框的两三句话。
+blog_sidenotes:
+  - marker: "*"
+    title: 侧栏标题
+    body: 侧栏正文；桌面显示在右栏，手机收进可展开的边注区域。
+blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entropy-and-everything/
+---
+```
+
+- `blog_id` 是网站稳定 ID，必须使用小写 ASCII、数字和连字符；一旦公开不得擅自改变。
+- `blog_type` 映射网站的 `essay` 或 `note`，不要把 Vault 的 `type: note` 直接当作网站类型。
+- `blog_description`、`blog_abstract` 和 `blog_sidenotes` 分别映射网站的列表说明、摘要框和侧栏边注；同步时不得遗漏。
+- `blog_sidenotes` 中的 `marker` 是符号，`title` 是侧栏粗体标题，`body` 是正文。列表顺序就是显示顺序；桌面显示在右栏，手机显示在可展开的“边注”区域。
+- 编辑源稿没有 `blog_sidenotes`，不代表网站必须没有边注。若 Agent 在整理或排版时认为需要新增边注，必须把最终采用的完整 `blog_sidenotes` 回写到 reading-essays 原稿；不得只写进网站 `content/`。
+- 若网站现有发布副本已有 `sidenotes`、但编辑源稿缺失对应字段，开始修订时应先把现有边注映射回原稿，再让用户或 Agent 在同一处继续修改。
+- 没有 `blog_id` 的新笔记在首次发布时由 Agent 选择稳定 ID，并把映射写回编辑源稿。
+- `blog_url` 在首次成功上线后写入；它是查找线上版本的便利字段，不用于决定部署路径。
+
+### 10.3 同步与发布
+
+用户说“发布这篇”或“重新上传这篇”后：
+
+1. 读取本文件、reading-essays 根目录的 `AGENTS.md`、目标编辑源稿、网站 schema 与文章模板。
+2. 检查两个项目的工作区状态，保护用户未提交修改；目标文件已存在时先比较，不静默覆盖。
+3. 以 reading-essays 目标笔记为编辑内容权威，以 `content/<blog_id>.md` 为发布副本。
+4. 将 Vault Frontmatter 映射为网站 Frontmatter；同步阶段保持网站 `draft: true`。若网站旧副本存在边注而源稿没有 `blog_sidenotes`，先把旧边注回写源稿，避免后续修订时丢失。
+5. Vault 笔记允许保留与标题相同的单个 H1；复制到博客时删除这个 H1，避免文章页出现两个一级标题。
+6. 把 Obsidian WikiLink、嵌入和相对附件转换成网站支持的链接或图片；附件复制到 `public/figures/<blog_id>/`，不得引用 vault 的绝对本地路径。
+7. 只做排版兼容和用户明确要求的修改。若发现物理结论、公式或引用疑点，先报告，不在同步时静默改意。
+8. Agent 若在发布整理中新增、删除或修改侧栏边注，必须先把最终的 `marker`、`title`、`body` 和顺序完整写回编辑源稿的 `blog_sidenotes`，再继续构建；禁止产生只存在于网站副本中的边注。
+9. 比较编辑源稿与当前线上副本，向用户保留所有实质性改动；不得用旧网站正文反向覆盖新稿。边注回写属于元数据补全，不得借此覆盖用户已修改的 `blog_sidenotes`。
+10. 按下节的新文章发布流程执行构建、桌面/手机/深浅色/打印检查和线上验证；通过后再设 `draft: false`。
+11. 首次发布保留 `date`；实质性修订添加或更新网站 `updated`。成功上线后确认编辑源稿中的 `blog_id`、`blog_url` 与最终 `blog_sidenotes` 均和发布副本一致。
+
+发布完成后不要删除或移动 reading-essays 编辑源稿。它是用户下次修改的入口；网站 `content/` 是可构建、可部署的同步副本。
+
+## 11. 新文章发布流程
 
 未来 Agent 接到“发布这篇文章”后，按以下顺序执行：
 
@@ -171,7 +237,7 @@ sidenotes:
 
 不得仅因为本地能打开就宣称已经上线；也不得在构建或发布失败时把工作标为完成。
 
-## 11. 常规维护流程
+## 12. 常规维护流程
 
 - 修改前先确认任务边界；诊断请求只报告原因，不擅自实施大改。
 - 保持最小改动，不借发布文章之机升级依赖或重构全站。
@@ -183,7 +249,7 @@ sidenotes:
 - 不在仓库中提交密码、令牌、私钥或个人邮箱。Giscus 等公开配置只通过已定义的环境变量提供。
 - 当前仓库保持 Public 以支持现有 GitHub Pages。未经用户明确要求和托管迁移验证，不要转为 Private。
 
-## 12. 发布验收底线
+## 13. 发布验收底线
 
 每次正式发布至少满足：
 
@@ -197,7 +263,7 @@ sidenotes:
 - 音乐不自动播放；当前没有音乐入口或“书房”入口。
 - Build 与公开发布均成功，线上页面返回 200。
 
-## 13. 当前暂缓事项
+## 14. 当前暂缓事项
 
 - 独立域名：未配置。
 - Vercel：未接管当前正式托管。

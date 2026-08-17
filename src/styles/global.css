@@ -420,8 +420,29 @@ main { min-height: calc(100vh - 9rem); }
 .article-prose figure img {
   display: block;
   width: 100%;
+  height: auto;
   border: 1px solid var(--rule-soft);
   cursor: zoom-in;
+}
+.article-prose .lead-figure {
+  width: min(100%, 46rem);
+  margin: 1.35rem auto 2.8rem;
+}
+.article-prose .figure-plot {
+  width: min(100%, 38rem);
+  margin-inline: auto;
+}
+.article-prose .figure-diagram {
+  width: min(100%, 43rem);
+  margin-inline: auto;
+}
+.article-prose .figure-portrait {
+  width: min(100%, 18rem);
+  margin: 1.6rem auto 2.4rem;
+}
+.article-prose .figure-light img {
+  box-sizing: border-box;
+  background: #fff;
 }
 .article-prose figcaption {
   margin-top: 0.65rem;
@@ -555,6 +576,9 @@ main { min-height: calc(100vh - 9rem); }
   .article-prose h3 { font-size: 1.12rem; }
   .article-prose .katex-display { margin: 1.45rem 0; padding-inline: 0.2rem; }
   .article-prose figure { margin-inline: -1.25rem; }
+  .article-prose .figure-portrait { width: min(76%, 17rem); margin-inline: auto; }
+  .article-prose .figure-plot,
+  .article-prose .figure-diagram { width: auto; }
   .article-prose figcaption { padding-inline: 1.25rem; }
   .article-prose table { display: block; overflow-x: auto; white-space: nowrap; }
   .article-prose pre { margin-inline: -0.25rem; padding: 1rem; font-size: 0.78rem; }

@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase } from '../../lib/content';
 
 const entries = await getCollection('articles', ({ data }) => !data.draft);
 const counts = new Map<string, number>();
@@ -11,6 +12,6 @@ const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeComp
 <BaseLayout title="标签｜渐近自由" description="按主题查看渐近自由的文章与笔记。" pageKind="index">
   <div class="index-page">
     <header class="index-header"><p class="eyebrow">TAGS</p><h1>标签</h1><p>同一问题在不同课程中会反复出现；标签用来保留这种横向联系。</p></header>
-    <div class="tag-cloud">{tags.map(([tag, count]) => <a href={`/tags/${encodeURIComponent(tag)}/`}>{tag} <span>{count}</span></a>)}</div>
+    <div class="tag-cloud">{tags.map(([tag, count]) => <a href={withBase(`/tags/${encodeURIComponent(tag)}/`)}>{tag} <span>{count}</span></a>)}</div>
   </div>
 </BaseLayout>

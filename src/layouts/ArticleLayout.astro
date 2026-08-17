@@ -2,7 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import Comments from '../components/Comments.astro';
 import { siteConfig } from '../config/site';
-import { entryUrl, formatDate, readingMinutes, type ArticleEntry } from '../lib/content';
+import { entryUrl, formatDate, readingMinutes, withBase, type ArticleEntry } from '../lib/content';
 import 'katex/dist/katex.min.css';
 
 interface Heading { depth: number; slug: string; text: string; }
@@ -74,7 +74,7 @@ const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
 
       {(post.data.tags.length > 0) && (
         <footer class="article-footer">
-          <p class="article-tags">{post.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a>)}</p>
+          <p class="article-tags">{post.data.tags.map((tag) => <a href={withBase(`/tags/${encodeURIComponent(tag)}/`)}>#{tag}</a>)}</p>
         </footer>
       )}
 

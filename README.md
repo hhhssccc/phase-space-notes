@@ -6,9 +6,9 @@ AsyaInTheCosmicStatic 的中文理论物理博客：沿着公式，逼近直觉�
 
 ## 日常写作
 
-所有文章都在 `content/` 中，每篇文章是一份 Markdown。这个目录可以直接作为 Obsidian Vault 的内容目录使用。
+长期写作和修订优先在 `C:\Users\39948\Obsidian\reading-essays\<学科>\notes\` 中完成；学科明确时放进对应学科，而不是统一堆到根目录。`content/` 保存网站实际构建使用的发布副本。
 
-用户只需要写正文并告诉 Codex“发布这篇”；Codex负责补全元数据、检查公式和图片、构建、提交与推送。`templates/article.md` 是文章结构参考，不要求手工填写。
+用户只需要在 Obsidian 修改源稿并告诉 Codex“发布这篇”或“重新上传这篇”；Codex 负责按 `blog_id` 同步发布副本、转换 WikiLink 和附件、补全网站元数据、检查公式与图片、构建、提交与推送。`templates/article.md` 是网站侧结构参考，不要求用户手工填写。
 
 ## 已实现
 
