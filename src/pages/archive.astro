@@ -7,7 +7,7 @@ const entries = (await getCollection('articles', ({ data }) => !data.draft)).sor
 const grouped = Map.groupBy(entries, (entry) => String(entry.data.date.getFullYear()));
 ---
 
-<BaseLayout title="归档｜相空间" description="按年份查看相空间的文章与笔记。" pageKind="index">
+<BaseLayout title="归档｜渐近自由" description="按年份查看渐近自由的文章与笔记。" pageKind="index">
   <div class="index-page">
     <header class="index-header"><p class="eyebrow">ARCHIVE</p><h1>归档</h1><p>按写作时间排列。修订日期不会改变文章在这里的位置。</p></header>
     {[...grouped.entries()].map(([year, items]) => (

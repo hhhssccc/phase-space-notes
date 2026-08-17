@@ -1,18 +1,19 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../config/site';
 ---
 
-<BaseLayout title="关于｜相空间" description="相空间的写作原则、技术说明与联系信息。" pageKind="index">
+<BaseLayout title={`关于｜${siteConfig.name}`} description={`${siteConfig.name}的写作原则与阅读说明。`} pageKind="index">
   <div class="index-page">
-    <header class="index-header"><p class="eyebrow">ABOUT</p><h1>关于</h1><p>这是一个把内容放在工程之前的个人物理博客。</p></header>
+    <header class="index-header"><p class="eyebrow">ABOUT</p><h1>关于</h1><p>这是 {siteConfig.author} 的个人理论物理博客。</p></header>
     <div class="about-copy">
       <p>我在这里整理理论物理学习中的长推导、短问题和反复出现的概念误区。目标不是写出最快的结论，而是让每一步假设都能被重新检查。</p>
       <h2>阅读方式</h2>
       <p>长文页在桌面上保留目录、正文和边注三层；手机上自动收束为单栏。公式、代码、图表、参考文献和打印版使用同一份 Markdown 内容。</p>
       <h2>站点原则</h2>
-      <p>正文不使用壁纸，不自动播放音乐。趣味功能全部收进可关闭的书房；即使书房关闭，文章仍然完整可读。</p>
+      <p>正文保持纯净纸面，不自动播放内容，也不使用遮挡阅读的悬浮工具。视觉设计始终服务于文章本身。</p>
       <h2>内容说明</h2>
-      <p>当前文章为排版与功能验收用示例。替换站名、作者信息和真实文章时，不需要修改页面结构。</p>
+      <p>当前部分文章兼作排版与功能验收示例；后续内容会继续使用同一套可编辑的 Markdown 格式。</p>
     </div>
   </div>
 </BaseLayout>

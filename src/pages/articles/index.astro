@@ -6,7 +6,7 @@ import { byNewest, entryUrl, formatDate, readingMinutes } from '../../lib/conten
 const entries = (await getCollection('articles', ({ data }) => !data.draft && data.type === 'essay')).sort(byNewest);
 ---
 
-<BaseLayout title="文章｜相空间" description="相空间的物理长文与完整推导。" pageKind="index">
+<BaseLayout title="文章｜渐近自由" description="渐近自由的物理长文与完整推导。" pageKind="index">
   <div class="index-page">
     <header class="index-header"><p class="eyebrow">ESSAYS</p><h1>文章</h1><p>从一个具体问题出发，尽量把物理图景、数学结构和推导细节放在同一张纸上。</p></header>
     <ol class="entry-list">

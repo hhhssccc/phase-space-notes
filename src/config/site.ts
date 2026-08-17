@@ -1,9 +1,8 @@
 export const siteConfig = {
-  name: '相空间',
-  title: '相空间｜物理笔记与长文',
-  description: '在公式与直觉之间，做一点缓慢的物理。这里收录理论物理学习札记、完整推导，以及值得反复追问的简单问题。',
-  author: '作者名占位',
-  location: '上海',
+  name: '渐近自由',
+  title: '渐近自由｜物理笔记与长文',
+  description: '沿着公式，逼近直觉。记录理论物理中的完整推导、物理图像，以及那些值得反复追问的问题。',
+  author: 'AsyaInTheCosmicStatic',
   language: 'zh-CN',
   nav: [
     { label: '文章', href: '/articles/' },

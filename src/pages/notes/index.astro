@@ -6,7 +6,7 @@ import { byNewest, entryUrl, formatDate, readingMinutes } from '../../lib/conten
 const entries = (await getCollection('articles', ({ data }) => !data.draft && data.type === 'note')).sort(byNewest);
 ---
 
-<BaseLayout title="笔记｜相空间" description="相空间的短札、推导卡片与问题记录。" pageKind="index">
+<BaseLayout title="笔记｜渐近自由" description="渐近自由的短札、推导卡片与问题记录。" pageKind="index">
   <div class="index-page">
     <header class="index-header"><p class="eyebrow">NOTES</p><h1>笔记</h1><p>短一些，但仍保留定义、假设和推导路径。它们常常会长成下一篇文章。</p></header>
     <ol class="entry-list">
