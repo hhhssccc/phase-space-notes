@@ -8,7 +8,6 @@ import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/global.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import MascotDrawer from '../components/MascotDrawer.astro';
 import { siteConfig } from '../config/site';
 
 interface Props {
@@ -61,7 +60,6 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.u
       <slot />
     </main>
     <SiteFooter />
-    <MascotDrawer />
     <dialog class="lightbox" data-lightbox aria-label="图片预览">
       <button type="button" data-lightbox-close aria-label="关闭图片预览">关闭</button>
       <img alt="" data-lightbox-image />
@@ -71,59 +69,12 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.u
       const root = document.documentElement;
       const systemDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
       const resolvedDark = () => root.dataset.theme === 'dark' || (root.dataset.theme === 'system' && systemDark());
-      const syncTheme = () => {
-        document.querySelectorAll('[data-set-theme]').forEach((button) => {
-          button.toggleAttribute('aria-pressed', button.getAttribute('data-set-theme') === root.dataset.theme);
-        });
-      };
       const setTheme = (value: string) => {
         root.dataset.theme = value;
         localStorage.setItem('phase-space-theme', value);
-        syncTheme();
       };
       document.querySelectorAll('[data-theme-cycle]').forEach((button) => {
         button.addEventListener('click', () => setTheme(resolvedDark() ? 'light' : 'dark'));
-      });
-      document.querySelectorAll('[data-set-theme]').forEach((button) => {
-        button.addEventListener('click', () => setTheme(button.getAttribute('data-set-theme') || 'system'));
-      });
-      syncTheme();
-
-      const body = document.body;
-      const wallpaper = localStorage.getItem('phase-space-wallpaper') || 'plain';
-      if (body.dataset.pageKind === 'home') body.dataset.wallpaper = wallpaper;
-      document.querySelectorAll('[data-set-wallpaper]').forEach((button) => {
-        const value = button.getAttribute('data-set-wallpaper');
-        button.toggleAttribute('aria-pressed', value === wallpaper);
-        button.addEventListener('click', () => {
-          localStorage.setItem('phase-space-wallpaper', value || 'plain');
-          if (body.dataset.pageKind === 'home') body.dataset.wallpaper = value || 'plain';
-          document.querySelectorAll('[data-set-wallpaper]').forEach((item) => item.toggleAttribute('aria-pressed', item === button));
-        });
-      });
-
-      const drawer = document.querySelector('[data-drawer-open]');
-      const panel = document.querySelector('.study-drawer');
-      const backdrop = document.querySelector('[data-drawer-backdrop]');
-      const close = document.querySelector('[data-drawer-close]');
-      let returnFocus: Element | null = null;
-      const setDrawer = (open: boolean) => {
-        if (!(panel instanceof HTMLElement) || !(drawer instanceof HTMLElement) || !(backdrop instanceof HTMLElement)) return;
-        panel.classList.toggle('is-open', open);
-        panel.setAttribute('aria-hidden', String(!open));
-        drawer.setAttribute('aria-expanded', String(open));
-        backdrop.hidden = !open;
-        document.body.classList.toggle('drawer-open', open);
-        if (open) {
-          returnFocus = document.activeElement;
-          panel.focus();
-        } else if (returnFocus instanceof HTMLElement) returnFocus.focus();
-      };
-      drawer?.addEventListener('click', () => setDrawer(true));
-      close?.addEventListener('click', () => setDrawer(false));
-      backdrop?.addEventListener('click', () => setDrawer(false));
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') setDrawer(false);
       });
 
       document.querySelectorAll('.article-prose pre > code.language-mermaid').forEach((code) => {

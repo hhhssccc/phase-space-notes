@@ -21,7 +21,7 @@
 ## 固定角色接口
 
 - `public/assets/mascot-idle.webp`：首页首屏
-- `public/assets/mascot-reading.webp`：书房入口和状态
+- `public/assets/mascot-reading.webp`：保留的角色阅读状态素材，目前不在页面中显示
 
 两张图始终等比显示。深色模式不会对素材使用反色、改色或滤镜。
 

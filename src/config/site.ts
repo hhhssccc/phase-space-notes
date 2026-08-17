@@ -15,9 +15,6 @@ export const siteConfig = {
   features: {
     search: true,
     comments: false,
-    music: false,
-    wallpaper: true,
-    stats: true,
     mermaid: true,
     lightbox: true,
     readingProgress: true,
