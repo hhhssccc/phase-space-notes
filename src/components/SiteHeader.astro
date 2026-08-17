@@ -1,0 +1,28 @@
+---
+import { siteConfig } from '../config/site';
+
+const path = Astro.url.pathname;
+const isActive = (href: string) => href !== '/' && path.startsWith(href);
+---
+
+<a class="skip-link" href="#main-content">跳到正文</a>
+<header class="site-header">
+  <a class="site-name" href="/" aria-label={`${siteConfig.name}首页`}>{siteConfig.name}</a>
+
+  <nav class="main-nav" aria-label="主导航">
+    {siteConfig.nav.map((item) => (
+      <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+    ))}
+    <button class="theme-toggle" type="button" data-theme-cycle aria-label="切换明暗模式">明 / 暗</button>
+  </nav>
+
+  <div class="mobile-actions">
+    <button class="theme-toggle" type="button" data-theme-cycle aria-label="切换明暗模式">明 / 暗</button>
+    <details class="mobile-menu">
+      <summary>菜单</summary>
+      <nav aria-label="手机导航">
+        {siteConfig.nav.map((item) => <a href={item.href}>{item.label}</a>)}
+      </nav>
+    </details>
+  </div>
+</header>

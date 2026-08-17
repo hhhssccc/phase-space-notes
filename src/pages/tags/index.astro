@@ -1,0 +1,16 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const entries = await getCollection('articles', ({ data }) => !data.draft);
+const counts = new Map<string, number>();
+for (const entry of entries) for (const tag of entry.data.tags) counts.set(tag, (counts.get(tag) || 0) + 1);
+const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-CN'));
+---
+
+<BaseLayout title="标签｜相空间" description="按主题查看相空间的文章与笔记。" pageKind="index">
+  <div class="index-page">
+    <header class="index-header"><p class="eyebrow">TAGS</p><h1>标签</h1><p>同一问题在不同课程中会反复出现；标签用来保留这种横向联系。</p></header>
+    <div class="tag-cloud">{tags.map(([tag, count]) => <a href={`/tags/${encodeURIComponent(tag)}/`}>{tag} <span>{count}</span></a>)}</div>
+  </div>
+</BaseLayout>

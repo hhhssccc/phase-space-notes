@@ -1,0 +1,50 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../config/site';
+import { byNewest, entryUrl, readingMinutes } from '../lib/content';
+
+const entries = (await getCollection('articles', ({ data }) => !data.draft)).sort(byNewest);
+const featured = entries.filter((entry) => entry.data.type === 'essay' && entry.data.featured).slice(0, 3);
+const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
+---
+
+<BaseLayout pageKind="home">
+  <div class="home-page">
+    <section class="home-hero" aria-labelledby="home-title">
+      <div class="home-intro">
+        <p class="eyebrow">PHYSICS · NOTES · ESSAYS</p>
+        <h1 id="home-title">在公式与直觉之间，<br />做一点缓慢的物理。</h1>
+        <p class="home-lede">这里收录理论物理学习札记、完整推导，以及那些值得反复追问的简单问题。</p>
+        <p class="home-byline">{siteConfig.author} · 物理学习者 · {siteConfig.location}</p>
+      </div>
+      <figure class="home-mascot">
+        <div class="home-mascot-stage">
+          <img src={siteConfig.mascot.idle} width="334" height="560" alt={`${siteConfig.mascot.name}扶帽站立`} fetchpriority="high" />
+        </div>
+        <figcaption>{siteConfig.mascot.name} · 观测中</figcaption>
+      </figure>
+    </section>
+
+    <section class="home-section" aria-labelledby="featured-title">
+      <div class="section-heading"><h2 id="featured-title">精选文章</h2><a href="/articles/">全部文章 →</a></div>
+      <ol class="featured-list">
+        {featured.map((entry) => (
+          <li>
+            <a href={entryUrl(entry)}>{entry.data.title}</a>
+            <span class="entry-meta">{entry.data.category} · {readingMinutes(entry.body || '')} 分钟</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="home-section" aria-labelledby="notes-title">
+      <div class="section-heading"><h2 id="notes-title">近期笔记</h2><a href="/notes/">全部笔记 →</a></div>
+      <ol class="note-list">
+        {notes.map((entry) => (
+          <li><time datetime={entry.data.date.toISOString()}>{String(entry.data.date.getMonth() + 1).padStart(2, '0')}.{String(entry.data.date.getDate()).padStart(2, '0')}</time><a href={entryUrl(entry)}>{entry.data.title}</a></li>
+        ))}
+      </ol>
+    </section>
+  </div>
+</BaseLayout>

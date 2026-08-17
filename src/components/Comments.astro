@@ -1,0 +1,24 @@
+---
+import { siteConfig } from '../config/site';
+
+const enabled = siteConfig.features.comments
+  && siteConfig.giscus.repo
+  && siteConfig.giscus.repoId
+  && siteConfig.giscus.categoryId;
+---
+
+{enabled && (
+  <section class="comments print-hidden" aria-labelledby="comments-title">
+    <h2 id="comments-title">讨论</h2>
+    <p>评论按需加载，不会影响正文首次显示。</p>
+    <button
+      type="button"
+      class="text-button"
+      data-load-comments
+      data-repo={siteConfig.giscus.repo}
+      data-repo-id={siteConfig.giscus.repoId}
+      data-category-id={siteConfig.giscus.categoryId}
+    >加载评论</button>
+    <div data-comments-root></div>
+  </section>
+)}

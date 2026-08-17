@@ -1,0 +1,20 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { byNewest, entryUrl, formatDate, readingMinutes, type ArticleEntry } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const all = await getCollection('articles', ({ data }) => !data.draft);
+  const tags = [...new Set(all.flatMap((entry) => entry.data.tags))];
+  return tags.map((tag) => ({ params: { tag }, props: { tag, entries: all.filter((entry) => entry.data.tags.includes(tag)).sort(byNewest) } }));
+}
+
+const { tag, entries } = Astro.props as { tag: string; entries: ArticleEntry[] };
+---
+
+<BaseLayout title={`${tag}｜标签｜相空间`} description={`相空间中标记为“${tag}”的内容。`} pageKind="index">
+  <div class="index-page">
+    <header class="index-header"><p class="eyebrow">TAG</p><h1>#{tag}</h1><p>共 {entries.length} 篇内容。</p></header>
+    <ol class="entry-list">{entries.map((entry) => <li><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time><div><h2><a href={entryUrl(entry)}>{entry.data.title}</a></h2><p>{entry.data.description}</p><span class="entry-meta">{entry.data.category} · {readingMinutes(entry.body || '')} 分钟</span></div></li>)}</ol>
+  </div>
+</BaseLayout>

@@ -1,0 +1,115 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Comments from '../components/Comments.astro';
+import { siteConfig } from '../config/site';
+import { entryUrl, formatDate, readingMinutes, type ArticleEntry } from '../lib/content';
+import 'katex/dist/katex.min.css';
+
+interface Heading { depth: number; slug: string; text: string; }
+interface Props {
+  post: ArticleEntry;
+  headings: Heading[];
+  relatedEntries: ArticleEntry[];
+  backlinkEntries: ArticleEntry[];
+}
+
+const { post, headings, relatedEntries, backlinkEntries } = Astro.props;
+const minutes = readingMinutes(post.body || '');
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
+---
+
+<BaseLayout
+  title={`${post.data.title}｜${siteConfig.name}`}
+  description={post.data.description}
+  pageKind="article"
+>
+  {siteConfig.features.readingProgress && <div class="reading-progress" data-reading-progress aria-hidden="true"></div>}
+  <div class="article-shell">
+    <aside class="article-toc print-hidden" aria-label="文章目录">
+      <p>目录</p>
+      <ol>
+        {toc.map((heading) => (
+          <li class:list={{ nested: heading.depth === 3 }}><a href={`#${heading.slug}`}>{heading.text}</a></li>
+        ))}
+      </ol>
+      <small>{minutes} 分钟 · {post.body?.length.toLocaleString('zh-CN')} 字符</small>
+    </aside>
+
+    <article class="article-main">
+      <header class="article-title">
+        <p class="eyebrow">{post.data.category.toUpperCase()} · {typeLabel}</p>
+        <h1>{post.data.title}</h1>
+        <p class="article-dek">{post.data.description}</p>
+        <p class="article-meta">
+          {siteConfig.author} · <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time> · {minutes} 分钟
+          {post.data.updated && <> · 修订于 <time datetime={post.data.updated.toISOString()}>{formatDate(post.data.updated)}</time></>}
+        </p>
+      </header>
+
+      {post.data.abstract && (
+        <section class="abstract" aria-labelledby="abstract-title">
+          <strong id="abstract-title">摘要</strong>
+          <p>{post.data.abstract}</p>
+        </section>
+      )}
+
+      {toc.length > 0 && (
+        <details class="mobile-toc print-hidden">
+          <summary>目录</summary>
+          <ol>{toc.map((heading) => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ol>
+        </details>
+      )}
+
+      {post.data.sidenotes.length > 0 && (
+        <details class="mobile-sidenotes print-hidden">
+          <summary>边注</summary>
+          {post.data.sidenotes.map((note) => <p><sup>{note.marker}</sup> <strong>{note.title}</strong>：{note.body}</p>)}
+        </details>
+      )}
+
+      <div class="article-prose">
+        <slot />
+      </div>
+
+      {(post.data.tags.length > 0) && (
+        <footer class="article-footer">
+          <p class="article-tags">{post.data.tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}/`}>#{tag}</a>)}</p>
+        </footer>
+      )}
+
+      {(backlinkEntries.length > 0 || relatedEntries.length > 0) && (
+        <section class="link-notes print-hidden" aria-label="延伸阅读">
+          {backlinkEntries.length > 0 && <div><h2>反向链接</h2><ul>{backlinkEntries.map((entry) => <li><a href={entryUrl(entry)}>{entry.data.title}</a></li>)}</ul></div>}
+          {relatedEntries.length > 0 && <div><h2>相关阅读</h2><ul>{relatedEntries.map((entry) => <li><a href={entryUrl(entry)}>{entry.data.title}</a></li>)}</ul></div>}
+        </section>
+      )}
+
+      <Comments />
+    </article>
+
+    <aside class="margin-notes print-hidden" aria-label="边注">
+      {post.data.sidenotes.map((note, index) => (
+        <section style={`--note-offset: ${index === 0 ? 11 : 4}rem`}>
+          <sup>{note.marker}</sup>
+          <h2>{note.title}</h2>
+          <p>{note.body}</p>
+        </section>
+      ))}
+    </aside>
+  </div>
+  <script>
+    const progress = document.querySelector('[data-reading-progress]');
+    const article = document.querySelector('.article-main');
+    const updateProgress = () => {
+      if (!(progress instanceof HTMLElement) || !(article instanceof HTMLElement)) return;
+      const start = article.offsetTop;
+      const total = article.offsetHeight - window.innerHeight;
+      const amount = Math.min(1, Math.max(0, (window.scrollY - start) / Math.max(total, 1)));
+      progress.style.transform = `scaleX(${amount})`;
+    };
+    updateProgress();
+    addEventListener('scroll', updateProgress, { passive: true });
+    addEventListener('resize', updateProgress);
+  </script>
+</BaseLayout>

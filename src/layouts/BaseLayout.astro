@@ -1,0 +1,180 @@
+---
+import '@fontsource-variable/noto-sans-sc';
+import '@fontsource-variable/noto-serif-sc';
+import '@fontsource-variable/source-sans-3';
+import '@fontsource-variable/source-serif-4';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import MascotDrawer from '../components/MascotDrawer.astro';
+import { siteConfig } from '../config/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  pageKind?: 'home' | 'article' | 'index' | 'utility';
+  noindex?: boolean;
+}
+
+const {
+  title = siteConfig.title,
+  description = siteConfig.description,
+  pageKind = 'index',
+  noindex = false,
+} = Astro.props;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.url;
+---
+
+<!doctype html>
+<html lang={siteConfig.language} data-theme="system">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} RSS`} href="/rss.xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <title>{title}</title>
+    <script is:inline>
+      (() => {
+        const saved = localStorage.getItem('phase-space-theme') || 'system';
+        document.documentElement.dataset.theme = saved;
+      })();
+    </script>
+  </head>
+  <body data-page-kind={pageKind}>
+    <SiteHeader />
+    <main id="main-content">
+      <slot />
+    </main>
+    <SiteFooter />
+    <MascotDrawer />
+    <dialog class="lightbox" data-lightbox aria-label="图片预览">
+      <button type="button" data-lightbox-close aria-label="关闭图片预览">关闭</button>
+      <img alt="" data-lightbox-image />
+      <p data-lightbox-caption></p>
+    </dialog>
+    <script>
+      const root = document.documentElement;
+      const systemDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const resolvedDark = () => root.dataset.theme === 'dark' || (root.dataset.theme === 'system' && systemDark());
+      const syncTheme = () => {
+        document.querySelectorAll('[data-set-theme]').forEach((button) => {
+          button.toggleAttribute('aria-pressed', button.getAttribute('data-set-theme') === root.dataset.theme);
+        });
+      };
+      const setTheme = (value: string) => {
+        root.dataset.theme = value;
+        localStorage.setItem('phase-space-theme', value);
+        syncTheme();
+      };
+      document.querySelectorAll('[data-theme-cycle]').forEach((button) => {
+        button.addEventListener('click', () => setTheme(resolvedDark() ? 'light' : 'dark'));
+      });
+      document.querySelectorAll('[data-set-theme]').forEach((button) => {
+        button.addEventListener('click', () => setTheme(button.getAttribute('data-set-theme') || 'system'));
+      });
+      syncTheme();
+
+      const body = document.body;
+      const wallpaper = localStorage.getItem('phase-space-wallpaper') || 'plain';
+      if (body.dataset.pageKind === 'home') body.dataset.wallpaper = wallpaper;
+      document.querySelectorAll('[data-set-wallpaper]').forEach((button) => {
+        const value = button.getAttribute('data-set-wallpaper');
+        button.toggleAttribute('aria-pressed', value === wallpaper);
+        button.addEventListener('click', () => {
+          localStorage.setItem('phase-space-wallpaper', value || 'plain');
+          if (body.dataset.pageKind === 'home') body.dataset.wallpaper = value || 'plain';
+          document.querySelectorAll('[data-set-wallpaper]').forEach((item) => item.toggleAttribute('aria-pressed', item === button));
+        });
+      });
+
+      const drawer = document.querySelector('[data-drawer-open]');
+      const panel = document.querySelector('.study-drawer');
+      const backdrop = document.querySelector('[data-drawer-backdrop]');
+      const close = document.querySelector('[data-drawer-close]');
+      let returnFocus: Element | null = null;
+      const setDrawer = (open: boolean) => {
+        if (!(panel instanceof HTMLElement) || !(drawer instanceof HTMLElement) || !(backdrop instanceof HTMLElement)) return;
+        panel.classList.toggle('is-open', open);
+        panel.setAttribute('aria-hidden', String(!open));
+        drawer.setAttribute('aria-expanded', String(open));
+        backdrop.hidden = !open;
+        document.body.classList.toggle('drawer-open', open);
+        if (open) {
+          returnFocus = document.activeElement;
+          panel.focus();
+        } else if (returnFocus instanceof HTMLElement) returnFocus.focus();
+      };
+      drawer?.addEventListener('click', () => setDrawer(true));
+      close?.addEventListener('click', () => setDrawer(false));
+      backdrop?.addEventListener('click', () => setDrawer(false));
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setDrawer(false);
+      });
+
+      document.querySelectorAll('.article-prose pre > code.language-mermaid').forEach((code) => {
+        const pre = code.parentElement;
+        const diagram = document.createElement('div');
+        diagram.className = 'mermaid';
+        diagram.textContent = code.textContent;
+        pre?.replaceWith(diagram);
+      });
+      if (document.querySelector('.mermaid')) {
+        const { default: mermaid } = await import('mermaid');
+        mermaid.initialize({ startOnLoad: false, theme: resolvedDark() ? 'dark' : 'neutral', securityLevel: 'strict' });
+        await mermaid.run({ querySelector: '.mermaid' });
+      }
+
+      const lightbox = document.querySelector('[data-lightbox]');
+      const lightboxImage = document.querySelector('[data-lightbox-image]');
+      const lightboxCaption = document.querySelector('[data-lightbox-caption]');
+      document.querySelectorAll<HTMLImageElement>('.article-prose figure img').forEach((image) => {
+        image.addEventListener('click', () => {
+          if (!(lightbox instanceof HTMLDialogElement) || !(lightboxImage instanceof HTMLImageElement)) return;
+          lightboxImage.src = image.src;
+          lightboxImage.alt = image.alt;
+          if (lightboxCaption) lightboxCaption.textContent = image.closest('figure')?.querySelector('figcaption')?.textContent || '';
+          lightbox.showModal();
+        });
+      });
+      document.querySelector('[data-lightbox-close]')?.addEventListener('click', () => {
+        if (lightbox instanceof HTMLDialogElement) lightbox.close();
+      });
+
+      document.querySelector('[data-load-comments]')?.addEventListener('click', (event) => {
+        const button = event.currentTarget;
+        if (!(button instanceof HTMLElement)) return;
+        const script = document.createElement('script');
+        script.src = 'https://giscus.app/client.js';
+        script.async = true;
+        script.crossOrigin = 'anonymous';
+        script.dataset.repo = button.dataset.repo || '';
+        script.dataset.repoId = button.dataset.repoId || '';
+        script.dataset.category = 'Announcements';
+        script.dataset.categoryId = button.dataset.categoryId || '';
+        script.dataset.mapping = 'pathname';
+        script.dataset.strict = '0';
+        script.dataset.reactionsEnabled = '1';
+        script.dataset.emitMetadata = '0';
+        script.dataset.inputPosition = 'top';
+        script.dataset.theme = resolvedDark() ? 'dark' : 'light';
+        script.dataset.lang = 'zh-CN';
+        document.querySelector('[data-comments-root]')?.append(script);
+        button.remove();
+      }, { once: true });
+    </script>
+  </body>
+</html>

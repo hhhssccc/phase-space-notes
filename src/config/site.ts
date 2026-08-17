@@ -1,0 +1,35 @@
+export const siteConfig = {
+  name: '相空间',
+  title: '相空间｜物理笔记与长文',
+  description: '在公式与直觉之间，做一点缓慢的物理。这里收录理论物理学习札记、完整推导，以及值得反复追问的简单问题。',
+  author: '作者名占位',
+  location: '上海',
+  language: 'zh-CN',
+  nav: [
+    { label: '文章', href: '/articles/' },
+    { label: '笔记', href: '/notes/' },
+    { label: '归档', href: '/archive/' },
+    { label: '关于', href: '/about/' },
+    { label: '搜索', href: '/search/' },
+  ],
+  features: {
+    search: true,
+    comments: false,
+    music: false,
+    wallpaper: true,
+    stats: true,
+    mermaid: true,
+    lightbox: true,
+    readingProgress: true,
+  },
+  mascot: {
+    idle: '/assets/mascot-idle.webp',
+    reading: '/assets/mascot-reading.webp',
+    name: '宇佐见莲子',
+  },
+  giscus: {
+    repo: import.meta.env.PUBLIC_GISCUS_REPO || '',
+    repoId: import.meta.env.PUBLIC_GISCUS_REPO_ID || '',
+    categoryId: import.meta.env.PUBLIC_GISCUS_CATEGORY_ID || '',
+  },
+} as const;
