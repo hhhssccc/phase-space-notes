@@ -4,6 +4,7 @@ import { unified } from '@astrojs/markdown-remark';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import { remarkObsidianCallouts } from './src/plugins/remark-obsidian-callouts.mjs';
 import { remarkWikiLinks } from './src/plugins/remark-wikilinks.mjs';
 
 const site = process.env.SITE_URL || 'https://hhhssccc.github.io';
@@ -16,7 +17,7 @@ export default defineConfig({
   integrations: [sitemap()],
   markdown: {
     processor: unified({
-      remarkPlugins: [remarkGfm, remarkMath, remarkWikiLinks],
+      remarkPlugins: [remarkGfm, remarkMath, remarkObsidianCallouts, remarkWikiLinks],
       rehypePlugins: [rehypeKatex],
     }),
     syntaxHighlight: {

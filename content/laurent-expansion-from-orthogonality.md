@@ -17,7 +17,6 @@ sidenotes:
 
 <figure class="lead-figure">
   <img src="../../figures/laurent-expansion-from-orthogonality/lead.jpg" alt="蓝发动漫角色双手托腮，周围点缀星形图案" width="1280" height="824" loading="eager" decoding="async" />
-  <figcaption>题图｜用户提供的插图。</figcaption>
 </figure>
 
 ## 从一个重要的积分开始

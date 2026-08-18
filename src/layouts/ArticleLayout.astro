@@ -17,6 +17,19 @@ const { post, headings, relatedEntries, backlinkEntries } = Astro.props;
 const minutes = readingMinutes(post.body || '');
 const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
+const sourceBody = post.body || '';
+const displayMathCount = Math.floor((sourceBody.match(/(?:^|\n)\s*\$\$\s*(?=\n|$)/g)?.length || 0) / 2);
+const proseCharacters = Array.from(
+  sourceBody
+    .replace(/(?:^|\n)\s*\$\$[\s\S]*?\$\$(?=\n|$)/g, ' ')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[\s#>*_`~|{}\[\]()-]+/g, ''),
+).length;
+const autoPlainMath = displayMathCount >= 6 && proseCharacters / displayMathCount <= 180;
+const effectiveMathDisplay = post.data.mathDisplay === 'auto'
+  ? (autoPlainMath ? 'plain' : 'ruled')
+  : post.data.mathDisplay;
 ---
 
 <BaseLayout
@@ -68,7 +81,7 @@ const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
         </details>
       )}
 
-      <div class="article-prose">
+      <div class="article-prose" data-math-display={effectiveMathDisplay}>
         <slot />
       </div>
 

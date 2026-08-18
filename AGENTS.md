@@ -73,6 +73,7 @@ featured: false
 draft: true
 related: [coarse-graining-note]
 backlinks: []
+mathDisplay: auto
 sidenotes:
   - marker: "*"
     title: 粗粒化
@@ -96,6 +97,7 @@ sidenotes:
 | `draft` | 写作和检查阶段必须为 `true`；通过发布检查后才能改为 `false`。 |
 | `related` | 相关内容的文件 ID，不含路径和 `.md`。只填写确实相关且已存在的内容。 |
 | `backlinks` | 明确链接到本文的内容 ID。新增 WikiLink 后同步检查是否应更新。 |
+| `mathDisplay` | `auto`、`ruled` 或 `plain`。默认 `auto`：文字多公式少时保留上下细线，公式密集时自动使用无框紧凑样式；只有自动判断不合适时才手动覆盖。 |
 | `sidenotes` | 可选。宽屏显示在右侧，手机折叠；控制在 1–4 条，不要复制脚注内容。 |
 
 禁止添加未经 `src/content.config.ts` 定义的 Frontmatter 字段；需要新字段时，先更新 schema、模板和本文件。
@@ -115,6 +117,8 @@ sidenotes:
 
 - 行内公式：`$E=mc^2$`。
 - 独立公式：使用 `$$ ... $$`，前后各留一个空行。
+- 显示公式样式默认使用 `mathDisplay: auto`。构建时根据正文字符数与显示公式数量自动选择 `ruled` 或 `plain`；不要为了某一篇文章直接改全站公式边框。
+- KaTeX 的渲染包与页面 CSS 必须解析到同一安装版本；`npm run build` 的渲染合同检查会阻止版本错配、残留 Obsidian callout 和损坏的 `\boxed` 结构进入发布。
 - 公式作为句子的一部分时保留中文标点；长推导按逻辑分段，不用截图代替公式。
 - 每个新符号应在首次出现附近定义，并注明单位、维度或约定（若相关）。
 - 代码块必须声明语言，例如 `````python``；代码应能说明正文问题，不放无关样板。
@@ -182,6 +186,7 @@ blog_type: essay
 blog_category: 信息论与统计力学
 blog_tags: [信息熵, Shannon 熵, 粗粒化]
 blog_featured: true
+blog_math_display: auto
 blog_description: 用于文章列表与社交元数据的一句话说明。
 blog_abstract: 用于文章标题下方摘要框的两三句话。
 blog_sidenotes:
@@ -194,7 +199,8 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 
 - `blog_id` 是网站稳定 ID，必须使用小写 ASCII、数字和连字符；一旦公开不得擅自改变。
 - `blog_type` 映射网站的 `essay` 或 `note`，不要把 Vault 的 `type: note` 直接当作网站类型。
-- `blog_description`、`blog_abstract` 和 `blog_sidenotes` 分别映射网站的列表说明、摘要框和侧栏边注；同步时不得遗漏。
+- `blog_description`、`blog_abstract`、`blog_math_display` 和 `blog_sidenotes` 分别映射网站的列表说明、摘要框、公式布局和侧栏边注；同步时不得遗漏。
+- `blog_math_display` 可取 `auto`、`ruled` 或 `plain`，默认使用 `auto`；只在自动密度判断不符合文章意图时写入手动值。
 - `blog_sidenotes` 中的 `marker` 是符号，`title` 是侧栏粗体标题，`body` 是正文。列表顺序就是显示顺序；桌面显示在右栏，手机显示在可展开的“边注”区域。
 - 编辑源稿没有 `blog_sidenotes`，不代表网站必须没有边注。若 Agent 在整理或排版时认为需要新增边注，必须把最终采用的完整 `blog_sidenotes` 回写到 reading-essays 原稿；不得只写进网站 `content/`。
 - 若网站现有发布副本已有 `sidenotes`、但编辑源稿缺失对应字段，开始修订时应先把现有边注映射回原稿，再让用户或 Agent 在同一处继续修改。
@@ -208,7 +214,7 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 1. 读取本文件、reading-essays 根目录的 `AGENTS.md`、目标编辑源稿、网站 schema 与文章模板。
 2. 检查两个项目的工作区状态，保护用户未提交修改；目标文件已存在时先比较，不静默覆盖。
 3. 以 reading-essays 目标笔记为编辑内容权威，以 `content/<blog_id>.md` 为发布副本。
-4. 将 Vault Frontmatter 映射为网站 Frontmatter；同步阶段保持网站 `draft: true`。若网站旧副本存在边注而源稿没有 `blog_sidenotes`，先把旧边注回写源稿，避免后续修订时丢失。
+4. 将 Vault Frontmatter 映射为网站 Frontmatter，包括把 `blog_math_display` 映射为 `mathDisplay`；同步阶段保持网站 `draft: true`。若网站旧副本存在边注而源稿没有 `blog_sidenotes`，先把旧边注回写源稿，避免后续修订时丢失。
 5. Vault 笔记允许保留与标题相同的单个 H1；复制到博客时删除这个 H1，避免文章页出现两个一级标题。
 6. 把 Obsidian WikiLink、嵌入和相对附件转换成网站支持的链接或图片；附件复制到 `public/figures/<blog_id>/`，不得引用 vault 的绝对本地路径。
 7. 只做排版兼容和用户明确要求的修改。若发现物理结论、公式或引用疑点，先报告，不在同步时静默改意。

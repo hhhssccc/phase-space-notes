@@ -408,13 +408,44 @@ main { min-height: calc(100vh - 9rem); }
   line-height: 1.82;
 }
 .article-prose blockquote p { margin: 0.5rem 0; }
+.article-prose .callout {
+  --callout-accent: var(--ink-soft);
+  margin: 1.6rem 0;
+  padding: 0.9rem 1rem 0.95rem;
+  border: 1px solid var(--rule-soft);
+  border-left: 0.24rem solid var(--callout-accent);
+  background: var(--paper-soft);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 0.98em;
+  line-height: 1.78;
+}
+.article-prose .callout-question,
+.article-prose .callout-help,
+.article-prose .callout-faq { --callout-accent: #6c63a8; }
+.article-prose .callout-warning,
+.article-prose .callout-caution,
+.article-prose .callout-attention { --callout-accent: #9a6a17; }
+.article-prose .callout-danger,
+.article-prose .callout-error,
+.article-prose .callout-bug { --callout-accent: #a04444; }
+.article-prose .callout-success,
+.article-prose .callout-check { --callout-accent: #3f7a57; }
+.article-prose .callout-title { margin: 0 0 0.35rem; color: var(--callout-accent); }
+.article-prose .callout > :last-child { margin-bottom: 0; }
 .article-prose .katex-display {
-  margin: 1.8rem 0;
-  padding: 1.15rem 0.5rem;
+  margin: 1.55rem 0;
+  padding: 0.9rem 0.5rem;
   overflow-x: auto;
-  overflow-y: hidden;
   border-block: 1px solid var(--rule-soft);
 }
+.article-prose[data-math-display='plain'] .katex-display {
+  margin: 1.05rem 0;
+  padding: 0.3rem 0.25rem;
+  border-block: 0;
+}
+.article-prose[data-math-display='plain'] .katex-display + p,
+.article-prose[data-math-display='plain'] p + .katex-display { margin-top: 0.85rem; }
 .article-prose .katex { font-size: 1.05em; }
 .article-prose figure { margin: 2.2rem 0; }
 .article-prose figure img {
@@ -574,7 +605,8 @@ main { min-height: calc(100vh - 9rem); }
   .article-prose > p:first-of-type::first-letter { float: none; margin: 0; font: inherit; }
   .article-prose h2 { margin-top: 2.55rem; font-size: 1.34rem; line-height: 1.42; }
   .article-prose h3 { font-size: 1.12rem; }
-  .article-prose .katex-display { margin: 1.45rem 0; padding-inline: 0.2rem; }
+  .article-prose .katex-display { margin: 1.3rem 0; padding-inline: 0.2rem; }
+  .article-prose[data-math-display='plain'] .katex-display { margin: 0.9rem 0; padding-block: 0.25rem; }
   .article-prose figure { margin-inline: -1.25rem; }
   .article-prose .figure-portrait { width: min(76%, 17rem); margin-inline: auto; }
   .article-prose .figure-plot,

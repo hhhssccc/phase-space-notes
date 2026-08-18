@@ -11,6 +11,7 @@ featured: false
 draft: true
 related: []
 backlinks: []
+mathDisplay: auto
 sidenotes:
   - marker: "*"
     title: 边注标题

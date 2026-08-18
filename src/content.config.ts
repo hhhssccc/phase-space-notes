@@ -17,6 +17,7 @@ const articles = defineCollection({
     draft: z.boolean().default(false),
     related: z.array(z.string()).default([]),
     backlinks: z.array(z.string()).default([]),
+    mathDisplay: z.enum(['auto', 'ruled', 'plain']).default('auto'),
     sidenotes: z.array(z.object({
       marker: z.string(),
       title: z.string(),
