@@ -17,7 +17,8 @@ const { post, headings, relatedEntries, backlinkEntries } = Astro.props;
 const minutes = readingMinutes(post.body || '');
 const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
-const sourceBody = post.body || '';
+// Normalize line endings so the adaptive layout is identical on Windows and CI/Linux.
+const sourceBody = (post.body || '').replace(/\r\n?/g, '\n');
 const displayMathCount = Math.floor((sourceBody.match(/(?:^|\n)\s*\$\$\s*(?=\n|$)/g)?.length || 0) / 2);
 const proseCharacters = Array.from(
   sourceBody
