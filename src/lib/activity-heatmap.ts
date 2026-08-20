@@ -45,7 +45,7 @@ function readCommitCounts(startDate: string) {
   try {
     const output = execFileSync(
       'git',
-      ['log', '--all', '--format=%cs', `--since=${startDate}`],
+      ['log', '--format=%cs', `--since=${startDate}`],
       { cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
     );
 
