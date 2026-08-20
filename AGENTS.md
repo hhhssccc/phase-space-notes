@@ -18,12 +18,12 @@
 
 1. 整体方向是“学术纸刊 + 极简主页”，正文阅读优先于装饰。
 2. 首页不使用卡片墙、大横幅、统计卡片或常驻播放器；右下角阅读角色是唯一有意保留的悬浮入口。
-3. “书房”已按用户最新要求恢复并重做，收纳音乐、首页纸面、最近动态、内容统计和三态主题；不得再依据旧对话删除。
+3. “书房”已按用户最新要求恢复并重做，收纳音乐、全站纸面、最近动态、内容统计和三态主题；不得再依据旧对话删除。
 4. 首页精选文章只显示标题、分类和阅读时间，不在标题旁放文章简介。
 5. 桌面长文保持“左目录—中正文—右边注”；手机收束成单栏，并把目录和边注变成可展开区域。
 6. 正文背景始终是纯净纸面；深色模式需要单独调校，禁止直接对整页或图片套反色滤镜。
-7. `public/assets/mascot-idle.webp` 只用于首页首屏；`mascot-reading.webp` 用于书房入口和抽屉阅读状态。
-8. 角色图片必须等比显示，不得裁掉帽子、手、书或鞋，不得使用 `invert()`、着色滤镜或改色版本。
+7. `public/assets/mascot-idle.webp` 只用于首页首屏；书房入口使用 `mascot-study-avatar.webp` 的莲子 Q 版头像；`mascot-reading.webp` 是保留素材，当前书房标题区不显示人物。
+8. 全身角色图片必须等比显示，不得裁掉帽子、手、书或鞋；Q 版头像按其原生方形构图完整显示。所有角色图都不得使用 `invert()`、着色滤镜或改色版本。
 9. 打印时隐藏导航、角色、互动控件和阅读进度，只保留适合 A4 的文章内容。
 10. 字体职责保持稳定：中文正文为思源黑体风格，标题为思源宋体风格；拉丁标题/正文分别使用 Source Serif 4 / Source Sans 3；代码使用 IBM Plex Mono。
 
@@ -40,7 +40,7 @@
 - `src/lib/article-history.ts`、`src/components/ArticleHistory.astro`：文章 Git 文件版本与日期语义的公开展示。
 - `src/styles/global.css`：全站排版、响应式、深浅色与打印样式。
 - `public/figures/`：文章插图；新文章优先使用 `public/figures/<文章文件名>/` 子目录。
-- `public/assets/mascot-idle.webp`、`public/assets/mascot-reading.webp`：固定角色资源接口，文件名不得改变。
+- `public/assets/mascot-idle.webp`、`public/assets/mascot-reading.webp`、`public/assets/mascot-study-avatar.webp`：固定角色资源接口，文件名不得改变。
 - `src/plugins/remark-wikilinks.mjs`：WikiLink 转换逻辑。
 - `.github/workflows/ci.yml`：源码构建检查。
 - `.github/workflows/pages.yml`：当前 GitHub Pages 发布流程。
@@ -269,7 +269,7 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 - 390px 无横向页面溢出；宽表格和代码只在自身容器内滚动。
 - 深色模式中的角色和正文插图未被反色；打印版不包含导航和角色。
 - 音乐默认暂停、不自动播放，且只在用户明确点击后初始化；没有可用音源时应隐藏或明确降级。
-- 书房默认关闭，支持 Escape、焦点限定与关闭后回焦；壁纸只影响首页与书房，不影响文章正文。
+- 书房默认关闭，支持 Escape、焦点限定与关闭后回焦；纯纸、方格与轨道纹理必须应用到首页、文章、笔记和其他站内页面。
 - 文章页明确区分“首次公开”、“正文实质修订”和“Git 文件版本”，不得把技术提交冒称为正文修订。
 - Build 与公开发布均成功，线上页面返回 200。
 

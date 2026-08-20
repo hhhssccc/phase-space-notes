@@ -26,6 +26,7 @@ export const siteConfig = {
   mascot: {
     idle: '/assets/mascot-idle.webp',
     reading: '/assets/mascot-reading.webp',
+    studyAvatar: '/assets/mascot-study-avatar.webp',
     name: '宇佐见莲子',
   },
   giscus: {

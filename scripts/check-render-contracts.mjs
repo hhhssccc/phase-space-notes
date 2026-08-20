@@ -33,6 +33,14 @@ if (rootKatexCss !== rendererKatexCss) {
   throw new Error(`KaTeX renderer/CSS mismatch:\nrenderer: ${rendererKatexCss}\nCSS: ${rootKatexCss}`);
 }
 
+const studyRoomSource = await readFile(path.join(root, 'src', 'components', 'study-room', 'StudyRoom.astro'), 'utf8');
+if (/dataset\.pageKind\s*===\s*['"]home['"]/.test(studyRoomSource)
+    || !/if\s*\(wallpaperEnabled\)\s*body\.dataset\.wallpaper\s*=/.test(studyRoomSource)
+    || !studyRoomSource.includes(":global(body[data-wallpaper='grid'])")
+    || !studyRoomSource.includes(":global(body[data-wallpaper='orbit'])")) {
+  throw new Error('Study-room wallpaper choices must apply to every site page, not only the homepage.');
+}
+
 async function collectHtml(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -233,6 +241,12 @@ for (const file of htmlFiles) {
     }
     if (!/data-study-drawer[^>]*aria-hidden="true"[^>]*\bhidden\b[^>]*\binert\b/.test(html)) {
       throw new Error(`Study drawer must be hidden and inert before interaction: ${file}`);
+    }
+    if (!html.includes('mascot-study-avatar.webp')) {
+      throw new Error(`Study-room trigger must use the chibi avatar: ${file}`);
+    }
+    if (html.includes('study-room-description') || html.includes('宇佐见莲子 · 阅读中') || html.includes('把界面偏好')) {
+      throw new Error(`Study-room intro must remain title-only: ${file}`);
     }
     studyRoomPages += 1;
   }
