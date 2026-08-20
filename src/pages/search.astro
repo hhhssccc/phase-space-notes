@@ -1,9 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../config/site';
 import { byNewest, entryUrl, plainText } from '../lib/content';
 
-const entries = (await getCollection('articles', ({ data }) => !data.draft)).sort(byNewest);
+const searchEnabled = siteConfig.features.search;
+const entries = searchEnabled
+  ? (await getCollection('articles', ({ data }) => !data.draft)).sort(byNewest)
+  : [];
 const index = entries.map((entry) => ({
   title: entry.data.title,
   description: entry.data.description,
@@ -17,33 +21,39 @@ const index = entries.map((entry) => ({
 <BaseLayout title="搜索｜渐近自由" description="搜索渐近自由的文章、笔记和标签。" pageKind="utility" noindex>
   <div class="index-page">
     <header class="index-header"><p class="eyebrow">SEARCH</p><h1>搜索</h1><p>搜索标题、摘要、标签与正文。索引在本地运行，不上传查询内容。</p></header>
-    <label for="site-search">输入关键词</label>
-    <input class="search-box" id="site-search" type="search" inputmode="search" autocomplete="off" placeholder="例如：信息熵、粗粒化、Maxwell 妖" autofocus />
-    <p class="search-status" data-search-status>输入关键词开始搜索。</p>
-    <ol class="entry-list" data-search-results>
-      {index.map((item, indexNumber) => <li class="search-result" data-search-item={indexNumber} hidden><span class="entry-meta">{item.category}</span><div><h2><a href={item.url}>{item.title}</a></h2><p>{item.description}</p><span class="entry-meta">{item.tags.join(' · ')}</span></div></li>)}
-    </ol>
-    <script is:inline type="application/json" id="search-index" set:html={JSON.stringify(index).replaceAll('<', '\\u003c')}></script>
+    {searchEnabled ? (
+      <>
+        <label for="site-search">输入关键词</label>
+        <input class="search-box" id="site-search" type="search" inputmode="search" autocomplete="off" placeholder="例如：信息熵、粗粒化、Maxwell 妖" />
+        <p class="search-status" data-search-status role="status" aria-live="polite">输入关键词开始搜索。</p>
+        <ol class="entry-list" data-search-results>
+          {index.map((item, indexNumber) => <li class="search-result" data-search-item={indexNumber} hidden><span class="entry-meta">{item.category}</span><div><h2><a href={item.url}>{item.title}</a></h2><p>{item.description}</p><span class="entry-meta">{item.tags.join(' · ')}</span></div></li>)}
+        </ol>
+        <script is:inline type="application/json" id="search-index" set:html={JSON.stringify(index).replaceAll('<', '\\u003c')}></script>
+      </>
+    ) : <p class="empty-state">搜索功能当前未启用。</p>}
   </div>
-  <script>
-    const input = document.querySelector('#site-search');
-    const status = document.querySelector('[data-search-status]');
-    const raw = document.querySelector('#search-index')?.textContent || '[]';
-    interface SearchItem { title: string; description: string; category: string; tags: string[]; url: string; text: string; }
-    const entries = JSON.parse(raw) as SearchItem[];
-    const normalize = (value: string) => value.toLocaleLowerCase('zh-CN').normalize('NFKC');
-    const update = () => {
-      if (!(input instanceof HTMLInputElement)) return;
-      const terms = normalize(input.value).split(/\s+/).filter(Boolean);
-      let count = 0;
-      entries.forEach((entry, index) => {
-        const haystack = normalize([entry.title, entry.description, entry.category, entry.tags.join(' '), entry.text].join(' '));
-        const matched = terms.length > 0 && terms.every((term) => haystack.includes(term));
-        document.querySelector(`[data-search-item="${index}"]`)?.toggleAttribute('hidden', !matched);
-        if (matched) count += 1;
-      });
-      if (status) status.textContent = terms.length ? `找到 ${count} 条结果。` : '输入关键词开始搜索。';
-    };
-    input?.addEventListener('input', update);
-  </script>
+  {searchEnabled && (
+    <script>
+      const input = document.querySelector('#site-search');
+      const status = document.querySelector('[data-search-status]');
+      const raw = document.querySelector('#search-index')?.textContent || '[]';
+      interface SearchItem { title: string; description: string; category: string; tags: string[]; url: string; text: string; }
+      const entries = JSON.parse(raw) as SearchItem[];
+      const normalize = (value: string) => value.toLocaleLowerCase('zh-CN').normalize('NFKC');
+      const update = () => {
+        if (!(input instanceof HTMLInputElement)) return;
+        const terms = normalize(input.value).split(/\s+/).filter(Boolean);
+        let count = 0;
+        entries.forEach((entry, index) => {
+          const haystack = normalize([entry.title, entry.description, entry.category, entry.tags.join(' '), entry.text].join(' '));
+          const matched = terms.length > 0 && terms.every((term) => haystack.includes(term));
+          document.querySelector(`[data-search-item="${index}"]`)?.toggleAttribute('hidden', !matched);
+          if (matched) count += 1;
+        });
+        if (status) status.textContent = terms.length ? `找到 ${count} 条结果。` : '输入关键词开始搜索。';
+      };
+      input?.addEventListener('input', update);
+    </script>
+  )}
 </BaseLayout>

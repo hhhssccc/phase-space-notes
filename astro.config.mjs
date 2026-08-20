@@ -14,10 +14,19 @@ export default defineConfig({
   site,
   base,
   output: 'static',
-  integrations: [sitemap()],
+  integrations: [sitemap({
+    // The local search UI is intentionally noindex and should not be advertised
+    // as a content page in the sitemap.
+    filter: (page) => !new URL(page).pathname.endsWith('/search/'),
+  })],
   markdown: {
     processor: unified({
-      remarkPlugins: [remarkGfm, remarkMath, remarkObsidianCallouts, remarkWikiLinks],
+      remarkPlugins: [
+        remarkGfm,
+        remarkMath,
+        remarkObsidianCallouts,
+        [remarkWikiLinks, { base }],
+      ],
       rehypePlugins: [rehypeKatex],
     }),
     syntaxHighlight: {

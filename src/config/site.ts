@@ -14,10 +14,15 @@ export const siteConfig = {
   features: {
     search: true,
     comments: false,
+    studyRoom: true,
+    music: true,
+    wallpaper: true,
+    stats: true,
     mermaid: true,
     lightbox: true,
     readingProgress: true,
   },
+  repositoryUrl: 'https://github.com/hhhssccc/phase-space-notes',
   mascot: {
     idle: '/assets/mascot-idle.webp',
     reading: '/assets/mascot-reading.webp',

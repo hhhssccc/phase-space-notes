@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build && npm run validate:render",
+    "build": "astro check && astro build && npm run optimize:fonts && npm run validate:render",
     "preview": "astro preview",
     "check": "astro check",
+    "optimize:fonts": "node scripts/optimize-font-assets.mjs",
     "validate:render": "node scripts/check-render-contracts.mjs"
   },
   "dependencies": {

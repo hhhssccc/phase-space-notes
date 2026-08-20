@@ -17,12 +17,12 @@
 ## 2. 不可破坏的视觉约束
 
 1. 整体方向是“学术纸刊 + 极简主页”，正文阅读优先于装饰。
-2. 首页不使用卡片墙、大横幅、统计卡片、常驻播放器或悬浮工具按钮。
-3. “书房”入口、抽屉、壁纸选择器和站点统计已经按用户要求删除，不得擅自恢复。
+2. 首页不使用卡片墙、大横幅、统计卡片或常驻播放器；右下角阅读角色是唯一有意保留的悬浮入口。
+3. “书房”已按用户最新要求恢复并重做，收纳音乐、首页纸面、最近动态、内容统计和三态主题；不得再依据旧对话删除。
 4. 首页精选文章只显示标题、分类和阅读时间，不在标题旁放文章简介。
 5. 桌面长文保持“左目录—中正文—右边注”；手机收束成单栏，并把目录和边注变成可展开区域。
 6. 正文背景始终是纯净纸面；深色模式需要单独调校，禁止直接对整页或图片套反色滤镜。
-7. `public/assets/mascot-idle.webp` 只用于首页首屏。`mascot-reading.webp` 作为保留素材，目前不显示。
+7. `public/assets/mascot-idle.webp` 只用于首页首屏；`mascot-reading.webp` 用于书房入口和抽屉阅读状态。
 8. 角色图片必须等比显示，不得裁掉帽子、手、书或鞋，不得使用 `invert()`、着色滤镜或改色版本。
 9. 打印时隐藏导航、角色、互动控件和阅读进度，只保留适合 A4 的文章内容。
 10. 字体职责保持稳定：中文正文为思源黑体风格，标题为思源宋体风格；拉丁标题/正文分别使用 Source Serif 4 / Source Sans 3；代码使用 IBM Plex Mono。
@@ -31,11 +31,13 @@
 
 ## 3. 工程结构与权威来源
 
-- `C:\Users\39948\Obsidian\reading-essays\<学科>\notes\`：用户长期写作与修订的编辑源稿。学科能够明确时，优先放入对应学科的 `notes/`，不要默认堆到 vault 根目录的 `notes/`。
+- `%USERPROFILE%\Obsidian\reading-essays\<学科>\notes\`：用户长期写作与修订的编辑源稿。学科能够明确时，优先放入对应学科的 `notes/`，不要默认堆到 vault 根目录的 `notes/`。
 - `content/`：网站构建使用的发布副本。它是线上版本的直接输入；若内容带有 `blog_id` 对应的 reading-essays 编辑源稿，再次发布前必须先从编辑源稿同步，不能让两份正文各自演化。
 - `src/content.config.ts`：Frontmatter 数据结构的唯一工程定义。
 - `templates/article.md`：新文章起稿模板。
 - `src/config/site.ts`：站名、署名、导航、功能开关和角色资源接口。
+- `src/components/study-room/`：书房抽屉、音乐控件和站点内容统计。
+- `src/lib/article-history.ts`、`src/components/ArticleHistory.astro`：文章 Git 文件版本与日期语义的公开展示。
 - `src/styles/global.css`：全站排版、响应式、深浅色与打印样式。
 - `public/figures/`：文章插图；新文章优先使用 `public/figures/<文章文件名>/` 子目录。
 - `public/assets/mascot-idle.webp`、`public/assets/mascot-reading.webp`：固定角色资源接口，文件名不得改变。
@@ -160,7 +162,7 @@ sidenotes:
 
 ## 10. 从 reading-essays 笔记到博客的工作流
 
-用户今后会在 `C:\Users\39948\Obsidian\reading-essays` 各学科的次级 `notes/` 文件夹中编写 Markdown，再由 Codex 发布。这个流程的目标是让用户只维护一份适合 Obsidian 阅读和修改的源稿，网站工程负责格式转换、验证与上线。
+用户今后会在 `%USERPROFILE%\Obsidian\reading-essays` 各学科的次级 `notes/` 文件夹中编写 Markdown，再由 Codex 发布。这个流程的目标是让用户只维护一份适合 Obsidian 阅读和修改的源稿，网站工程负责格式转换、验证与上线。
 
 ### 10.1 编辑源稿的位置与命名
 
@@ -266,7 +268,9 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 - 文章页仅有一个 H1；目录、边注、脚注和参考文献层级正确。
 - 390px 无横向页面溢出；宽表格和代码只在自身容器内滚动。
 - 深色模式中的角色和正文插图未被反色；打印版不包含导航和角色。
-- 音乐不自动播放；当前没有音乐入口或“书房”入口。
+- 音乐默认暂停、不自动播放，且只在用户明确点击后初始化；没有可用音源时应隐藏或明确降级。
+- 书房默认关闭，支持 Escape、焦点限定与关闭后回焦；壁纸只影响首页与书房，不影响文章正文。
+- 文章页明确区分“首次公开”、“正文实质修订”和“Git 文件版本”，不得把技术提交冒称为正文修订。
 - Build 与公开发布均成功，线上页面返回 200。
 
 ## 14. 当前暂缓事项
@@ -274,6 +278,5 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 - 独立域名：未配置。
 - Vercel：未接管当前正式托管。
 - Giscus 评论：功能代码保留但默认关闭，缺少配置时不渲染。
-- `mascot-reading.webp`：保留文件接口，不在页面中显示。
 
-这些事项只有在用户明确要求后才启用。不要为了“功能完整”主动恢复或上线。
+这些事项只有在用户明确要求后才启用。

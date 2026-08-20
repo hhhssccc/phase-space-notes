@@ -5,17 +5,16 @@ import { siteConfig } from '../config/site';
 
 export async function GET(context) {
   const entries = (await getCollection('articles', ({ data }) => !data.draft)).sort(byNewest);
+  const siteRoot = new URL(import.meta.env.BASE_URL || '/', context.site);
   return rss({
     title: siteConfig.title,
     description: siteConfig.description,
-    site: context.site,
+    site: siteRoot,
     items: entries.map((entry) => ({
       title: entry.data.title,
       description: entry.data.description,
       pubDate: entry.data.date,
-      link: entryUrl(entry),
-      categories: entry.data.tags,
-      content: entry.body,
+      link: new URL(entryUrl(entry), context.site).href,
     })),
     customData: '<language>zh-CN</language>',
   });

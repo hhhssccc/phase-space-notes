@@ -1,0 +1,852 @@
+---
+import { getCollection } from 'astro:content';
+import { musicConfig } from '../../config/music';
+import { siteConfig } from '../../config/site';
+import { byRecentlyChanged, entryUrl, withBase } from '../../lib/content';
+import { getSiteStats } from '../../lib/site-stats';
+import MusicPlayer from './MusicPlayer.astro';
+import SiteStats from './SiteStats.astro';
+
+const entries = (await getCollection('articles', ({ data }) => !data.draft)).sort(byRecentlyChanged);
+const latest = entries.slice(0, 3);
+const stats = getSiteStats(entries);
+const readingMascot = withBase(siteConfig.mascot.reading);
+const hasMusicTracks = siteConfig.features.music && musicConfig.tracks.length > 0;
+const roomDescription = hasMusicTracks
+  ? '把界面偏好、最近写作和一小段夜间音乐收在这里。'
+  : '把界面偏好和最近写作收在这里。';
+const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: 'UTC',
+});
+---
+
+<button
+  class="study-trigger"
+  type="button"
+  data-study-open
+  aria-controls="study-room-drawer"
+  aria-expanded="false"
+>
+  <img
+    src={readingMascot}
+    width="373"
+    height="520"
+    alt=""
+    decoding="async"
+  />
+  <span>书房</span>
+</button>
+
+<div class="study-backdrop" data-study-backdrop hidden aria-hidden="true"></div>
+
+<aside
+  class="study-drawer"
+  id="study-room-drawer"
+  data-study-drawer
+  data-wallpaper="plain"
+  data-wallpaper-enabled={String(siteConfig.features.wallpaper)}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="study-room-title"
+  aria-describedby="study-room-description"
+  aria-hidden="true"
+  hidden
+  inert
+>
+  <div class="drawer-topbar">
+    <p><span aria-hidden="true">02</span> PRIVATE STUDY</p>
+    <button type="button" class="drawer-close" data-study-close aria-label="关闭书房">
+      <span aria-hidden="true">×</span>
+      <span class="visually-hidden">关闭书房</span>
+    </button>
+  </div>
+
+  <div class="drawer-content">
+    <header class="room-intro">
+      <div>
+        <p class="eyebrow">READING ROOM</p>
+        <h2 id="study-room-title">夜读书房</h2>
+        <p id="study-room-description">{roomDescription}</p>
+      </div>
+      <figure>
+        <img
+          src={readingMascot}
+          width="373"
+          height="520"
+          alt={`${siteConfig.mascot.name}站着阅读笔记`}
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>{siteConfig.mascot.name} · 阅读中</figcaption>
+      </figure>
+    </header>
+
+    <section class="room-section preference-section" aria-labelledby="appearance-title">
+      <div class="section-heading">
+        <h3 id="appearance-title">阅读环境</h3>
+        <span>APPEARANCE</span>
+      </div>
+
+      <div class="preference-row">
+        <p id="theme-label">主题</p>
+        <div class="segmented" role="group" aria-labelledby="theme-label">
+          <button type="button" data-study-theme="light" aria-pressed="false">浅色</button>
+          <button type="button" data-study-theme="dark" aria-pressed="false">深色</button>
+          <button type="button" data-study-theme="system" aria-pressed="false">系统</button>
+        </div>
+      </div>
+
+      {siteConfig.features.wallpaper && (
+        <div class="preference-row">
+          <p id="wallpaper-label">首页纸面</p>
+          <div class="segmented" role="group" aria-labelledby="wallpaper-label">
+            <button type="button" data-study-wallpaper="plain" aria-pressed="false">纯纸</button>
+            <button type="button" data-study-wallpaper="grid" aria-pressed="false">方格</button>
+            <button type="button" data-study-wallpaper="orbit" aria-pressed="false">轨道</button>
+          </div>
+          <small>纹理只出现在首页与书房，文章正文始终保持纯净。</small>
+        </div>
+      )}
+    </section>
+
+    {hasMusicTracks && (
+      <section class="room-section" aria-labelledby="music-section-title">
+        <div class="section-heading">
+          <h3 id="music-section-title">书房音乐</h3>
+          <span>LISTENING</span>
+        </div>
+        <MusicPlayer />
+      </section>
+    )}
+
+    <section class="room-section" aria-labelledby="updates-title">
+      <div class="section-heading">
+        <h3 id="updates-title">最近动态</h3>
+        <span>LATEST</span>
+      </div>
+      {latest.length > 0 ? (
+        <ol class="recent-list">
+          {latest.map((entry, index) => {
+            const updated = entry.data.updated ?? entry.data.date;
+            return (
+              <li>
+                <span class="recent-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <div>
+                  <a href={entryUrl(entry)}>{entry.data.title}</a>
+                  <p>
+                    <span>{entry.data.type === 'essay' ? '文章' : '笔记'} · {entry.data.category}</span>
+                    <time datetime={updated.toISOString()}>{formatUpdateDate.format(updated)}</time>
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <p class="empty-state">暂时没有公开内容。</p>
+      )}
+    </section>
+
+    {siteConfig.features.stats && (
+      <div class="room-section stats-section">
+        <SiteStats stats={stats} />
+      </div>
+    )}
+
+    <p class="drawer-colophon">ASYMPTOTIC FREEDOM · STUDY LOG</p>
+  </div>
+</aside>
+
+<script>
+  const THEME_KEY = 'asymptotic-freedom-theme';
+  const WALLPAPER_KEY = 'asymptotic-freedom-wallpaper';
+  const themes = ['light', 'dark', 'system'] as const;
+  const wallpapers = ['plain', 'grid', 'orbit'] as const;
+  type Theme = (typeof themes)[number];
+  type Wallpaper = (typeof wallpapers)[number];
+
+  const trigger = document.querySelector<HTMLButtonElement>('[data-study-open]');
+  const drawer = document.querySelector<HTMLElement>('[data-study-drawer]');
+  const backdrop = document.querySelector<HTMLElement>('[data-study-backdrop]');
+  const closeButton = document.querySelector<HTMLButtonElement>('[data-study-close]');
+  const root = document.documentElement;
+  const body = document.body;
+  const wallpaperEnabled = drawer?.dataset.wallpaperEnabled === 'true';
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  let returnFocus: HTMLElement | null = null;
+  let invokingTrigger: HTMLElement | null = null;
+  let closeTimer: number | undefined;
+  let isOpen = false;
+  const previousInertStates = new Map<Element, boolean>();
+
+  const readStorage = (key: string) => {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  };
+
+  const writeStorage = (key: string, value: string) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // The selected preference still applies for this page when storage is unavailable.
+    }
+  };
+
+  const isTheme = (value: string | null): value is Theme => value !== null && themes.includes(value as Theme);
+  const isWallpaper = (value: string | null): value is Wallpaper => value !== null && wallpapers.includes(value as Wallpaper);
+
+  const syncThemeControls = () => {
+    const activeTheme = isTheme(root.dataset.theme ?? null) ? root.dataset.theme : 'system';
+    document.querySelectorAll<HTMLButtonElement>('[data-study-theme]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.studyTheme === activeTheme));
+    });
+  };
+
+  const applyTheme = (theme: Theme) => {
+    root.dataset.theme = theme;
+    writeStorage(THEME_KEY, theme);
+    syncThemeControls();
+  };
+
+  const applyWallpaper = (wallpaper: Wallpaper) => {
+    const activeWallpaper = wallpaperEnabled ? wallpaper : 'plain';
+    if (wallpaperEnabled && body.dataset.pageKind === 'home') body.dataset.wallpaper = activeWallpaper;
+    else body.removeAttribute('data-wallpaper');
+    if (drawer) drawer.dataset.wallpaper = activeWallpaper;
+    document.querySelectorAll<HTMLButtonElement>('[data-study-wallpaper]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.studyWallpaper === activeWallpaper));
+    });
+  };
+
+  const focusableElements = () => {
+    if (!drawer) return [];
+    return Array.from(drawer.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )).filter((element) => !element.hidden && element.getClientRects().length > 0);
+  };
+
+  const focusElement = (element: HTMLElement | null) => {
+    if (!element) return;
+    try {
+      element.focus({ preventScroll: true });
+    } catch {
+      // Older Safari accepts focus(), but not the FocusOptions overload.
+      element.focus();
+    }
+  };
+
+  const focusDrawer = () => {
+    focusElement(focusableElements()[0] ?? closeButton ?? drawer);
+  };
+
+  const setPageInert = (value: boolean) => {
+    if (value) {
+      previousInertStates.clear();
+      Array.from(body.children).forEach((element) => {
+        if (element === drawer || element === backdrop) return;
+        previousInertStates.set(element, element.hasAttribute('inert'));
+        element.setAttribute('inert', '');
+      });
+      return;
+    }
+
+    previousInertStates.forEach((wasInert, element) => {
+      if (wasInert) element.setAttribute('inert', '');
+      else element.removeAttribute('inert');
+    });
+    previousInertStates.clear();
+  };
+
+  const finishClose = () => {
+    if (!drawer || !backdrop || isOpen) return;
+    drawer.hidden = true;
+    backdrop.hidden = true;
+  };
+
+  const openDrawer = (invoker: HTMLElement | null = null) => {
+    if (!drawer || !backdrop || !trigger || isOpen) return;
+    if (closeTimer !== undefined) window.clearTimeout(closeTimer);
+    isOpen = true;
+    invokingTrigger = invoker;
+    returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : trigger;
+    drawer.hidden = false;
+    drawer.inert = false;
+    drawer.setAttribute('aria-hidden', 'false');
+    backdrop.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    trigger.setAttribute('aria-hidden', 'true');
+    trigger.tabIndex = -1;
+    body.classList.add('study-room-open');
+    setPageInert(true);
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        if (!isOpen) return;
+        drawer.dataset.open = '';
+        backdrop.dataset.open = '';
+        focusDrawer();
+      });
+    });
+  };
+
+  const closeDrawer = () => {
+    if (!drawer || !backdrop || !trigger || !isOpen) return;
+    isOpen = false;
+    drawer.removeAttribute('data-open');
+    backdrop.removeAttribute('data-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    drawer.inert = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.removeAttribute('aria-hidden');
+    trigger.removeAttribute('tabindex');
+    body.classList.remove('study-room-open');
+    setPageInert(false);
+    const focusTarget = invokingTrigger?.isConnected
+      ? invokingTrigger
+      : returnFocus?.isConnected
+        ? returnFocus
+        : trigger;
+    focusElement(focusTarget);
+    // iOS/Safari can defer the inert-state update until the next frame.
+    window.requestAnimationFrame(() => {
+      if (!isOpen && document.activeElement !== focusTarget && focusTarget.isConnected) {
+        focusElement(focusTarget);
+      }
+    });
+    invokingTrigger = null;
+    returnFocus = null;
+    const transitionDelay = reducedMotion.matches ? 0 : 230;
+    closeTimer = window.setTimeout(finishClose, transitionDelay);
+  };
+
+  trigger?.addEventListener('click', (event) => {
+    openDrawer(event.currentTarget instanceof HTMLElement ? event.currentTarget : trigger);
+  });
+  closeButton?.addEventListener('click', closeDrawer);
+  backdrop?.addEventListener('click', closeDrawer);
+
+  document.addEventListener('focusin', (event) => {
+    if (!isOpen || !drawer) return;
+    if (event.target instanceof Node && drawer.contains(event.target)) return;
+    focusDrawer();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (!isOpen) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeDrawer();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+
+    const focusable = focusableElements();
+    if (focusable.length === 0) {
+      event.preventDefault();
+      closeButton?.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-study-theme]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const value = button.dataset.studyTheme ?? null;
+      if (isTheme(value)) applyTheme(value);
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-study-wallpaper]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!wallpaperEnabled) return;
+      const value = button.dataset.studyWallpaper ?? null;
+      if (!isWallpaper(value)) return;
+      applyWallpaper(value);
+      writeStorage(WALLPAPER_KEY, value);
+    });
+  });
+
+  const themeObserver = new MutationObserver(syncThemeControls);
+  themeObserver.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  syncThemeControls();
+  const storedWallpaper = wallpaperEnabled ? readStorage(WALLPAPER_KEY) : null;
+  applyWallpaper(wallpaperEnabled && isWallpaper(storedWallpaper) ? storedWallpaper : 'plain');
+</script>
+
+<style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .study-trigger {
+    position: fixed;
+    z-index: 58;
+    right: max(0.85rem, env(safe-area-inset-right));
+    bottom: max(0.8rem, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: 2.2rem auto;
+    align-items: center;
+    gap: 0.42rem;
+    min-height: 3rem;
+    padding: 0.2rem 0.82rem 0.2rem 0.34rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    box-shadow: 0 0.55rem 1.5rem var(--shadow);
+    color: var(--ink);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    font-size: 0.76rem;
+    font-weight: 680;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  }
+
+  .study-trigger:hover {
+    border-color: var(--ink-soft);
+    box-shadow: 0 0.7rem 1.8rem var(--shadow);
+    transform: translateY(-2px);
+  }
+
+  .study-trigger img {
+    display: block;
+    width: 2.2rem;
+    height: 2.45rem;
+    object-fit: contain;
+    filter: none !important;
+  }
+
+  .study-backdrop {
+    position: fixed;
+    z-index: 68;
+    inset: 0;
+    background: rgb(10 10 10 / 42%);
+    opacity: 0;
+    transition: opacity 220ms ease;
+  }
+
+  .study-backdrop[data-open] {
+    opacity: 1;
+  }
+
+  .study-drawer {
+    position: fixed;
+    z-index: 69;
+    inset: 0 0 0 auto;
+    width: min(22rem, 92vw);
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    border-left: 1px solid var(--rule);
+    background-color: var(--paper);
+    box-shadow: -1rem 0 3rem var(--shadow);
+    color: var(--ink);
+    transform: translateX(103%);
+    visibility: hidden;
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 220ms;
+  }
+
+  .study-drawer[data-open] {
+    transform: translateX(0);
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .study-drawer[data-wallpaper='grid'] {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--rule-soft) 68%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--rule-soft) 68%, transparent) 1px, transparent 1px);
+    background-size: 1.5rem 1.5rem;
+  }
+
+  .study-drawer[data-wallpaper='orbit'] {
+    background-image:
+      radial-gradient(circle at 112% 18%, transparent 0 8.8rem, color-mix(in srgb, var(--rule) 52%, transparent) 8.84rem 8.9rem, transparent 8.95rem),
+      radial-gradient(circle at 112% 18%, transparent 0 5.6rem, color-mix(in srgb, var(--rule-soft) 70%, transparent) 5.64rem 5.7rem, transparent 5.75rem);
+  }
+
+  .drawer-topbar {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 3.35rem;
+    padding: 0.45rem 1rem 0.45rem 1.15rem;
+    border-bottom: 1px solid var(--rule-soft);
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  .drawer-topbar p {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.14em;
+  }
+
+  .drawer-topbar p span {
+    display: inline-block;
+    margin-right: 0.45rem;
+    color: var(--ink);
+  }
+
+  .drawer-close {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 1.55rem;
+    font-weight: 300;
+    line-height: 1;
+  }
+
+  .drawer-close:hover {
+    border-color: var(--rule);
+    background: var(--paper-soft);
+  }
+
+  .drawer-content {
+    position: relative;
+    z-index: 1;
+    padding: 0 1.15rem max(1.7rem, env(safe-area-inset-bottom));
+  }
+
+  .room-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 5.5rem;
+    align-items: end;
+    gap: 0.8rem;
+    min-height: 12rem;
+    padding: 1.45rem 0 1.1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    margin: 0 0 0.45rem;
+    color: var(--muted);
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.64rem;
+    font-weight: 680;
+    letter-spacing: 0.18em;
+  }
+
+  .room-intro h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(1.75rem, 7vw, 2.25rem);
+    font-weight: 590;
+    letter-spacing: 0.04em;
+    line-height: 1.18;
+  }
+
+  .room-intro > div > p:last-child {
+    max-width: 15rem;
+    margin: 0.7rem 0 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.7;
+  }
+
+  .room-intro figure {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin: 0;
+    padding: 0.5rem 0.35rem 0.35rem;
+    background: color-mix(in srgb, var(--mascot-ground) 90%, transparent);
+  }
+
+  .room-intro figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: auto auto 0;
+    object-fit: contain;
+    filter: none !important;
+  }
+
+  .room-intro figcaption {
+    margin-top: 0.35rem;
+    color: #3c3a36;
+    font-size: 0.55rem;
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  .room-section {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.78rem;
+  }
+
+  .section-heading h3 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 0.98rem;
+    font-weight: 660;
+    letter-spacing: 0.08em;
+  }
+
+  .section-heading span {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.57rem;
+    letter-spacing: 0.13em;
+  }
+
+  .preference-row + .preference-row {
+    margin-top: 0.9rem;
+  }
+
+  .preference-row > p {
+    margin: 0 0 0.4rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 620;
+  }
+
+  .preference-row small {
+    display: block;
+    margin-top: 0.45rem;
+    color: var(--muted);
+    font-size: 0.67rem;
+    line-height: 1.55;
+  }
+
+  .segmented {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid var(--rule);
+  }
+
+  .segmented button {
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.42rem 0.28rem;
+    border: 0;
+    border-right: 1px solid var(--rule);
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    cursor: pointer;
+    font-size: 0.72rem;
+    line-height: 1.2;
+  }
+
+  .segmented button:last-child {
+    border-right: 0;
+  }
+
+  .segmented button:hover {
+    background: var(--paper-soft);
+  }
+
+  .segmented button[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .recent-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .recent-list li {
+    display: grid;
+    grid-template-columns: 1.55rem minmax(0, 1fr);
+    gap: 0.55rem;
+    padding: 0.62rem 0;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  .recent-list li:first-child {
+    border-top-color: var(--rule);
+  }
+
+  .recent-index {
+    padding-top: 0.12rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.62rem;
+  }
+
+  .recent-list a {
+    display: block;
+    overflow-wrap: anywhere;
+    font-family: var(--serif);
+    font-size: 0.82rem;
+    font-weight: 620;
+    line-height: 1.45;
+    text-decoration-thickness: 1px;
+  }
+
+  .recent-list p {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.65rem;
+    margin: 0.24rem 0 0;
+    color: var(--muted);
+    font-size: 0.64rem;
+    line-height: 1.4;
+  }
+
+  .recent-list time {
+    flex: 0 0 auto;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .empty-state {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .stats-section {
+    padding-bottom: 1.1rem;
+  }
+
+  .drawer-colophon {
+    margin: 1.15rem 0 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.52rem;
+    letter-spacing: 0.12em;
+    text-align: center;
+  }
+
+  :global(body.study-room-open) {
+    overflow: hidden;
+  }
+
+  :global(body[data-page-kind='home'][data-wallpaper='grid']) {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--rule-soft) 62%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--rule-soft) 62%, transparent) 1px, transparent 1px);
+    background-size: 2rem 2rem;
+  }
+
+  :global(body[data-page-kind='home'][data-wallpaper='orbit']) {
+    background-image:
+      radial-gradient(circle at 92% 15%, transparent 0 12rem, color-mix(in srgb, var(--rule) 42%, transparent) 12.04rem 12.1rem, transparent 12.16rem),
+      radial-gradient(circle at 92% 15%, transparent 0 7.5rem, color-mix(in srgb, var(--rule-soft) 72%, transparent) 7.54rem 7.6rem, transparent 7.66rem);
+  }
+
+  @media (max-width: 40rem) {
+    .study-trigger {
+      right: max(0.38rem, env(safe-area-inset-right));
+      bottom: max(0.38rem, env(safe-area-inset-bottom));
+      grid-template-columns: 1.65rem;
+      width: 2.8rem;
+      min-height: 2.8rem;
+      padding: 0.14rem;
+      place-content: center;
+    }
+
+    .study-trigger img {
+      width: 1.65rem;
+      height: 2.2rem;
+    }
+
+    .study-trigger span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .drawer-content {
+      padding-inline: 1rem;
+    }
+  }
+
+  @media (max-width: 22rem) {
+    .drawer-content {
+      padding-inline: 0.85rem;
+    }
+
+    .room-intro {
+      grid-template-columns: minmax(0, 1fr) 4.7rem;
+      gap: 0.62rem;
+    }
+
+    .room-intro h2 {
+      font-size: 1.65rem;
+    }
+
+    .segmented button {
+      font-size: 0.68rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .study-trigger,
+    .study-backdrop,
+    .study-drawer {
+      transition-duration: 0.01ms;
+    }
+
+    .study-trigger:hover {
+      transform: none;
+    }
+  }
+
+  @media print {
+    :global(body.study-room-open) {
+      overflow: visible !important;
+    }
+
+    .study-trigger,
+    .study-backdrop,
+    .study-drawer {
+      display: none !important;
+    }
+  }
+</style>

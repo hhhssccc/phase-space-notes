@@ -8,6 +8,8 @@ import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/global.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import StudyRoom from '../components/study-room/StudyRoom.astro';
+import { musicConfig } from '../config/music';
 import { siteConfig } from '../config/site';
 import { withBase } from '../lib/content';
 
@@ -16,6 +18,10 @@ interface Props {
   description?: string;
   pageKind?: 'home' | 'article' | 'index' | 'utility';
   noindex?: boolean;
+  includeCanonical?: boolean;
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  headline?: string;
 }
 
 const {
@@ -23,8 +29,31 @@ const {
   description = siteConfig.description,
   pageKind = 'index',
   noindex = false,
+  includeCanonical = true,
+  publishedTime,
+  modifiedTime,
+  headline,
 } = Astro.props;
 const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.url;
+const siteRoot = new URL(withBase('/'), Astro.site ?? Astro.url).href;
+const rssUrl = new URL(withBase('/rss.xml'), Astro.site ?? Astro.url).href;
+const musicEnabled = siteConfig.features.studyRoom
+  && siteConfig.features.music
+  && musicConfig.tracks.length > 0;
+const articleStructuredData = pageKind === 'article' && publishedTime
+  ? JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: headline ?? title,
+      description,
+      inLanguage: 'zh-CN',
+      datePublished: publishedTime.toISOString(),
+      dateModified: (modifiedTime ?? publishedTime).toISOString(),
+      author: { '@type': 'Person', name: siteConfig.author },
+      mainEntityOfPage: canonical.href,
+      isPartOf: { '@type': 'WebSite', name: siteConfig.name, url: siteRoot },
+    }).replaceAll('<', '\\u003c')
+  : undefined;
 ---
 
 <!doctype html>
@@ -34,77 +63,158 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.u
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" data-theme-color />
     <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
     {noindex && <meta name="robots" content="noindex" />}
-    <link rel="canonical" href={canonical} />
-    <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} RSS`} href={withBase('/rss.xml')} />
-    <meta property="og:type" content="website" />
+    {includeCanonical && <link rel="canonical" href={canonical} />}
+    <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} RSS`} href={rssUrl} />
+    <meta property="og:type" content={pageKind === 'article' ? 'article' : 'website'} />
+    <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:locale" content="zh_CN" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {includeCanonical && <meta property="og:url" content={canonical} />}
+    {pageKind === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+    {pageKind === 'article' && modifiedTime && <meta property="article:modified_time" content={modifiedTime.toISOString()} />}
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    {articleStructuredData && <script is:inline type="application/ld+json" set:html={articleStructuredData}></script>}
     <title>{title}</title>
     <script is:inline>
       (() => {
-        const saved = localStorage.getItem('asymptotic-freedom-theme') || 'system';
-        document.documentElement.dataset.theme = saved;
+        try {
+          const saved = localStorage.getItem('asymptotic-freedom-theme') || 'system';
+          const theme = ['light', 'dark', 'system'].includes(saved) ? saved : 'system';
+          document.documentElement.dataset.theme = theme;
+          const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+          document.querySelector('meta[data-theme-color]')?.setAttribute('content', dark ? '#121212' : '#ffffff');
+        } catch {
+          document.documentElement.dataset.theme = 'system';
+          const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+          document.querySelector('meta[data-theme-color]')?.setAttribute('content', dark ? '#121212' : '#ffffff');
+        }
       })();
     </script>
   </head>
-  <body data-page-kind={pageKind}>
+  <body
+    data-page-kind={pageKind}
+    data-feature-study-room={String(siteConfig.features.studyRoom)}
+    data-feature-music={String(musicEnabled)}
+    data-feature-mermaid={String(siteConfig.features.mermaid)}
+    data-feature-lightbox={String(siteConfig.features.lightbox)}
+  >
     <SiteHeader />
     <main id="main-content">
       <slot />
     </main>
     <SiteFooter />
-    <dialog class="lightbox" data-lightbox aria-label="图片预览">
-      <button type="button" data-lightbox-close aria-label="关闭图片预览">关闭</button>
-      <img alt="" data-lightbox-image />
-      <p data-lightbox-caption></p>
-    </dialog>
+    {siteConfig.features.studyRoom && <StudyRoom />}
+    {siteConfig.features.lightbox && (
+      <dialog class="lightbox" data-lightbox aria-label="图片预览" aria-describedby="lightbox-caption">
+        <button type="button" data-lightbox-close aria-label="关闭图片预览">关闭</button>
+        <img alt="" data-lightbox-image />
+        <p id="lightbox-caption" data-lightbox-caption></p>
+      </dialog>
+    )}
     <script>
       const root = document.documentElement;
-      const systemDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+      const themeColor = document.querySelector<HTMLMetaElement>('meta[data-theme-color]');
+      const systemDark = () => systemTheme.matches;
       const resolvedDark = () => root.dataset.theme === 'dark' || (root.dataset.theme === 'system' && systemDark());
+      const themeButtons = document.querySelectorAll<HTMLButtonElement>('[data-theme-cycle]');
+      const syncThemeButtons = () => {
+        const dark = resolvedDark();
+        themeColor?.setAttribute('content', dark ? '#121212' : '#ffffff');
+        themeButtons.forEach((button) => {
+          button.setAttribute('aria-pressed', String(dark));
+          button.setAttribute('aria-label', dark ? '切换到浅色模式' : '切换到深色模式');
+          button.title = dark ? '切换到浅色模式' : '切换到深色模式';
+        });
+      };
       const setTheme = (value: string) => {
         root.dataset.theme = value;
-        localStorage.setItem('asymptotic-freedom-theme', value);
+        try {
+          localStorage.setItem('asymptotic-freedom-theme', value);
+        } catch {
+          // The theme still applies for this page when storage is unavailable.
+        }
       };
-      document.querySelectorAll('[data-theme-cycle]').forEach((button) => {
+      themeButtons.forEach((button) => {
         button.addEventListener('click', () => setTheme(resolvedDark() ? 'light' : 'dark'));
       });
+      new MutationObserver(syncThemeButtons).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+      systemTheme.addEventListener('change', syncThemeButtons);
+      syncThemeButtons();
 
-      document.querySelectorAll('.article-prose pre > code.language-mermaid').forEach((code) => {
-        const pre = code.parentElement;
-        const diagram = document.createElement('div');
-        diagram.className = 'mermaid';
-        diagram.textContent = code.textContent;
-        pre?.replaceWith(diagram);
-      });
-      if (document.querySelector('.mermaid')) {
-        const { default: mermaid } = await import('mermaid');
-        mermaid.initialize({ startOnLoad: false, theme: resolvedDark() ? 'dark' : 'neutral', securityLevel: 'strict' });
-        await mermaid.run({ querySelector: '.mermaid' });
+      if (document.body.dataset.featureMermaid === 'true') {
+        document.querySelectorAll('.article-prose pre > code.language-mermaid').forEach((code) => {
+          const pre = code.parentElement;
+          const diagram = document.createElement('div');
+          diagram.className = 'mermaid';
+          diagram.textContent = code.textContent;
+          pre?.replaceWith(diagram);
+        });
+        if (document.querySelector('.mermaid')) {
+          const { default: mermaid } = await import('mermaid');
+          mermaid.initialize({ startOnLoad: false, theme: resolvedDark() ? 'dark' : 'neutral', securityLevel: 'strict' });
+          await mermaid.run({ querySelector: '.mermaid' });
+        }
       }
 
       const lightbox = document.querySelector('[data-lightbox]');
       const lightboxImage = document.querySelector('[data-lightbox-image]');
       const lightboxCaption = document.querySelector('[data-lightbox-caption]');
-      document.querySelectorAll<HTMLImageElement>('.article-prose figure img').forEach((image) => {
-        image.addEventListener('click', () => {
+      if (document.body.dataset.featureLightbox === 'true') {
+        const openLightbox = (image: HTMLImageElement) => {
           if (!(lightbox instanceof HTMLDialogElement) || !(lightboxImage instanceof HTMLImageElement)) return;
+          const caption = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim() || '';
           lightboxImage.src = image.src;
           lightboxImage.alt = image.alt;
-          if (lightboxCaption) lightboxCaption.textContent = image.closest('figure')?.querySelector('figcaption')?.textContent || '';
+          if (lightboxCaption) lightboxCaption.textContent = caption;
           lightbox.showModal();
+        };
+        document.querySelectorAll<HTMLImageElement>('.article-prose figure img').forEach((image) => {
+          const caption = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim();
+          image.dataset.lightboxTarget = '';
+          image.tabIndex = 0;
+          image.setAttribute('role', 'button');
+          image.setAttribute('aria-haspopup', 'dialog');
+          image.setAttribute('aria-label', `放大查看：${caption || image.alt || '文章图片'}`);
+          image.addEventListener('click', (event) => {
+            event.preventDefault();
+            openLightbox(image);
+          });
+          image.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            openLightbox(image);
+          });
         });
-      });
+      }
       document.querySelector('[data-lightbox-close]')?.addEventListener('click', () => {
         if (lightbox instanceof HTMLDialogElement) lightbox.close();
+      });
+
+      document.querySelectorAll<HTMLAnchorElement>('.article-prose a[data-footnote-ref]').forEach((reference, index) => {
+        const href = reference.getAttribute('href');
+        if (!href?.startsWith('#')) return;
+        const target = document.getElementById(decodeURIComponent(href.slice(1)));
+        if (!target || reference.closest('.citation-wrap')) return;
+        const previewText = target.textContent?.replace(/↩|Back to reference/gi, '').replace(/\s+/g, ' ').trim();
+        if (!previewText) return;
+        const wrap = document.createElement('span');
+        wrap.className = 'citation-wrap';
+        reference.before(wrap);
+        wrap.append(reference);
+        const preview = document.createElement('span');
+        preview.className = 'citation-popover';
+        preview.id = `citation-preview-${index + 1}`;
+        preview.setAttribute('role', 'tooltip');
+        preview.textContent = previewText;
+        reference.setAttribute('aria-describedby', preview.id);
+        wrap.append(preview);
       });
 
       document.querySelector('[data-load-comments]')?.addEventListener('click', (event) => {

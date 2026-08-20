@@ -1,0 +1,108 @@
+---
+import type { SiteStats } from '../../lib/site-stats';
+
+interface Props {
+  stats: SiteStats;
+}
+
+const { stats } = Astro.props;
+const formatNumber = new Intl.NumberFormat('zh-CN');
+const formatDate = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: 'UTC',
+});
+
+const rows = [
+  ['文章数', formatNumber.format(stats.articleCount)],
+  ['笔记数', formatNumber.format(stats.noteCount)],
+  ['总字数', formatNumber.format(stats.totalWords)],
+  ['总阅读时长', `${formatNumber.format(stats.totalReadingMinutes)} 分钟`],
+  ['分类数', formatNumber.format(stats.categoryCount)],
+  ['标签数', formatNumber.format(stats.tagCount)],
+  ['最近更新时间', stats.latestUpdated ? formatDate.format(stats.latestUpdated) : '暂无'],
+] as const;
+---
+
+<section class="site-stats" aria-labelledby="site-stats-title">
+  <h3 id="site-stats-title">内容统计</h3>
+  <dl>
+    {rows.map(([label, value]) => (
+      <div class="stat-row">
+        <dt>{label}</dt>
+        <dd>{value}</dd>
+      </div>
+    ))}
+  </dl>
+  <p class="privacy-note">内容统计，不记录访客数据。</p>
+</section>
+
+<style>
+  .site-stats {
+    min-width: 0;
+    color: var(--ink);
+  }
+
+  h3 {
+    margin: 0 0 0.6rem;
+    font-family: var(--serif);
+    font-size: 0.96rem;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+  }
+
+  dl {
+    margin: 0;
+    border-block: 1px solid var(--rule);
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.46rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .stat-row:last-child {
+    border-bottom: 0;
+  }
+
+  dt {
+    min-width: 0;
+    color: var(--muted);
+    font-size: 0.76rem;
+    letter-spacing: 0.045em;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--ink-soft);
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.84rem;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-weight: 620;
+    letter-spacing: 0.015em;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .privacy-note {
+    margin: 0.55rem 0 0;
+    color: var(--muted);
+    font-size: 0.7rem;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 22rem) {
+    .stat-row {
+      gap: 0.5rem;
+    }
+
+    dd {
+      font-size: 0.8rem;
+    }
+  }
+</style>

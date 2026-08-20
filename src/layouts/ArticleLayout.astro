@@ -1,6 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import Comments from '../components/Comments.astro';
+import ArticleHistory from '../components/ArticleHistory.astro';
 import { siteConfig } from '../config/site';
 import { entryUrl, formatDate, readingMinutes, withBase, type ArticleEntry } from '../lib/content';
 import 'katex/dist/katex.min.css';
@@ -15,7 +16,19 @@ interface Props {
 
 const { post, headings, relatedEntries, backlinkEntries } = Astro.props;
 const minutes = readingMinutes(post.body || '');
-const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+let sectionNumber = 0;
+let subsectionNumber = 0;
+const toc = headings
+  .filter((heading) => heading.depth === 2 || heading.depth === 3)
+  .map((heading) => {
+    if (heading.depth === 2) {
+      sectionNumber += 1;
+      subsectionNumber = 0;
+      return { ...heading, number: `${sectionNumber}` };
+    }
+    subsectionNumber += 1;
+    return { ...heading, number: `${Math.max(sectionNumber, 1)}.${subsectionNumber}` };
+  });
 const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
 // Normalize line endings so the adaptive layout is identical on Windows and CI/Linux.
 const sourceBody = (post.body || '').replace(/\r\n?/g, '\n');
@@ -37,6 +50,9 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
   title={`${post.data.title}｜${siteConfig.name}`}
   description={post.data.description}
   pageKind="article"
+  publishedTime={post.data.date}
+  modifiedTime={post.data.updated || post.data.date}
+  headline={post.data.title}
 >
   {siteConfig.features.readingProgress && <div class="reading-progress" data-reading-progress aria-hidden="true"></div>}
   <div class="article-shell">
@@ -44,7 +60,7 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       <p>目录</p>
       <ol>
         {toc.map((heading) => (
-          <li class:list={{ nested: heading.depth === 3 }}><a href={`#${heading.slug}`}>{heading.text}</a></li>
+          <li class:list={{ nested: heading.depth === 3 }}><a href={`#${heading.slug}`}><span aria-hidden="true">{heading.number}</span>{heading.text}</a></li>
         ))}
       </ol>
       <small>{minutes} 分钟 · {post.body?.length.toLocaleString('zh-CN')} 字符</small>
@@ -56,8 +72,9 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
         <h1>{post.data.title}</h1>
         <p class="article-dek">{post.data.description}</p>
         <p class="article-meta">
-          {siteConfig.author} · <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time> · {minutes} 分钟
-          {post.data.updated && <> · 修订于 <time datetime={post.data.updated.toISOString()}>{formatDate(post.data.updated)}</time></>}
+          {siteConfig.author} · {minutes} 分钟
+          {' · '}首次公开 <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+          {post.data.updated && <> · 正文实质修订 <time datetime={post.data.updated.toISOString()}>{formatDate(post.data.updated)}</time></>}
         </p>
       </header>
 
@@ -71,7 +88,7 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       {toc.length > 0 && (
         <details class="mobile-toc print-hidden">
           <summary>目录</summary>
-          <ol>{toc.map((heading) => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ol>
+          <ol>{toc.map((heading) => <li><a href={`#${heading.slug}`}><span aria-hidden="true">{heading.number}</span>{heading.text}</a></li>)}</ol>
         </details>
       )}
 
@@ -91,6 +108,8 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
           <p class="article-tags">{post.data.tags.map((tag) => <a href={withBase(`/tags/${encodeURIComponent(tag)}/`)}>#{tag}</a>)}</p>
         </footer>
       )}
+
+      <ArticleHistory slug={post.id} date={post.data.date} updated={post.data.updated} />
 
       {(backlinkEntries.length > 0 || relatedEntries.length > 0) && (
         <section class="link-notes print-hidden" aria-label="延伸阅读">
@@ -112,18 +131,20 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       ))}
     </aside>
   </div>
-  <script>
-    const progress = document.querySelector('[data-reading-progress]');
-    const article = document.querySelector('.article-main');
-    const updateProgress = () => {
-      if (!(progress instanceof HTMLElement) || !(article instanceof HTMLElement)) return;
-      const start = article.offsetTop;
-      const total = article.offsetHeight - window.innerHeight;
-      const amount = Math.min(1, Math.max(0, (window.scrollY - start) / Math.max(total, 1)));
-      progress.style.transform = `scaleX(${amount})`;
-    };
-    updateProgress();
-    addEventListener('scroll', updateProgress, { passive: true });
-    addEventListener('resize', updateProgress);
-  </script>
+  {siteConfig.features.readingProgress && (
+    <script>
+      const progress = document.querySelector('[data-reading-progress]');
+      const article = document.querySelector('.article-main');
+      const updateProgress = () => {
+        if (!(progress instanceof HTMLElement) || !(article instanceof HTMLElement)) return;
+        const start = article.offsetTop;
+        const total = article.offsetHeight - window.innerHeight;
+        const amount = Math.min(1, Math.max(0, (window.scrollY - start) / Math.max(total, 1)));
+        progress.style.transform = `scaleX(${amount})`;
+      };
+      updateProgress();
+      addEventListener('scroll', updateProgress, { passive: true });
+      addEventListener('resize', updateProgress);
+    </script>
+  )}
 </BaseLayout>

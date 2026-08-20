@@ -1,0 +1,684 @@
+---
+import { musicConfig } from '../../config/music';
+import { withBase } from '../../lib/content';
+
+const track = musicConfig.tracks[0] ?? null;
+const selfHostedSource = track?.source.kind === 'self-hosted' ? track.source : null;
+const initialStatus = selfHostedSource
+  ? '默认暂停。点击播放后，本页才会加载站内音频。'
+  : '默认暂停。点击播放后，本页才会创建声音。';
+---
+
+{track && (
+  <div
+    class="music-player"
+    data-music-player
+    data-state="idle"
+    data-track-title={track.title}
+    data-track-kind={track.source.kind}
+    data-default-volume={String(musicConfig.defaultVolume)}
+    data-volume-storage-key={musicConfig.volumeStorageKey}
+    data-startup-timeout={String(musicConfig.startupTimeoutMs)}
+    aria-label={`${track.title}音乐播放器`}
+  >
+  <div class="track-row">
+    <button
+      class="play-button"
+      type="button"
+      data-music-toggle
+      aria-label={`播放${track.title}`}
+      aria-pressed="false"
+      aria-describedby="music-player-status"
+    >
+      <span class="control-symbol" aria-hidden="true"></span>
+      <span data-control-label>播放</span>
+    </button>
+
+    <div class="track-copy">
+      <p class="track-kicker">{track.kicker}</p>
+      <p class="track-title">{track.title}</p>
+      <p class="track-subtitle">{track.subtitle}</p>
+    </div>
+
+    <div class="waveform" aria-hidden="true">
+      <span style="--bar: 0.62; --delay: -0.12s;"></span>
+      <span style="--bar: 1; --delay: -0.44s;"></span>
+      <span style="--bar: 0.78; --delay: -0.28s;"></span>
+      <span style="--bar: 0.48; --delay: -0.62s;"></span>
+      <span style="--bar: 0.86; --delay: -0.36s;"></span>
+    </div>
+  </div>
+
+  <p class="track-description">{track.description}</p>
+
+  <div class="volume-row">
+    <label for="study-music-volume">音量</label>
+    <input
+      id="study-music-volume"
+      data-music-volume
+      type="range"
+      min="0"
+      max="100"
+      step="1"
+      value={musicConfig.defaultVolume}
+      aria-describedby="music-volume-value"
+    />
+    <output id="music-volume-value" data-music-volume-value for="study-music-volume">
+      {musicConfig.defaultVolume}%
+    </output>
+  </div>
+
+  <p class="player-status" id="music-player-status" data-music-status role="status" aria-live="polite">
+    {initialStatus}
+  </p>
+  <p class="player-error" data-music-error role="alert" hidden></p>
+  <p class="source-note">{track.sourceNote}</p>
+  {selfHostedSource && (
+    <audio data-music-audio preload="none" loop={selfHostedSource.loop ?? false}>
+      <source src={withBase(selfHostedSource.src)} type={selfHostedSource.mimeType} />
+    </audio>
+  )}
+  </div>
+)}
+
+<script>
+  import type { GeneratedMusicEngine } from './generated-music-engine';
+
+  type PlayerState = 'idle' | 'starting' | 'waiting' | 'playing' | 'paused' | 'error';
+  const player = document.querySelector<HTMLElement>('[data-music-player]');
+
+  if (player) {
+  const trackTitle = player.dataset.trackTitle || '书房音乐';
+  const trackKind = player.dataset.trackKind === 'self-hosted' ? 'self-hosted' : 'generated';
+  const defaultVolume = Number(player.dataset.defaultVolume || '28');
+  const volumeStorageKey = player.dataset.volumeStorageKey || 'asymptotic-freedom-music-volume';
+  const startupTimeoutMs = Number(player.dataset.startupTimeout || '10000');
+  const toggle = player.querySelector<HTMLButtonElement>('[data-music-toggle]');
+  const controlLabel = player.querySelector<HTMLElement>('[data-control-label]');
+  const status = player.querySelector<HTMLElement>('[data-music-status]');
+  const errorMessage = player.querySelector<HTMLElement>('[data-music-error]');
+  const volume = player.querySelector<HTMLInputElement>('[data-music-volume]');
+  const volumeValue = player.querySelector<HTMLOutputElement>('[data-music-volume-value]');
+  const selfHostedAudio = player.querySelector<HTMLAudioElement>('[data-music-audio]');
+
+  let generatedContext: AudioContext | null = null;
+  let generatedEngine: GeneratedMusicEngine | null = null;
+  let generatedModulePromise: Promise<typeof import('./generated-music-engine')> | null = null;
+  let currentVolume = defaultVolume;
+  let isPlaying = false;
+  let isStarting = false;
+  let operationVersion = 0;
+  let startController: AbortController | null = null;
+
+  class StartupTimeoutError extends Error {}
+
+  const withStartupDeadline = <T,>(task: Promise<T>, signal: AbortSignal) => new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const timeoutId = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new StartupTimeoutError('Playback did not start before the deadline.'));
+    }, startupTimeoutMs);
+    const handleAbort = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error('Playback start was cancelled.'));
+    };
+    const cleanup = () => {
+      window.clearTimeout(timeoutId);
+      signal.removeEventListener('abort', handleAbort);
+    };
+
+    signal.addEventListener('abort', handleAbort, { once: true });
+    task.then(
+      (value) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(value);
+      },
+      (error: unknown) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      },
+    );
+  });
+
+  const readStoredVolume = () => {
+    try {
+      const raw = localStorage.getItem(volumeStorageKey);
+      if (raw === null || raw.trim() === '') return defaultVolume;
+      const stored = Number(raw);
+      return Number.isFinite(stored) && stored >= 0 && stored <= 100 ? stored : defaultVolume;
+    } catch {
+      return defaultVolume;
+    }
+  };
+
+  const storeVolume = (value: number) => {
+    try {
+      localStorage.setItem(volumeStorageKey, String(value));
+    } catch {
+      // Volume remains valid for this page when storage is unavailable.
+    }
+  };
+
+  const playingStatus = () => currentVolume === 0
+    ? '正在播放 · 当前音量为 0%'
+    : '正在播放 · 仅在本页持续';
+
+  const setState = (state: PlayerState, message: string) => {
+    if (!player || !toggle || !controlLabel || !status || !errorMessage) return;
+    player.dataset.state = state;
+    const playing = state === 'playing';
+    const pending = state === 'starting' || state === 'waiting';
+    toggle.setAttribute('aria-pressed', String(playing));
+    toggle.setAttribute('aria-label', `${pending ? '取消启动' : playing ? '暂停' : '播放'}${trackTitle}`);
+    controlLabel.textContent = pending ? '取消' : playing ? '暂停' : '播放';
+    status.textContent = message;
+    if (state !== 'error') {
+      errorMessage.hidden = true;
+      errorMessage.textContent = '';
+    }
+    window.dispatchEvent(new CustomEvent('study-music-state', { detail: { playing } }));
+  };
+
+  const showError = (message: string) => {
+    if (!errorMessage) return;
+    errorMessage.textContent = message;
+    errorMessage.hidden = false;
+    setState('error', '声音没有启动。');
+  };
+
+  const waitForMediaPlaying = (audio: HTMLAudioElement, signal: AbortSignal) => new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      audio.removeEventListener('playing', handlePlaying);
+      audio.removeEventListener('error', handleError);
+      signal.removeEventListener('abort', handleAbort);
+    };
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback();
+    };
+    const handlePlaying = () => finish(resolve);
+    const handleError = () => finish(() => reject(new Error('The configured audio source failed.')));
+    const handleAbort = () => finish(() => reject(new Error('Playback start was cancelled.')));
+
+    audio.addEventListener('playing', handlePlaying);
+    audio.addEventListener('error', handleError);
+    signal.addEventListener('abort', handleAbort, { once: true });
+    if (!audio.paused && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) handlePlaying();
+  });
+
+  const loadGeneratedModule = () => {
+    if (!generatedModulePromise) {
+      generatedModulePromise = import('./generated-music-engine').catch((error: unknown) => {
+        generatedModulePromise = null;
+        throw error;
+      });
+    }
+    return generatedModulePromise;
+  };
+
+  const cancelPendingStart = (message = '已取消启动；声音保持暂停。') => {
+    if (!isStarting) return;
+    operationVersion += 1;
+    startController?.abort();
+    startController = null;
+    isStarting = false;
+    isPlaying = false;
+    selfHostedAudio?.pause();
+    if (generatedEngine) void generatedEngine.pause();
+    else if (generatedContext?.state === 'running') void generatedContext.suspend().catch(() => undefined);
+    if (toggle) toggle.disabled = false;
+    setState('paused', message);
+  };
+
+  const pausePlayback = async (message = '已暂停；声音与后续调度均已停止。') => {
+    if (!toggle) return;
+    if (isStarting) {
+      cancelPendingStart(message);
+      return;
+    }
+
+    const operation = ++operationVersion;
+    startController?.abort();
+    startController = null;
+    toggle.disabled = true;
+    isPlaying = false;
+
+    try {
+      if (trackKind === 'self-hosted') {
+        selfHostedAudio?.pause();
+        setState('paused', message);
+      } else {
+        setState('paused', message);
+        if (generatedEngine) {
+          await generatedEngine.pause();
+        } else if (generatedContext?.state === 'running') {
+          try {
+            await generatedContext.suspend();
+          } catch {
+            // The page can become inactive while suspend() is settling.
+          }
+        }
+      }
+    } finally {
+      if (operation === operationVersion) toggle.disabled = false;
+    }
+  };
+
+  const startPlayback = async () => {
+    if (isPlaying || isStarting || !toggle) return;
+
+    const operation = ++operationVersion;
+    const controller = new AbortController();
+    startController?.abort();
+    startController = controller;
+    isStarting = true;
+    toggle.disabled = false;
+    setState('starting', '正在启动本页声音…点击可取消。');
+
+    try {
+      if (trackKind === 'self-hosted') {
+        if (!selfHostedAudio) throw new Error('The configured self-hosted audio element is unavailable.');
+        selfHostedAudio.volume = currentVolume / 100;
+        const playing = waitForMediaPlaying(selfHostedAudio, controller.signal);
+        const requested = selfHostedAudio.play();
+        await withStartupDeadline(Promise.all([requested, playing]).then(() => undefined), controller.signal);
+        if (operation !== operationVersion || controller.signal.aborted) return;
+        isPlaying = !selfHostedAudio.paused && !selfHostedAudio.ended;
+        if (!isPlaying) throw new Error('The audio element did not enter a playing state.');
+        isStarting = false;
+        setState('playing', playingStatus());
+      } else {
+        // Creating/resuming the context happens synchronously inside the user
+        // click before awaiting the lazy engine chunk. This preserves strict
+        // transient-user-activation behavior in Safari and mobile browsers.
+        if (!generatedContext || generatedContext.state === 'closed') {
+          generatedContext = new AudioContext({ latencyHint: 'playback' });
+          generatedEngine = null;
+        }
+        const audioContext = generatedContext;
+        const resumeTask = audioContext.resume();
+        const moduleTask = loadGeneratedModule();
+        void resumeTask.then(
+          () => {
+            if (controller.signal.aborted && audioContext.state === 'running') {
+              void audioContext.suspend().catch(() => undefined);
+            }
+          },
+          () => undefined,
+        );
+        const engineModule = await withStartupDeadline(
+          Promise.all([resumeTask, moduleTask]).then(([, module]) => module),
+          controller.signal,
+        );
+        if (operation !== operationVersion || controller.signal.aborted) return;
+        if (audioContext.state !== 'running') throw new Error('AudioContext did not enter the running state.');
+        if (!generatedEngine) {
+          generatedEngine = engineModule.createGeneratedMusicEngine(audioContext, () => {
+            if (!isPlaying) return;
+            isPlaying = false;
+            isStarting = false;
+            setState('paused', '浏览器已暂停声音。点击播放可继续。');
+          });
+        }
+        generatedEngine.start(currentVolume);
+        isStarting = false;
+        isPlaying = true;
+        setState('playing', playingStatus());
+      }
+      if (startController === controller) startController = null;
+    } catch (error) {
+      const cancelled = operation !== operationVersion || controller.signal.aborted;
+      if (!controller.signal.aborted) controller.abort();
+      if (startController === controller) startController = null;
+      if (cancelled) return;
+
+      isStarting = false;
+      isPlaying = false;
+      selfHostedAudio?.pause();
+      if (generatedEngine) void generatedEngine.pause();
+      else if (generatedContext?.state === 'running') void generatedContext.suspend().catch(() => undefined);
+      toggle.disabled = false;
+      if (error instanceof StartupTimeoutError) {
+        showError('声音启动超时。请检查本地音频文件或浏览器声音权限后重试。');
+      } else {
+        showError(trackKind === 'generated'
+          ? '浏览器未能加载或启动本页 Web Audio。请检查网络与站点声音权限后重试。'
+          : '本地音频未能加载或播放。请检查文件路径与格式。');
+      }
+    }
+  };
+
+  const teardown = () => {
+    operationVersion += 1;
+    startController?.abort();
+    startController = null;
+    isPlaying = false;
+    isStarting = false;
+    selfHostedAudio?.pause();
+    const engine = generatedEngine;
+    const context = generatedContext;
+    generatedEngine = null;
+    generatedContext = null;
+    if (engine) void engine.close();
+    else if (context && context.state !== 'closed') void context.close().catch(() => undefined);
+    if (toggle) toggle.disabled = false;
+    setState('paused', '页面已离开，声音已停止。');
+  };
+
+  currentVolume = readStoredVolume();
+  if (volume) volume.value = String(currentVolume);
+  if (volumeValue) volumeValue.value = `${currentVolume}%`;
+  if (selfHostedAudio) selfHostedAudio.volume = currentVolume / 100;
+
+  toggle?.addEventListener('click', () => {
+    if (isStarting) cancelPendingStart();
+    else if (isPlaying || (selfHostedAudio !== null && !selfHostedAudio.paused)) void pausePlayback();
+    else void startPlayback();
+  });
+
+  volume?.addEventListener('input', () => {
+    const nextVolume = Number(volume.value);
+    if (!Number.isFinite(nextVolume)) return;
+    currentVolume = Math.max(0, Math.min(100, nextVolume));
+    if (volumeValue) volumeValue.value = `${currentVolume}%`;
+    storeVolume(currentVolume);
+    if (selfHostedAudio) selfHostedAudio.volume = currentVolume / 100;
+    if (generatedEngine && isPlaying) {
+      generatedEngine.setVolume(currentVolume);
+      setState('playing', playingStatus());
+    } else if (selfHostedAudio && isPlaying) {
+      setState('playing', playingStatus());
+    }
+  });
+
+  if (selfHostedAudio) {
+    selfHostedAudio.addEventListener('playing', () => {
+      if (selfHostedAudio.paused || selfHostedAudio.ended) return;
+      isStarting = false;
+      isPlaying = true;
+      if (toggle) toggle.disabled = false;
+      setState('playing', playingStatus());
+    });
+
+    selfHostedAudio.addEventListener('pause', () => {
+      if (startController) {
+        operationVersion += 1;
+        startController.abort();
+        startController = null;
+      }
+      isStarting = false;
+      isPlaying = false;
+      if (toggle) toggle.disabled = false;
+      if (selfHostedAudio.ended || player.dataset.state === 'error' || player.dataset.state === 'paused') return;
+      setState('paused', '播放已暂停。点击播放可继续。');
+    });
+
+    selfHostedAudio.addEventListener('ended', () => {
+      if (selfHostedAudio.loop) return;
+      startController?.abort();
+      startController = null;
+      isStarting = false;
+      isPlaying = false;
+      if (toggle) toggle.disabled = false;
+      setState('paused', '播放已结束。');
+    });
+
+    selfHostedAudio.addEventListener('error', () => {
+      operationVersion += 1;
+      startController?.abort();
+      startController = null;
+      isStarting = false;
+      isPlaying = false;
+      if (toggle) toggle.disabled = false;
+      showError('本地音频未能加载或播放。请检查文件路径与格式。');
+    });
+
+    selfHostedAudio.addEventListener('waiting', () => {
+      if (selfHostedAudio.paused || selfHostedAudio.ended) return;
+      isStarting = true;
+      isPlaying = false;
+      if (toggle) toggle.disabled = false;
+      setState('waiting', '本地音频正在等待数据…点击可取消。');
+    });
+
+    selfHostedAudio.addEventListener('stalled', () => {
+      if (selfHostedAudio.paused || selfHostedAudio.ended) return;
+      isStarting = true;
+      isPlaying = false;
+      if (toggle) toggle.disabled = false;
+      setState('waiting', '本地音频加载暂时停滞…点击可取消。');
+    });
+  }
+
+  window.addEventListener('pagehide', teardown);
+  }
+</script>
+
+<style>
+  .music-player {
+    min-width: 0;
+    padding: 0.05rem 0 0;
+  }
+
+  [data-music-audio] {
+    display: none;
+  }
+
+  .track-row {
+    display: grid;
+    grid-template-columns: 3.35rem minmax(0, 1fr) 2.7rem;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .play-button {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    width: 3.35rem;
+    min-height: 3.85rem;
+    place-items: center;
+    padding: 0.48rem 0.2rem 0.38rem;
+    border: 1px solid var(--ink-soft);
+    border-radius: 0;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    font-size: 0.58rem;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    line-height: 1;
+  }
+
+  .play-button:hover {
+    background: var(--ink-soft);
+  }
+
+  .play-button:disabled {
+    cursor: wait;
+    opacity: 0.62;
+  }
+
+  .control-symbol {
+    position: relative;
+    display: block;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .control-symbol::before {
+    position: absolute;
+    top: 0.08rem;
+    left: 0.25rem;
+    width: 0;
+    height: 0;
+    border-top: 0.42rem solid transparent;
+    border-bottom: 0.42rem solid transparent;
+    border-left: 0.67rem solid currentColor;
+    content: '';
+  }
+
+  [data-state='playing'] .control-symbol::before {
+    top: 0.12rem;
+    left: 0.17rem;
+    width: 0.62rem;
+    height: 0.76rem;
+    border: 0;
+    background: linear-gradient(90deg, currentColor 0 0.22rem, transparent 0.22rem 0.4rem, currentColor 0.4rem);
+  }
+
+  .track-copy {
+    min-width: 0;
+  }
+
+  .track-kicker,
+  .track-subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.52rem;
+    letter-spacing: 0.11em;
+    line-height: 1.4;
+  }
+
+  .track-title {
+    margin: 0.13rem 0 0.08rem;
+    font-family: var(--serif);
+    font-size: 1.12rem;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+  }
+
+  .waveform {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.17rem;
+    height: 2.25rem;
+    padding-right: 0.05rem;
+  }
+
+  .waveform span {
+    width: 0.18rem;
+    height: calc(1.55rem * var(--bar));
+    max-height: 100%;
+    background: var(--rule);
+    transform: scaleY(0.3);
+    transform-origin: center;
+  }
+
+  [data-state='playing'] .waveform span {
+    background: var(--ink-soft);
+    animation: quiet-wave 1.16s ease-in-out infinite alternate;
+    animation-delay: var(--delay);
+  }
+
+  .track-description {
+    margin: 0.7rem 0 0;
+    color: var(--muted);
+    font-size: 0.7rem;
+    line-height: 1.65;
+  }
+
+  .volume-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 2.4rem;
+    align-items: center;
+    gap: 0.62rem;
+    margin-top: 0.82rem;
+  }
+
+  .volume-row label,
+  .volume-row output {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .volume-row output {
+    text-align: right;
+  }
+
+  .volume-row input {
+    width: 100%;
+    min-width: 0;
+    height: 1.8rem;
+    margin: 0;
+    accent-color: var(--ink);
+    cursor: pointer;
+  }
+
+  .player-status {
+    min-height: 1.35rem;
+    margin: 0.52rem 0 0;
+    color: var(--ink-soft);
+    font-size: 0.66rem;
+    line-height: 1.55;
+  }
+
+  .player-status::before {
+    display: inline-block;
+    width: 0.38rem;
+    height: 0.38rem;
+    margin-right: 0.4rem;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    content: '';
+    vertical-align: 0.03rem;
+  }
+
+  [data-state='playing'] .player-status::before {
+    background: currentColor;
+  }
+
+  .player-error {
+    margin: 0.35rem 0 0;
+    padding-left: 0.55rem;
+    border-left: 2px solid currentColor;
+    color: var(--ink);
+    font-size: 0.66rem;
+    line-height: 1.5;
+  }
+
+  .source-note {
+    margin: 0.52rem 0 0;
+    color: var(--muted);
+    font-size: 0.58rem;
+    line-height: 1.5;
+  }
+
+  @keyframes quiet-wave {
+    from { transform: scaleY(0.28); }
+    to { transform: scaleY(1); }
+  }
+
+  @media (max-width: 22rem) {
+    .track-row {
+      grid-template-columns: 3.1rem minmax(0, 1fr) 2.25rem;
+      gap: 0.55rem;
+    }
+
+    .play-button {
+      width: 3.1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-state='playing'] .waveform span {
+      animation: none;
+      transform: scaleY(var(--bar));
+    }
+  }
+</style>

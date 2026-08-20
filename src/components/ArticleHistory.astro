@@ -1,0 +1,321 @@
+---
+import { siteConfig } from '../config/site';
+import {
+  getArticleHistory,
+  type ArticleHistoryFallbackReason,
+  type ArticleVersionKind,
+} from '../lib/article-history';
+
+interface Props {
+  slug: string;
+  date: Date | string;
+  updated?: Date | string;
+}
+
+const { slug, date, updated } = Astro.props;
+const history = getArticleHistory(slug, { date, updated });
+const displayedVersions = [...history.versions].reverse();
+const validSha = (sha: string | null): sha is string => Boolean(sha && /^[0-9a-f]{40}$/i.test(sha));
+const repositoryUrl = siteConfig.repositoryUrl.replace(/\/+$/, '');
+
+const kindLabels: Record<ArticleVersionKind, string> = {
+  'first-upload': '首次上传',
+  'file-update': '文件更新',
+  'substantive-revision': '正文实质修订',
+};
+
+const fallbackNotices: Record<ArticleHistoryFallbackReason, string> = {
+  'shallow-repository': '当前构建使用浅层 Git 历史，无法确认全部文件版本。以下仅列出文章元数据中的首次公开与正文实质修订，不是完整 Git 历史。',
+  'invalid-slug': '文章标识无法安全映射到内容文件。以下仅列出文章元数据，不是完整 Git 历史。',
+  'untracked-file': '当前仓库中未找到该文章的已跟踪历史。以下仅列出文章元数据，不是完整 Git 历史。',
+  'git-unavailable': '当前环境无法读取 Git 历史。以下仅列出文章元数据中的首次公开与正文实质修订，不是完整 Git 历史。',
+  'not-a-repository': '当前环境不包含可读取的 Git 仓库。以下仅列出文章元数据，不是完整 Git 历史。',
+  'invalid-history': 'Git 历史输出无法可靠解析。以下仅列出文章元数据，不是完整 Git 历史。',
+};
+
+function normalizedDate(value: Date | string | undefined) {
+  if (!value) return undefined;
+  const parsed = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(parsed.valueOf()) ? undefined : parsed;
+}
+
+function formatCalendarDate(value: Date | string | undefined) {
+  const parsed = normalizedDate(value);
+  if (!parsed) return '未记录';
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'Asia/Shanghai',
+  }).format(parsed).replaceAll('/', '·');
+}
+
+function formatVersionTime(timestamp: string, fromGit: boolean) {
+  const parsed = new Date(timestamp);
+  if (Number.isNaN(parsed.valueOf())) return timestamp;
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: fromGit ? '2-digit' : undefined,
+    minute: fromGit ? '2-digit' : undefined,
+    hour12: false,
+    timeZone: 'Asia/Shanghai',
+  }).format(parsed).replaceAll('/', '·');
+}
+
+const publishedDate = normalizedDate(date);
+const updatedDate = normalizedDate(updated);
+const latestVersion = displayedVersions[0];
+const recordNoun = history.source === 'git' ? '版本' : '元数据里程碑';
+const fallbackNotice = history.fallbackReason ? fallbackNotices[history.fallbackReason] : undefined;
+---
+
+<section class="article-history print-hidden" aria-label="文章版本记录">
+  <details>
+    <summary>
+      <span>版本记录</span>
+      <small>
+        {latestVersion
+          ? `最新 ${formatVersionTime(latestVersion.timestamp, history.source === 'git')} · ${history.versions.length} 个${recordNoun}`
+          : '暂无记录'}
+      </small>
+    </summary>
+
+    <div class="history-body">
+      <p class="history-explanation">
+        {history.source === 'git'
+          ? '文件版本来自 Git，可能包含排版或构建等技术改动；版本号不等同于正文修订次数。'
+          : '当前只显示文章元数据中的日期里程碑，不声称它们构成完整的文件版本历史。'}
+      </p>
+
+      <dl class="history-dates" aria-label="文章日期语义">
+        <div>
+          <dt>首次公开</dt>
+          <dd>{publishedDate ? <time datetime={publishedDate.toISOString()}>{formatCalendarDate(date)}</time> : '未记录'}</dd>
+        </div>
+        <div>
+          <dt>正文实质修订</dt>
+          <dd>{updatedDate ? <time datetime={updatedDate.toISOString()}>{formatCalendarDate(updated)}</time> : '未记录'}</dd>
+        </div>
+        <div>
+          <dt>{history.source === 'git' ? '最新文件版本' : '最新元数据里程碑'}</dt>
+          <dd>{latestVersion
+            ? <time datetime={latestVersion.timestamp}>{formatVersionTime(latestVersion.timestamp, history.source === 'git')}</time>
+            : '未记录'}</dd>
+        </div>
+      </dl>
+
+      {fallbackNotice && <p class="history-notice" role="note">{fallbackNotice}</p>}
+
+      {displayedVersions.length > 0 ? (
+        <ol class="history-timeline" aria-label="文章文件版本时间线，最新版本在前">
+          {displayedVersions.map((entry) => {
+            const commitSha = validSha(entry.sha) ? entry.sha : undefined;
+            return (
+              <li>
+                <div class="version-heading">
+                  <span class="version-number">{history.source === 'git' ? `v${entry.version}` : `里程碑 ${entry.version}`}</span>
+                  <strong>{history.source === 'frontmatter' && entry.kind === 'first-upload' ? '首次公开' : kindLabels[entry.kind]}</strong>
+                </div>
+                <p class="version-time">
+                  <time datetime={entry.timestamp}>{formatVersionTime(entry.timestamp, history.source === 'git')}</time>
+                </p>
+                <p class="version-subject">{entry.subject || '未填写提交说明'}</p>
+                {commitSha && (
+                  <a class="commit-link" href={`${repositoryUrl}/commit/${commitSha}`} aria-label={`查看 v${entry.version} 对应的 GitHub 提交 ${commitSha}`}>
+                    查看提交 <code>{commitSha.slice(0, 10)}</code>
+                  </a>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <p class="history-empty">文章元数据中也没有可显示的有效日期。</p>
+      )}
+    </div>
+  </details>
+</section>
+
+<style>
+  .article-history {
+    margin-top: 3rem;
+    border-block: 1px solid var(--rule);
+    color: var(--ink-soft);
+  }
+
+  details > summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.9rem 0;
+    cursor: pointer;
+    font-family: var(--serif);
+    font-size: 1.08rem;
+    font-weight: 650;
+    list-style: none;
+  }
+
+  details > summary::-webkit-details-marker { display: none; }
+
+  details > summary small {
+    color: var(--muted);
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  details > summary::after {
+    content: '＋';
+    color: var(--muted);
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  details[open] > summary::after { content: '−'; }
+
+  .history-body {
+    padding: 1.2rem 0 1.45rem;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  .history-explanation,
+  .history-notice,
+  .history-empty {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.84rem;
+    line-height: 1.75;
+  }
+
+  .history-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem 1.5rem;
+    margin: 1rem 0 0;
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.8rem;
+  }
+
+  .history-dates > div {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .history-dates dt { color: var(--muted); }
+  .history-dates dd { margin: 0; color: var(--ink); }
+
+  .history-notice {
+    margin-top: 1rem;
+    padding-left: 0.8rem;
+    border-left: 2px solid var(--rule);
+  }
+
+  .history-timeline {
+    display: grid;
+    gap: 0;
+    margin: 1.35rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .history-timeline li {
+    position: relative;
+    min-width: 0;
+    padding: 0 0 1.35rem 1.4rem;
+  }
+
+  .history-timeline li:last-child { padding-bottom: 0; }
+
+  .history-timeline li::before {
+    position: absolute;
+    top: 0.45rem;
+    left: 0.1rem;
+    width: 0.42rem;
+    height: 0.42rem;
+    border: 1px solid var(--ink-soft);
+    border-radius: 50%;
+    background: var(--paper);
+    content: '';
+  }
+
+  .history-timeline li::after {
+    position: absolute;
+    top: 1rem;
+    bottom: -0.35rem;
+    left: 0.29rem;
+    width: 1px;
+    background: var(--rule-soft);
+    content: '';
+  }
+
+  .history-timeline li:last-child::after { display: none; }
+
+  .version-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.55rem;
+    line-height: 1.5;
+  }
+
+  .version-heading strong {
+    color: var(--ink);
+    font-size: 0.88rem;
+    font-weight: 680;
+  }
+
+  .version-number {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.73rem;
+  }
+
+  .version-time,
+  .version-subject { margin: 0.22rem 0 0; }
+
+  .version-time {
+    color: var(--muted);
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.76rem;
+  }
+
+  .version-subject {
+    overflow-wrap: anywhere;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    line-height: 1.65;
+  }
+
+  .commit-link {
+    display: inline-block;
+    margin-top: 0.25rem;
+    color: var(--muted);
+    font-size: 0.74rem;
+    text-decoration-color: var(--rule);
+  }
+
+  .commit-link code {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+  }
+
+  .history-empty { margin-top: 1rem; }
+
+  @media (max-width: 30rem) {
+    details > summary {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    details > summary small { display: none; }
+
+    .history-dates {
+      display: grid;
+      gap: 0.45rem;
+    }
+  }
+</style>
