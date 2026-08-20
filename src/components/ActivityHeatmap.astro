@@ -1,0 +1,246 @@
+---
+import type { ActivityHeatmap } from '../lib/activity-heatmap';
+
+interface Props {
+  activity: ActivityHeatmap;
+}
+
+const { activity } = Astro.props;
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+const formatDate = (date: string) => dateFormatter.format(new Date(`${date}T00:00:00Z`));
+const countLabel = (count: number) => count === 0 ? '无提交' : `${count} 次提交`;
+---
+
+<section class="activity" aria-labelledby="activity-title">
+  <div class="activity-heading">
+    <div>
+      <p class="activity-kicker">REPOSITORY ACTIVITY</p>
+      <h2 id="activity-title">写作轨迹</h2>
+    </div>
+    <p class="activity-summary">
+      <span>{activity.total} 次提交</span>
+      <span aria-hidden="true">·</span>
+      <span>{activity.activeDays} 个活跃日</span>
+    </p>
+  </div>
+
+  <p class="activity-note">过去 53 周的站点仓库提交记录。每一格代表一天，颜色越深表示当日提交越多。</p>
+
+  <div class="activity-scroll" tabindex="0" role="region" aria-label="过去 53 周的提交活动热力图">
+    <div class="activity-chart">
+      <div class="month-labels" aria-hidden="true">
+        {activity.months.map((month) => (
+          <span style={`grid-column: ${month.column}`}>{month.label}</span>
+        ))}
+      </div>
+
+      <div class="weekday-labels" aria-hidden="true">
+        <span style="grid-row: 2">周一</span>
+        <span style="grid-row: 4">周三</span>
+        <span style="grid-row: 6">周五</span>
+      </div>
+
+      <div class="activity-grid">
+        {activity.days.map((day) => (
+          <span
+            class:list={['activity-cell', `level-${day.level}`, { future: day.future }]}
+            title={day.future ? undefined : `${formatDate(day.date)}：${countLabel(day.count)}`}
+            aria-label={day.future ? undefined : `${formatDate(day.date)}，${countLabel(day.count)}`}
+            aria-hidden={day.future ? 'true' : undefined}
+          ></span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="activity-footer">
+    <span>{formatDate(activity.startDate)} — {formatDate(activity.endDate)}</span>
+    <span class="legend" aria-label="提交活动强度图例">
+      <span>少</span>
+      {[0, 1, 2, 3, 4].map((level) => <i class={`activity-cell level-${level}`} aria-hidden="true"></i>)}
+      <span>多</span>
+    </span>
+  </div>
+</section>
+
+<style>
+  .activity {
+    width: min(100%, 48rem);
+    margin-top: 3.5rem;
+    padding-block: 1.35rem 1.1rem;
+    border-block: 1px solid var(--rule);
+  }
+
+  .activity-heading,
+  .activity-footer,
+  .legend {
+    display: flex;
+    align-items: baseline;
+  }
+
+  .activity-heading {
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .activity-kicker {
+    margin: 0 0 0.2rem;
+    color: var(--muted);
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.68rem;
+    font-weight: 650;
+    letter-spacing: 0.14em;
+  }
+
+  h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+  }
+
+  .activity-summary,
+  .activity-note,
+  .activity-footer {
+    color: var(--muted);
+    font-family: var(--latin-sans), var(--sans);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .activity-summary {
+    display: flex;
+    gap: 0.45rem;
+    margin: 0;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .activity-note {
+    margin: 0.7rem 0 1.1rem;
+    font-size: 0.78rem;
+    line-height: 1.65;
+  }
+
+  .activity-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-color: var(--rule) transparent;
+    scrollbar-width: thin;
+  }
+
+  .activity-scroll:focus-visible {
+    outline-offset: 0.25rem;
+  }
+
+  .activity-chart {
+    display: grid;
+    grid-template-columns: 2.1rem auto;
+    grid-template-rows: 1rem auto;
+    gap: 0.35rem 0.45rem;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .month-labels,
+  .activity-grid {
+    display: grid;
+    grid-template-columns: repeat(53, 0.66rem);
+    grid-auto-flow: column;
+    gap: 0.18rem;
+  }
+
+  .month-labels {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: end;
+    color: var(--muted);
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.62rem;
+    line-height: 1;
+  }
+
+  .month-labels span {
+    overflow: visible;
+    white-space: nowrap;
+  }
+
+  .weekday-labels {
+    display: grid;
+    grid-column: 1;
+    grid-row: 2;
+    grid-template-rows: repeat(7, 0.66rem);
+    gap: 0.18rem;
+    color: var(--muted);
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.58rem;
+    line-height: 0.66rem;
+  }
+
+  .activity-grid {
+    grid-column: 2;
+    grid-row: 2;
+    grid-template-rows: repeat(7, 0.66rem);
+  }
+
+  .activity-cell {
+    display: block;
+    width: 0.66rem;
+    height: 0.66rem;
+    border: 1px solid color-mix(in srgb, var(--rule-soft) 72%, transparent);
+    background: var(--paper-soft);
+  }
+
+  .activity-grid .activity-cell:not(.future) {
+    cursor: help;
+  }
+
+  .activity-cell.level-1 { background: color-mix(in srgb, var(--ink) 22%, var(--paper)); }
+  .activity-cell.level-2 { background: color-mix(in srgb, var(--ink) 42%, var(--paper)); }
+  .activity-cell.level-3 { background: color-mix(in srgb, var(--ink) 66%, var(--paper)); }
+  .activity-cell.level-4 { background: color-mix(in srgb, var(--ink) 90%, var(--paper)); }
+  .activity-cell.future { border-color: transparent; background: transparent; }
+
+  .activity-footer {
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.85rem;
+    font-size: 0.68rem;
+  }
+
+  .legend {
+    flex: none;
+    gap: 0.25rem;
+  }
+
+  .legend .activity-cell {
+    flex: none;
+    width: 0.58rem;
+    height: 0.58rem;
+  }
+
+  @media (max-width: 38rem) {
+    .activity-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .activity-footer {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+
+  @media print {
+    .activity-scroll { overflow: visible; }
+    .activity-chart { transform: scale(0.88); transform-origin: left top; }
+  }
+</style>

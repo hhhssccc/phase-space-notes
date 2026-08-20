@@ -1,6 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ActivityHeatmap from '../components/ActivityHeatmap.astro';
 import { siteConfig } from '../config/site';
+import { getActivityHeatmap } from '../lib/activity-heatmap';
+
+const activity = getActivityHeatmap();
 ---
 
 <BaseLayout title={`关于｜${siteConfig.name}`} description={`${siteConfig.name}的写作原则与阅读说明。`} pageKind="index">
@@ -23,5 +27,6 @@ import { siteConfig } from '../config/site';
 
       <p class="about-signature">— {siteConfig.author}</p>
     </div>
+    <ActivityHeatmap activity={activity} />
   </div>
 </BaseLayout>
