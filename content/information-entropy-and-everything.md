@@ -5,7 +5,7 @@ abstract: 信息熵度量我们对随机结果的平均不确定性；热力学�
 date: 2026-08-17
 updated: 2026-08-17
 type: essay
-category: 信息论与统计力学
+category: 统计物理
 mathDisplay: ruled
 tags: [信息熵, Shannon 熵, 粗粒化, 热力学第二定律, Maxwell 妖]
 featured: true
