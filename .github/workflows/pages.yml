@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # 00:17 Asia/Shanghai; the offset avoids GitHub's busiest cron boundary.
+    - cron: '17 16 * * *'
 
 permissions:
   contents: read

@@ -22,13 +22,22 @@ export interface ActivityHeatmap {
 }
 
 const dayInMilliseconds = 24 * 60 * 60 * 1000;
+const activityTimeZone = 'Asia/Shanghai';
 
 function toIsoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-function startOfUtcDay(date: Date) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+function startOfActivityDay(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: activityTimeZone,
+  }).formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value);
+
+  return new Date(Date.UTC(value('year'), value('month') - 1, value('day')));
 }
 
 function activityLevel(count: number): ActivityDay['level'] {
@@ -63,7 +72,7 @@ function readCommitCounts(startDate: string) {
 
 /** Build a Sunday-to-Saturday, 53-week activity calendar from repository commits. */
 export function getActivityHeatmap(now = new Date()): ActivityHeatmap {
-  const today = startOfUtcDay(now);
+  const today = startOfActivityDay(now);
   const currentWeekStart = new Date(today);
   currentWeekStart.setUTCDate(currentWeekStart.getUTCDate() - currentWeekStart.getUTCDay());
 
