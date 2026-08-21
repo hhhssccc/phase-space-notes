@@ -268,6 +268,17 @@ for (const file of htmlFiles) {
     if (!/data-music-player[^>]*data-state="idle"/.test(html) || !html.includes('默认暂停')) {
       throw new Error(`Music player must begin idle with an explicit paused status: ${file}`);
     }
+    if (html.includes('data-track-kind="self-hosted"')) {
+      if (!/<audio\b[^>]*data-music-audio[^>]*preload="none"/.test(html)) {
+        throw new Error(`Self-hosted study music must remain lazy until explicit playback: ${file}`);
+      }
+      if (!/study-room-current\.m4a\?v=\d{8}-[a-z0-9-]+/.test(html)) {
+        throw new Error(`Self-hosted study music must carry a dated cache-busting source id: ${file}`);
+      }
+      if (!html.includes('rel="external noopener noreferrer"')) {
+        throw new Error(`Self-hosted study music must retain its external provenance link: ${file}`);
+      }
+    }
   }
 
   if (!html.includes('class="article-prose"')) continue;

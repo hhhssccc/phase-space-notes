@@ -22,6 +22,10 @@ AsyaInTheCosmicStatic 的中文理论物理博客：沿着公式，逼近直觉�
 - 文章首次公开/正文实质修订日期，以及可核验的 Git 文件版本时间线
 - 评论采用配置开关；缺少配置时自动隐藏
 
+## 书房音乐
+
+书房使用单一固定曲目，音频文件接口是 `public/audio/study-room-current.m4a`；前端仍保持默认暂停，只在用户点击后加载。未来由 Codex 更换时，必须按 `AGENTS.md` 的“更换书房固定音乐”流程执行，并更新 `src/config/music.ts` 中的来源页与缓存版本。
+
 ## 固定角色接口
 
 - `public/assets/mascot-idle.webp`：首页首屏
