@@ -1,7 +1,6 @@
 ---
 title: 统计系综:信息论视角
-description: 不知道多体系所有细节，怎么利用已有信息，给出好的 p(x)，并走向热力学？
-abstract: 从最大熵与Gibbs分布出发 ，导出三种系综
+description: 从最大熵与Gibbs分布出发 ，导出三种系综
 date: 2026-08-21
 updated: 2026-08-22
 type: note
@@ -19,7 +18,7 @@ sidenotes:
 ---
 
 <figure class="lead-figure">
-  <img src="../../figures/maximum-entropy-and-statistical-ensembles/lead.png" alt="冬日蓝调时分，长门有希独自站在空旷的街道上" width="1536" height="1024" loading="eager" decoding="async" />
+  <img src="../../figures/maximum-entropy-and-statistical-ensembles/lead.png?v=2" alt="冬日蓝调时分，长门有希独自站在空旷的街道上" width="1536" height="1024" loading="eager" decoding="async" />
 </figure>
 
 不知道多体系所有细节，怎么利用已有信息，给出好的 $p(x)$ $\Rightarrow$ 热力学？
@@ -405,7 +404,7 @@ S'(X)
 \end{aligned}
 $$
 
-### 正则系综的拉格朗日乘子推导。
+### 正则系综的拉格朗日乘子推导
 
 我们想推导 $\beta$ 具体为啥。
 
@@ -440,6 +439,6 @@ $$
 =-T\left.\frac{\partial\ln Z}{\partial N}\right|_T.
 $$
 
-### 巨正则系综的拉格朗日乘子。
+### 巨正则系综的拉格朗日乘子
 
 未完待续……
