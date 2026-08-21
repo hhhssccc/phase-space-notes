@@ -6,9 +6,9 @@ import { byNewest, entryUrl, formatDate, readingMinutes } from '../../lib/conten
 const entries = (await getCollection('articles', ({ data }) => !data.draft && data.type === 'essay')).sort(byNewest);
 ---
 
-<BaseLayout title="文章｜渐近自由" description="渐近自由的物理长文与完整推导。" pageKind="index">
+<BaseLayout title="文章｜渐近自由" description="厘清容易混淆的概念，试着找出复杂理论背后那个简单的想法。" pageKind="index">
   <div class="index-page">
-    <header class="index-header"><p class="eyebrow">ESSAYS</p><h1>文章</h1><p>从一个具体问题出发，尽量把物理图景、数学结构和推导细节放在同一张纸上。</p></header>
+    <header class="index-header"><p class="eyebrow">ESSAYS</p><h1>文章</h1><p>厘清容易混淆的概念，试着找出复杂理论背后那个简单的想法。</p></header>
     <ol class="entry-list">
       {entries.map((entry) => <li><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time><div><h2><a href={entryUrl(entry)}>{entry.data.title}</a></h2><p>{entry.data.description}</p><span class="entry-meta">{entry.data.category} · {readingMinutes(entry.body || '')} 分钟</span></div></li>)}
     </ol>

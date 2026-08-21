@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: '渐近自由',
   title: '渐近自由｜物理笔记与长文',
-  description: '沿着公式，逼近直觉。记录理论物理中的完整推导、物理图像，以及那些值得反复追问的问题。',
+  description: '从模型出发，向结构深入。读书时记下的推导、问题和偶尔想明白的事情。',
   author: 'AsyaInTheCosmicStatic',
   language: 'zh-CN',
   nav: [

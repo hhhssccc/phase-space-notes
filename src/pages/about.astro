@@ -7,25 +7,20 @@ import { getActivityHeatmap } from '../lib/activity-heatmap';
 const activity = getActivityHeatmap();
 ---
 
-<BaseLayout title={`关于｜${siteConfig.name}`} description={`${siteConfig.name}的写作原则与阅读说明。`} pageKind="index">
+<BaseLayout title={`关于我｜${siteConfig.name}`} description={`${siteConfig.author} 的个人介绍与写作说明。`} pageKind="index">
   <div class="index-page">
-    <header class="index-header"><p class="eyebrow">ABOUT</p><h1>关于渐近自由</h1><p>{siteConfig.author} 的个人理论物理写作站点。</p></header>
+    <header class="index-header"><p class="eyebrow">ABOUT</p><h1>关于我</h1><p>{siteConfig.author}</p></header>
     <div class="about-copy">
-      <p>“渐近自由”记录我在理论物理学习与思考中留下的长文、推导和问题札记。这里关心的不只是结论，也关心结论成立所依赖的定义、假设与近似。</p>
+      <p>25级物理系本科生，现在在北京学习。最近对统计物理和量子信息感兴趣。</p>
 
-      <h2>写作范围</h2>
-      <p>内容以理论物理为主，也会涉及与之相连的数学、信息论和科学史问题。长文用于梳理一条完整的论证链，笔记则保留尚在生长的局部问题与计算。</p>
+      <h2>写什么</h2>
+      <p>主要写理论物理，也会顺着问题走到相关的数学和科学史。简而言之，看我最近对什么感兴趣</p>
 
-      <h2>写作与校订</h2>
-      <p>文章尽量区分数学推导、物理解释与直觉类比，并明确适用条件和可能失效的边界。实质性修改会标注修订日期；发现公式、表述或引用错误时，以可追溯的修订替代无声改写。</p>
+      <h2>怎样写</h2>
+      <p>文章尽量写得好读，引用也尽量规范 。笔记则不保证这些</p>
 
-      <h2>引用与来源</h2>
-      <p>涉及外部论著、数据或图像时，原则上在正文或文末给出来源。本站文字首先是个人学习记录，不以替代教材、原始论文或专业课程为目的。</p>
-
-      <h2>阅读说明</h2>
-      <p>正文、公式、图表与参考文献由同一份 Markdown 内容生成；桌面端提供目录与边注，手机端收束为单栏，打印时自动隐藏导航和互动元素。页面不自动播放媒体，也不让装饰遮挡正文。</p>
-
-      <p class="about-signature">— {siteConfig.author}</p>
+      <h2>修订与引用</h2>
+      <p>发现错误就改。影响理解的修改会留下日期和说明；引用别人的论著、数据或图片时，会在正文或文末注明来源。当然，也可能有漏掉的时候。</p>
     </div>
     <ActivityHeatmap activity={activity} />
   </div>
