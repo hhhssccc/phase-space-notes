@@ -143,6 +143,15 @@ function articleHistorySection(html, file) {
   return html.slice(start, end + '</section>'.length);
 }
 
+function classElementSection(html, tagName, className, file) {
+  const classPosition = html.indexOf(`class="${className}`);
+  if (classPosition < 0) throw new Error(`Missing ${className} section: ${file}`);
+  const start = html.lastIndexOf(`<${tagName}`, classPosition);
+  const end = html.indexOf(`</${tagName}>`, classPosition);
+  if (start < 0 || end < 0) throw new Error(`Malformed ${className} section: ${file}`);
+  return html.slice(start, end + tagName.length + 3);
+}
+
 function openingTags(html) {
   return [...html.matchAll(/<[a-z][^>]*>/gi)].map((match) => match[0]);
 }
@@ -271,6 +280,40 @@ for (const file of htmlFiles) {
     await access(path.join(root, sourcePath));
   } catch {
     throw new Error(`Rendered article source is missing: ${sourcePath}`);
+  }
+  const sourceMarkdown = await readFile(path.join(root, sourcePath), 'utf8');
+  const desktopToc = classElementSection(html, 'aside', 'article-toc print-hidden', file);
+  const mobileToc = html.includes('class="mobile-toc print-hidden"')
+    ? classElementSection(html, 'details', 'mobile-toc print-hidden', file)
+    : '';
+  const automaticNumber = /<a\b[^>]*>\s*<span\b[^>]*aria-hidden="true"[^>]*>\s*\d+(?:\.\d+)*\s*<\/span>/i;
+  if (automaticNumber.test(desktopToc) || automaticNumber.test(mobileToc)) {
+    throw new Error(`Article TOC must not add automatic section numbers: ${file}`);
+  }
+  const sourceHeadingHasMath = /^ {0,3}#{2,3}[ \t]+[^\n]*\$[^$\n]+\$/m.test(sourceMarkdown);
+  if (sourceHeadingHasMath && (!desktopToc.includes('class="katex"') || !mobileToc.includes('class="katex"'))) {
+    throw new Error(`Inline math in article headings must render in both TOCs: ${file}`);
+  }
+  if (desktopToc.includes('⇒\\Rightarrow⇒') || mobileToc.includes('⇒\\Rightarrow⇒')) {
+    throw new Error(`Article TOC contains duplicated KaTeX accessibility text: ${file}`);
+  }
+
+  if (html.includes('class="margin-notes print-hidden"')) {
+    const desktopSidenotes = classElementSection(html, 'aside', 'margin-notes print-hidden', file);
+    const mobileSidenotes = classElementSection(html, 'details', 'mobile-sidenotes print-hidden', file);
+    if (desktopSidenotes.includes('$') || mobileSidenotes.includes('$')) {
+      throw new Error(`Sidenote math delimiters were emitted as plain text: ${file}`);
+    }
+    if (/<sup\b[^>]*>\s*<(?:ul|ol|p)\b/i.test(desktopSidenotes)
+        || /<sup\b[^>]*>\s*<(?:ul|ol|p)\b/i.test(mobileSidenotes)) {
+      throw new Error(`Sidenote marker was parsed as block Markdown: ${file}`);
+    }
+    const frontmatter = sourceMarkdown.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? '';
+    const sidenoteBlock = frontmatter.match(/(?:^|\n)sidenotes:\s*\r?\n([\s\S]*?)(?=\r?\n[A-Za-z][A-Za-z0-9_]*:\s|$)/)?.[1] ?? '';
+    if (/\$[^$\n]+\$/.test(sidenoteBlock)
+        && (!desktopSidenotes.includes('class="katex"') || !mobileSidenotes.includes('class="katex"'))) {
+      throw new Error(`Inline math in sidenotes must render on desktop and mobile: ${file}`);
+    }
   }
 
   if (!/class="article-prose" data-math-display="(?:plain|ruled)"/.test(html)) {

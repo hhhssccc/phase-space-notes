@@ -2,8 +2,10 @@
 import BaseLayout from './BaseLayout.astro';
 import Comments from '../components/Comments.astro';
 import ArticleHistory from '../components/ArticleHistory.astro';
+import InlineMarkup from '../components/InlineMarkup.astro';
 import { siteConfig } from '../config/site';
 import { entryUrl, formatDate, readingMinutes, withBase, type ArticleEntry } from '../lib/content';
+import { extractSourceHeadings, renderInlineMarkup } from '../lib/inline-markup';
 import 'katex/dist/katex.min.css';
 
 interface Heading { depth: number; slug: string; text: string; }
@@ -16,22 +18,22 @@ interface Props {
 
 const { post, headings, relatedEntries, backlinkEntries } = Astro.props;
 const minutes = readingMinutes(post.body || '');
-let sectionNumber = 0;
-let subsectionNumber = 0;
-const toc = headings
-  .filter((heading) => heading.depth === 2 || heading.depth === 3)
-  .map((heading) => {
-    if (heading.depth === 2) {
-      sectionNumber += 1;
-      subsectionNumber = 0;
-      return { ...heading, number: `${sectionNumber}` };
-    }
-    subsectionNumber += 1;
-    return { ...heading, number: `${Math.max(sectionNumber, 1)}.${subsectionNumber}` };
-  });
 const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
 // Normalize line endings so the adaptive layout is identical on Windows and CI/Linux.
 const sourceBody = (post.body || '').replace(/\r\n?/g, '\n');
+const renderedHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const sourceHeadings = extractSourceHeadings(sourceBody);
+const toc = await Promise.all(renderedHeadings.map(async (heading, index) => ({
+  ...heading,
+  html: await renderInlineMarkup(
+    sourceHeadings[index]?.depth === heading.depth ? sourceHeadings[index].text : heading.text,
+  ),
+})));
+const sidenotes = await Promise.all(post.data.sidenotes.map(async (note) => ({
+  ...note,
+  titleHtml: await renderInlineMarkup(note.title),
+  bodyHtml: await renderInlineMarkup(note.body),
+})));
 const displayMathCount = Math.floor((sourceBody.match(/(?:^|\n)\s*\$\$\s*(?=\n|$)/g)?.length || 0) / 2);
 const proseCharacters = Array.from(
   sourceBody
@@ -60,7 +62,7 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       <p>目录</p>
       <ol>
         {toc.map((heading) => (
-          <li class:list={{ nested: heading.depth === 3 }}><a href={`#${heading.slug}`}><span aria-hidden="true">{heading.number}</span>{heading.text}</a></li>
+          <li class:list={{ nested: heading.depth === 3 }}><a href={`#${heading.slug}`}><InlineMarkup html={heading.html} /></a></li>
         ))}
       </ol>
       <small>{minutes} 分钟 · {post.body?.length.toLocaleString('zh-CN')} 字符</small>
@@ -88,14 +90,14 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       {toc.length > 0 && (
         <details class="mobile-toc print-hidden">
           <summary>目录</summary>
-          <ol>{toc.map((heading) => <li><a href={`#${heading.slug}`}><span aria-hidden="true">{heading.number}</span>{heading.text}</a></li>)}</ol>
+          <ol>{toc.map((heading) => <li class:list={{ nested: heading.depth === 3 }}><a href={`#${heading.slug}`}><InlineMarkup html={heading.html} /></a></li>)}</ol>
         </details>
       )}
 
-      {post.data.sidenotes.length > 0 && (
+      {sidenotes.length > 0 && (
         <details class="mobile-sidenotes print-hidden">
           <summary>边注</summary>
-          {post.data.sidenotes.map((note) => <p><sup>{note.marker}</sup> <strong>{note.title}</strong>：{note.body}</p>)}
+          {sidenotes.map((note) => <p><sup>{note.marker}</sup> <strong><InlineMarkup html={note.titleHtml} /></strong>：<InlineMarkup html={note.bodyHtml} /></p>)}
         </details>
       )}
 
@@ -122,11 +124,11 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
     </article>
 
     <aside class="margin-notes print-hidden" aria-label="边注">
-      {post.data.sidenotes.map((note, index) => (
+      {sidenotes.map((note, index) => (
         <section style={`--note-offset: ${index === 0 ? 11 : 4}rem`}>
           <sup>{note.marker}</sup>
-          <h2>{note.title}</h2>
-          <p>{note.body}</p>
+          <h2><InlineMarkup html={note.titleHtml} /></h2>
+          <p><InlineMarkup html={note.bodyHtml} /></p>
         </section>
       ))}
     </aside>
