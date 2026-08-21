@@ -258,6 +258,18 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 - 不在仓库中提交密码、令牌、私钥或个人邮箱。Giscus 等公开配置只通过已定义的环境变量提供。
 - 当前仓库保持 Public 以支持现有 GitHub Pages。未经用户明确要求和托管迁移验证，不要转为 Private。
 
+### 12.1 更换书房固定音乐
+
+用户会定期指定新的公开音频页面，由 Codex 更换书房中的唯一固定曲目。这不是任意链接解析器或用户可编辑歌单；不得将需要签名、Cookie 或特殊请求头的临时媒体 URL 写入前端。
+
+1. 先读取 `src/config/music.ts`、`src/components/study-room/MusicPlayer.astro` 和当前 `public/audio/study-room-current.m4a`，记录旧音源页、版本标识、文件大小与哈希。
+2. 只处理用户明确给出的单个来源页面，去掉分享跟踪参数后把规范 URL 写入 `sourceUrl`。不抄用视频页面的完整标题；用户没有另行命名时，为书房写一个简短、中性、独立的展示名。
+3. 使用当前官方 `yt-dlp` 或同等可审计工具读取音轨列表，优先选择浏览器可直接播放的 AAC/M4A 独立音轨。默认只用公开可取得的格式；未经用户明确授权，不导入浏览器 Cookie、会员凭据或付费音源。
+4. 先把新音轨下载为临时候选文件，检查容器、时长、大小、可播放性与 SHA-256；只有候选文件通过后，才替换准确目标 `public/audio/study-room-current.m4a`。不要在新音频验证前删除或覆盖旧文件。
+5. 在 `musicConfig.tracks[0]` 中同步更新自定义标题、描述、时长、规范来源页和 `src` 查询版本。版本格式使用 `YYYYMMDD-bvid-or-source-id`，保证 GitHub Pages/CDN 不会继续返回旧音频。
+6. 运行完整 `npm run build`，然后在实际书房中检查：初始网络请求不包含音频、点击后才加载、播放/暂停/音量/循环正常、来源链接正确，且页面没有显示被要求避免的视频完整标题。
+7. 更换音乐不自动授权发布。若用户要求“先预览”，则在本地验证后等待明确的发布指令；正式上线仍须完成本文件的全部发布验收。
+
 ## 13. 发布验收底线
 
 每次正式发布至少满足：

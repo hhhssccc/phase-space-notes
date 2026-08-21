@@ -72,7 +72,17 @@ const initialStatus = selfHostedSource
     {initialStatus}
   </p>
   <p class="player-error" data-music-error role="alert" hidden></p>
-  <p class="source-note">{track.sourceNote}</p>
+  <p class="source-note">
+    <span>{track.sourceNote}</span>
+    {track.sourceUrl && (
+      <>
+        <span aria-hidden="true"> · </span>
+        <a href={track.sourceUrl} target="_blank" rel="external noopener noreferrer">
+          {track.sourceLabel ?? '来源页面'}
+        </a>
+      </>
+    )}
+  </p>
   {selfHostedSource && (
     <audio data-music-audio preload="none" loop={selfHostedSource.loop ?? false}>
       <source src={withBase(selfHostedSource.src)} type={selfHostedSource.mimeType} />
@@ -589,6 +599,11 @@ const initialStatus = selfHostedSource
     color: var(--muted);
     font-size: 0.7rem;
     line-height: 1.65;
+  }
+
+  .source-note a {
+    color: inherit;
+    text-underline-offset: 0.18em;
   }
 
   .volume-row {
