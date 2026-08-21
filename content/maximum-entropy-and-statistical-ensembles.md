@@ -1,7 +1,9 @@
 ---
-title: 统计系综
+title: 统计系综:信息论视角
 description: 不知道多体系所有细节，怎么利用已有信息，给出好的 p(x)，并走向热力学？
+abstract: 从最大熵与Gibbs分布出发 ，导出三种系综
 date: 2026-08-21
+updated: 2026-08-22
 type: note
 category: 统计物理
 tags: [最大熵原理, Gibbs 分布, 微正则系综, 正则系综, 巨正则系综]
@@ -9,7 +11,7 @@ featured: false
 draft: false
 related: []
 backlinks: []
-mathDisplay: ruled
+mathDisplay: plain
 sidenotes:
   - marker: "*"
     title: 一点命名学
@@ -17,7 +19,7 @@ sidenotes:
 ---
 
 <figure class="lead-figure">
-  <img src="../../figures/maximum-entropy-and-statistical-ensembles/lead.png" alt="雪夜里穿着连帽外套的长门有希" width="474" height="296" loading="eager" decoding="async" />
+  <img src="../../figures/maximum-entropy-and-statistical-ensembles/lead.png" alt="冬日蓝调时分，长门有希独自站在空旷的街道上" width="1536" height="1024" loading="eager" decoding="async" />
 </figure>
 
 不知道多体系所有细节，怎么利用已有信息，给出好的 $p(x)$ $\Rightarrow$ 热力学？
@@ -176,7 +178,7 @@ T,\qquad N(x)=N.
 $$
 
 $$
-\langle E(x)\rangle=\bar E\text{存在涨落}
+\langle E(x)\rangle=\bar E存在涨落
 $$
 
 $\Rightarrow$ Gibbs 分布
@@ -331,7 +333,7 @@ $$
 $$
 
 $$
-\sum_xp(x)f_a(x)=\bar f_a. \tag{a}
+\sum_xp(x)f_a(x)=\bar f_a. \tag{1}
 $$
 
 $$
