@@ -248,19 +248,19 @@ $$
 可以定义巨势
 
 $$
-\mathcal J=-T\ln Z(T,\mu).
+\Omega=-T\ln Z(T,\mu).
 $$
 
 $$
-S'=-\left.\frac{\partial\mathcal J}{\partial T}\right|_\mu,
+S'=-\left.\frac{\partial\Omega}{\partial T}\right|_\mu,
 $$
 
 $$
-N=-\left.\frac{\partial\mathcal J}{\partial\mu}\right|_T.
+N=-\left.\frac{\partial\Omega}{\partial\mu}\right|_T.
 $$
 
 $$
-\mathcal J=-T\ln Z=E-TS-\mu N.
+\Omega=-T\ln Z=E-TS-\mu N.
 $$
 
 ## Appendix
@@ -393,7 +393,7 @@ $$
 
 $$
 \begin{aligned}
-S'(X)
+S(X)
 &=-\sum_x\frac{\exp\left(-\sum_a\lambda_af_a\right)}{Z[\lambda]}
 \left[-\sum_a\lambda_af_a-\ln Z[\lambda]\right]\\
 &=-\sum_xp(x)\left[-\sum_a\lambda_af_a-\ln Z[\lambda]\right]\\
@@ -413,12 +413,12 @@ E=-\left.\frac{\partial\ln Z}{\partial\beta}\right|_N,
 $$
 
 $$
-S'=\ln Z+\beta E.
+S=\ln Z+\beta E.
 $$
 
 $$
 \begin{aligned}
-dS'
+dS
 &=\left.\frac{\partial\ln Z}{\partial N}\right|_\beta dN
 +\beta\,dE
 +\left(\left.\frac{\partial\ln Z}{\partial\beta}\right|_N d\beta+E\,d\beta\right)\\
@@ -441,4 +441,77 @@ $$
 
 ### 巨正则系综的拉格朗日乘子
 
-未完待续……
+设：
+
+$$
+p(x)=\frac{\exp\left(-\sum_a\lambda_a f_a\right)}{Z[\lambda]},
+$$
+
+$$
+\bar f_a=-\frac{\partial\ln Z[\lambda]}{\partial\lambda_a}.
+$$
+
+$$
+E=\langle E(x)\rangle,
+\qquad
+N=\langle N(x)\rangle.
+$$
+
+$$
+S(X)
+=-\sum_a\lambda_a\frac{\partial\ln Z[\lambda]}{\partial\lambda_a}
++\ln Z[\lambda].
+$$
+
+$$
+p(x)=\frac{1}{Z[\beta,\gamma]}e^{-[\beta E(x)+\gamma N(x)]}.
+$$
+
+$$
+E=-\left.\frac{\partial\ln Z}{\partial\beta}\right|_\gamma,
+$$
+
+$$
+N=-\left.\frac{\partial\ln Z}{\partial\gamma}\right|_\beta.
+$$
+
+$$
+S=\ln Z+\beta E+\gamma N.
+$$
+
+$$
+\begin{aligned}
+dS
+&=\left(\left.\frac{\partial\ln Z}{\partial\beta}\right|_\gamma d\beta
++E\,d\beta\right)
++\left(\left.\frac{\partial\ln Z}{\partial\gamma}\right|_\beta d\gamma
++N\,d\gamma\right)\\
+&\qquad+\beta\,dE+\gamma\,dN\\
+&=\beta\,dE+\gamma\,dN.
+\end{aligned}
+$$
+
+由“热一”：
+
+$$
+dS=\frac{1}{T}\,dE-\frac{\mu}{T}\,dN.
+$$
+
+$$
+\Rightarrow
+\beta=\frac{1}{T},
+\qquad
+\gamma=-\frac{\mu}{T}.
+$$
+
+$$
+p(x)=\frac{1}{Z}e^{-\beta[E(x)-\mu N(x)]}.
+$$
+
+$$
+Z
+=\sum_x e^{-\beta[E(x)-\mu N(x)]}
+=\sum_{N=0}^{\infty}e^{\beta\mu N}Z_N(\beta).
+$$
+
+固定粒子数正则配分函数加权求和。
