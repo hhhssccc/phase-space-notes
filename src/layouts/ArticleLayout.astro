@@ -123,15 +123,17 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       <Comments />
     </article>
 
-    <aside class="margin-notes print-hidden" aria-label="边注">
-      {sidenotes.map((note, index) => (
-        <section style={`--note-offset: ${index === 0 ? 11 : 4}rem`}>
-          <sup>{note.marker}</sup>
-          <h2><InlineMarkup html={note.titleHtml} /></h2>
-          <p><InlineMarkup html={note.bodyHtml} /></p>
-        </section>
-      ))}
-    </aside>
+    {sidenotes.length > 0 && (
+      <aside class="margin-notes print-hidden" aria-label="边注">
+        {sidenotes.map((note, index) => (
+          <section style={`--note-offset: ${index === 0 ? 11 : 4}rem`}>
+            <sup>{note.marker}</sup>
+            <h2><InlineMarkup html={note.titleHtml} /></h2>
+            <p><InlineMarkup html={note.bodyHtml} /></p>
+          </section>
+        ))}
+      </aside>
+    )}
   </div>
   {siteConfig.features.readingProgress && (
     <script>
