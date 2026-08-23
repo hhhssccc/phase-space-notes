@@ -32,7 +32,7 @@ function transformCallout(node) {
   const firstText = firstParagraph.children.find((child) => child.type === 'text');
   if (!firstText) return;
 
-  const match = firstText.value.match(/^\[!([A-Za-z0-9_-]+)\]([+-])?(?:[ \t]+([^\n]+))?(?:\n|$)/);
+  const match = firstText.value.match(/^\[!([A-Za-z0-9_-]+)\]([+-])?(?:[ \t]+([^\r\n]+))?(?:\r?\n|$)/);
   if (!match) return;
 
   const type = match[1].toLowerCase();
