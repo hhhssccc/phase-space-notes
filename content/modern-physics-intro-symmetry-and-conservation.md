@@ -1,5 +1,5 @@
 ---
-title: 《近代物理导论》听课笔记：从光与相对论到经典对称性
+title: 《近代物理导论》听课笔记1：从光与相对论到经典对称性
 description: 从 Maxwell 电磁波与狭义相对论出发，经由波粒二象性、Hamilton 力学与正则变换，整理对称性和守恒量的对应。
 date: 2026-08-24
 type: note
@@ -10,6 +10,7 @@ tags:
   - Hamilton 力学
   - 正则变换
   - Noether 定理
+  - 近代物理导论笔记系列
 featured: false
 draft: false
 related: []
