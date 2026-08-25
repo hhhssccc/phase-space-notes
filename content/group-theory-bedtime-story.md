@@ -11,7 +11,7 @@ tags:
   - 商群
   - 群表示
   - 简明群论
-featured: false
+featured: true
 draft: false
 related: []
 backlinks: []
