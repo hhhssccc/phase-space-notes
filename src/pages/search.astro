@@ -14,21 +14,37 @@ const index = entries.map((entry) => ({
   category: entry.data.category,
   tags: entry.data.tags,
   url: entryUrl(entry),
-  text: plainText(entry.body || '').slice(0, 1800),
+  text: plainText(entry.body || ''),
 }));
+const topics = [...new Set(index.flatMap((item) => item.tags))].slice(0, 6);
 ---
 
 <BaseLayout title="搜索｜渐近自由" description="搜索渐近自由的文章、笔记和标签。" pageKind="utility" noindex>
-  <div class="index-page">
-    <header class="index-header"><p class="eyebrow">SEARCH</p><h1>搜索</h1><p>搜索标题、摘要、标签与正文。索引在本地运行，不上传查询内容。</p></header>
+  <div class="index-page search-page">
+    <header class="index-header"><p class="eyebrow">SEARCH</p><h1>寻找一个问题</h1><p>从一个概念、一条公式，或一个尚未想明白的问题开始。</p></header>
     {searchEnabled ? (
       <>
-        <label for="site-search">输入关键词</label>
-        <input class="search-box" id="site-search" type="search" inputmode="search" autocomplete="off" placeholder="例如：信息熵、粗粒化、Maxwell 妖" />
-        <p class="search-status" data-search-status role="status" aria-live="polite">输入关键词开始搜索。</p>
-        <ol class="entry-list" data-search-results>
-          {index.map((item, indexNumber) => <li class="search-result" data-search-item={indexNumber} hidden><span class="entry-meta">{item.category}</span><div><h2><a href={item.url}>{item.title}</a></h2><p>{item.description}</p><span class="entry-meta">{item.tags.join(' · ')}</span></div></li>)}
+        <form class="search-form" role="search">
+          <label class="visually-hidden" for="site-search">搜索文章与笔记</label>
+          <div class="search-field">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+            <input id="site-search" type="search" inputmode="search" autocomplete="off" placeholder="搜索文章、笔记或概念" aria-describedby="search-hint" aria-controls="search-results" />
+            <button class="search-clear" type="button" aria-label="清空搜索" hidden>×</button>
+          </div>
+          <p id="search-hint" class="search-hint">输入即搜索，也可以试试下面的主题。</p>
+        </form>
+        <div class="search-topics" aria-label="搜索主题">
+          {topics.map((topic) => <button type="button" data-search-topic={topic}>{topic}</button>)}
+        </div>
+        <div class="search-results-heading">
+          <h2 data-results-heading>最近发布</h2>
+          <p class="search-status" data-search-status role="status" aria-live="polite">{index.length ? '先从这些文章与笔记开始。' : '还没有公开的文章与笔记。'}</p>
+        </div>
+        <div class="search-empty" data-search-empty hidden><h3>暂时没有找到</h3><p>试试更短的关键词，或选择上方的主题。</p></div>
+        <ol class="entry-list" id="search-results" data-search-results>
+          {index.map((item, indexNumber) => <li class="search-result" data-search-item={indexNumber} hidden={indexNumber >= 3}><span class="entry-meta">{item.category}</span><div><h2><a href={item.url}>{item.title}</a></h2><p>{item.description}</p><span class="entry-meta">{item.tags.join(' · ')}</span></div></li>)}
         </ol>
+        <noscript><p class="search-hint">启用 JavaScript 后即可搜索；也可以通过导航浏览全部文章与笔记。</p></noscript>
         <script is:inline type="application/json" id="search-index" set:html={JSON.stringify(index).replaceAll('<', '\\u003c')}></script>
       </>
     ) : <p class="empty-state">搜索功能当前未启用。</p>}
@@ -37,6 +53,9 @@ const index = entries.map((entry) => ({
     <script>
       const input = document.querySelector('#site-search');
       const status = document.querySelector('[data-search-status]');
+      const clear = document.querySelector<HTMLButtonElement>('.search-clear');
+      const heading = document.querySelector('[data-results-heading]');
+      const empty = document.querySelector('[data-search-empty]');
       const raw = document.querySelector('#search-index')?.textContent || '[]';
       interface SearchItem { title: string; description: string; category: string; tags: string[]; url: string; text: string; }
       const entries = JSON.parse(raw) as SearchItem[];
@@ -47,13 +66,67 @@ const index = entries.map((entry) => ({
         let count = 0;
         entries.forEach((entry, index) => {
           const haystack = normalize([entry.title, entry.description, entry.category, entry.tags.join(' '), entry.text].join(' '));
-          const matched = terms.length > 0 && terms.every((term) => haystack.includes(term));
+          const matched = terms.length > 0 ? terms.every((term) => haystack.includes(term)) : index < 3;
           document.querySelector(`[data-search-item="${index}"]`)?.toggleAttribute('hidden', !matched);
           if (matched) count += 1;
         });
-        if (status) status.textContent = terms.length ? `找到 ${count} 条结果。` : '输入关键词开始搜索。';
+        if (status) status.textContent = terms.length ? `找到 ${count} 条结果` : entries.length ? '先从这些文章与笔记开始。' : '还没有公开的文章与笔记。';
+        if (heading) heading.textContent = terms.length ? '搜索结果' : '最近发布';
+        if (clear) clear.hidden = input.value.length === 0;
+        empty?.toggleAttribute('hidden', !terms.length || count > 0);
       };
-      input?.addEventListener('input', update);
+      input?.addEventListener('input', (event) => {
+        if (!(event instanceof InputEvent) || !event.isComposing) update();
+      });
+      input?.addEventListener('compositionend', update);
+      document.querySelector('.search-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        update();
+      });
+      clear?.addEventListener('click', () => {
+        if (!(input instanceof HTMLInputElement)) return;
+        input.value = '';
+        update();
+        input.focus();
+      });
+      document.querySelectorAll<HTMLButtonElement>('[data-search-topic]').forEach((button) => {
+        button.addEventListener('click', () => {
+          if (!(input instanceof HTMLInputElement)) return;
+          input.value = button.dataset.searchTopic || '';
+          update();
+          input.focus();
+        });
+      });
+      update();
     </script>
   )}
 </BaseLayout>
+
+<style>
+  .search-page { max-width: 54rem; }
+  .search-page .index-header { margin-bottom: 2rem; padding-bottom: 0; }
+  .search-field { display: flex; align-items: center; gap: 0.85rem; min-height: 4rem; padding: 0.65rem 1.15rem; border-radius: 1.2rem; background: var(--paper-soft); }
+  .search-field > svg { flex: none; color: var(--muted); }
+  .search-field:focus-within { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .search-field input { width: 100%; min-width: 0; padding: 0.45rem 0; border: 0; outline: none; background: transparent; color: var(--ink); font-size: 1.05rem; }
+  .search-field input::placeholder { color: var(--muted); opacity: 1; }
+  .search-field input::-webkit-search-cancel-button { appearance: none; }
+  .search-clear { flex: none; width: 2.75rem; height: 2.75rem; border: 0; border-radius: 50%; background: transparent; font-size: 1.4rem; cursor: pointer; }
+  .search-clear:hover { background: color-mix(in srgb, var(--ink) 10%, var(--paper)); }
+  .search-hint { margin: 0.85rem 0 1.2rem; color: var(--muted); font-size: 0.82rem; }
+  .search-topics { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+  .search-topics button { min-height: 2.75rem; padding: 0.45rem 0.85rem; border: 0; border-radius: 999px; background: var(--paper-soft); font-size: 0.85rem; cursor: pointer; transition: background-color var(--ease); }
+  .search-topics button:hover { background: color-mix(in srgb, var(--ink) 10%, var(--paper)); }
+  .search-results-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; margin-top: 3.5rem; margin-bottom: 0.75rem; }
+  .search-results-heading h2 { margin: 0; font-family: var(--serif); font-size: 1.4rem; font-weight: 650; }
+  .search-status { margin: 0; }
+  .search-empty { padding: 2rem 0 3rem; color: var(--muted); }
+  .search-empty h3 { margin: 0; color: var(--ink); font-size: 1.05rem; font-weight: 500; }
+  .search-empty p { margin: 0.6rem 0 0; font-size: 0.9rem; }
+  @media (max-width: 48rem) {
+    .search-page .index-header h1 { font-size: 2.3rem; }
+    .search-field { gap: 0.6rem; padding-inline: 0.8rem; }
+    .search-field input { font-size: 1rem; }
+    .search-results-heading { margin-top: 2.5rem; }
+  }
+</style>

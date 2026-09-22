@@ -128,6 +128,7 @@ const articleStructuredData = pageKind === 'article' && publishedTime
         const dark = resolvedDark();
         themeColor?.setAttribute('content', dark ? '#121212' : '#ffffff');
         themeButtons.forEach((button) => {
+          button.textContent = root.dataset.theme === 'system' ? '随系统' : dark ? '深色' : '浅色';
           button.setAttribute('aria-pressed', String(dark));
           button.setAttribute('aria-label', dark ? '切换到浅色模式' : '切换到深色模式');
           button.title = dark ? '切换到浅色模式' : '切换到深色模式';

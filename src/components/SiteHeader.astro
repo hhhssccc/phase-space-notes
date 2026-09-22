@@ -5,6 +5,7 @@ import { withBase } from '../lib/content';
 const path = Astro.url.pathname;
 const isActive = (href: string) => href !== '/' && path.startsWith(withBase(href));
 const navItems = siteConfig.nav.filter((item) => item.href !== '/search/' || siteConfig.features.search);
+const primaryItems = navItems.filter((item) => item.href !== '/search/');
 ---
 
 <a class="skip-link" href="#main-content">跳到正文</a>
@@ -12,14 +13,23 @@ const navItems = siteConfig.nav.filter((item) => item.href !== '/search/' || sit
   <a class="site-name" href={withBase('/')} aria-label={`${siteConfig.name}首页`}>{siteConfig.name}</a>
 
   <nav class="main-nav" aria-label="主导航">
-    {navItems.map((item) => (
+    {primaryItems.map((item) => (
       <a href={withBase(item.href)} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
     ))}
-    <button class="theme-toggle" type="button" data-theme-cycle aria-label="切换明暗模式" aria-pressed="false">明 / 暗</button>
   </nav>
 
+  <div class="header-actions">
+    {siteConfig.features.search && (
+      <a class="header-search" href={withBase('/search/')} aria-current={isActive('/search/') ? 'page' : undefined}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+        <span>搜索</span>
+      </a>
+    )}
+    <button class="theme-toggle" type="button" data-theme-cycle aria-label="切换明暗模式" aria-pressed="false">主题</button>
+  </div>
+
   <div class="mobile-actions">
-    <button class="theme-toggle" type="button" data-theme-cycle aria-label="切换明暗模式" aria-pressed="false">明 / 暗</button>
+    <button class="theme-toggle" type="button" data-theme-cycle aria-label="切换明暗模式" aria-pressed="false">主题</button>
     <details class="mobile-menu">
       <summary>菜单</summary>
       <nav aria-label="手机导航">
@@ -28,3 +38,20 @@ const navItems = siteConfig.nav.filter((item) => item.href !== '/search/' || sit
     </details>
   </div>
 </header>
+
+<script>
+  const menu = document.querySelector<HTMLDetailsElement>('.mobile-menu');
+  const menuButton = menu?.querySelector('summary');
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && menu?.open) {
+      menu.open = false;
+      menuButton?.focus();
+    }
+  });
+  document.addEventListener('click', (event) => {
+    if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
+  });
+  window.matchMedia('(min-width: 48.001rem)').addEventListener('change', (event) => {
+    if (event.matches && menu) menu.open = false;
+  });
+</script>
