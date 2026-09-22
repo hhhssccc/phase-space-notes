@@ -4,9 +4,7 @@ import { withBase } from '../../lib/content';
 
 const track = musicConfig.tracks[0] ?? null;
 const selfHostedSource = track?.source.kind === 'self-hosted' ? track.source : null;
-const initialStatus = selfHostedSource
-  ? '默认暂停。点击播放后，本页才会加载站内音频。'
-  : '默认暂停。点击播放后，本页才会创建声音。';
+const initialStatus = '默认暂停，点击播放开始聆听。';
 ---
 
 {track && (
@@ -35,9 +33,7 @@ const initialStatus = selfHostedSource
     </button>
 
     <div class="track-copy">
-      <p class="track-kicker">{track.kicker}</p>
       <p class="track-title">{track.title}</p>
-      <p class="track-subtitle">{track.subtitle}</p>
     </div>
 
     <div class="waveform" aria-hidden="true">
@@ -478,7 +474,9 @@ const initialStatus = selfHostedSource
 <style>
   .music-player {
     min-width: 0;
-    padding: 0.05rem 0 0;
+    padding: 1.1rem;
+    border-radius: 0.85rem;
+    background: var(--paper-soft);
   }
 
   [data-music-audio] {
@@ -499,8 +497,8 @@ const initialStatus = selfHostedSource
     min-height: 3.85rem;
     place-items: center;
     padding: 0.48rem 0.2rem 0.38rem;
-    border: 1px solid var(--ink-soft);
-    border-radius: 0;
+    border: 0;
+    border-radius: 0.75rem;
     background: var(--ink);
     color: var(--paper);
     cursor: pointer;
@@ -555,8 +553,8 @@ const initialStatus = selfHostedSource
   .track-subtitle {
     margin: 0;
     color: var(--muted);
-    font-family: var(--mono);
-    font-size: 0.52rem;
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.68rem;
     letter-spacing: 0.11em;
     line-height: 1.4;
   }
@@ -597,14 +595,16 @@ const initialStatus = selfHostedSource
   .track-description {
     margin: 0.7rem 0 0;
     color: var(--muted);
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     line-height: 1.65;
   }
 
   .source-note a {
     color: inherit;
-    text-underline-offset: 0.18em;
+    text-decoration: none;
+    border-radius: 0.25rem;
   }
+  .source-note a:hover { color: var(--ink); }
 
   .volume-row {
     display: grid;
@@ -617,8 +617,8 @@ const initialStatus = selfHostedSource
   .volume-row label,
   .volume-row output {
     color: var(--muted);
-    font-family: var(--mono);
-    font-size: 0.62rem;
+    font-family: var(--latin-sans), var(--sans);
+    font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
   }
 
@@ -639,7 +639,7 @@ const initialStatus = selfHostedSource
     min-height: 1.35rem;
     margin: 0.52rem 0 0;
     color: var(--ink-soft);
-    font-size: 0.66rem;
+    font-size: 0.75rem;
     line-height: 1.55;
   }
 
@@ -663,7 +663,7 @@ const initialStatus = selfHostedSource
     padding-left: 0.55rem;
     border-left: 2px solid currentColor;
     color: var(--ink);
-    font-size: 0.66rem;
+    font-size: 0.75rem;
     line-height: 1.5;
   }
 

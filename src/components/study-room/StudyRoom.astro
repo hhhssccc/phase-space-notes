@@ -52,7 +52,7 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
   inert
 >
   <div class="drawer-topbar">
-    <p><span aria-hidden="true">02</span> PRIVATE STUDY</p>
+    <p>渐近自由</p>
     <button type="button" class="drawer-close" data-study-close aria-label="关闭书房">
       <span aria-hidden="true">×</span>
       <span class="visually-hidden">关闭书房</span>
@@ -61,14 +61,13 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
 
   <div class="drawer-content">
     <header class="room-intro">
-      <p class="eyebrow">READING ROOM</p>
       <h2 id="study-room-title">夜读书房</h2>
+      <p class="room-description">调好光线，留一点声音，继续阅读。</p>
     </header>
 
     <section class="room-section preference-section" aria-labelledby="appearance-title">
       <div class="section-heading">
         <h3 id="appearance-title">阅读环境</h3>
-        <span>APPEARANCE</span>
       </div>
 
       <div class="preference-row">
@@ -88,7 +87,7 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
             <button type="button" data-study-wallpaper="grid" aria-pressed="false">方格</button>
             <button type="button" data-study-wallpaper="orbit" aria-pressed="false">轨道</button>
           </div>
-          <small>纹理应用于整个站点；选择纯纸即可恢复无纹理背景。</small>
+          <small>纸面选择会应用到全站。</small>
         </div>
       )}
     </section>
@@ -97,7 +96,6 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
       <section class="room-section" aria-labelledby="music-section-title">
         <div class="section-heading">
           <h3 id="music-section-title">书房音乐</h3>
-          <span>LISTENING</span>
         </div>
         <MusicPlayer />
       </section>
@@ -106,15 +104,13 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
     <section class="room-section" aria-labelledby="updates-title">
       <div class="section-heading">
         <h3 id="updates-title">最近动态</h3>
-        <span>LATEST</span>
       </div>
       {latest.length > 0 ? (
         <ol class="recent-list">
-          {latest.map((entry, index) => {
+          {latest.map((entry) => {
             const updated = entry.data.updated ?? entry.data.date;
             return (
               <li>
-                <span class="recent-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
                 <div>
                   <a href={entryUrl(entry)}>{entry.data.title}</a>
                   <p>
@@ -137,7 +133,6 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
       </div>
     )}
 
-    <p class="drawer-colophon">ASYMPTOTIC FREEDOM · STUDY LOG</p>
   </div>
 </aside>
 
@@ -370,335 +365,40 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
 </script>
 
 <style>
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .study-trigger {
-    position: fixed;
-    z-index: 58;
-    right: max(0.85rem, env(safe-area-inset-right));
-    bottom: max(0.8rem, env(safe-area-inset-bottom));
-    display: grid;
-    grid-template-columns: 2.35rem auto;
-    align-items: center;
-    gap: 0.42rem;
-    min-height: 3rem;
-    padding: 0.2rem 0.82rem 0.2rem 0.28rem;
-    border: 1px solid var(--rule);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    box-shadow: 0 0.55rem 1.5rem var(--shadow);
-    color: var(--ink);
-    backdrop-filter: blur(10px);
-    cursor: pointer;
-    font-size: 0.76rem;
-    font-weight: 680;
-    letter-spacing: 0.12em;
-    line-height: 1;
-    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-  }
-
-  .study-trigger:hover {
-    border-color: var(--ink-soft);
-    box-shadow: 0 0.7rem 1.8rem var(--shadow);
-    transform: translateY(-2px);
-  }
-
-  .study-trigger img {
-    display: block;
-    width: 2.35rem;
-    height: 2.35rem;
-    object-fit: contain;
-    filter: none !important;
-  }
-
-  .study-backdrop {
-    position: fixed;
-    z-index: 68;
-    inset: 0;
-    background: rgb(10 10 10 / 42%);
-    opacity: 0;
-    transition: opacity 220ms ease;
-  }
-
-  .study-backdrop[data-open] {
-    opacity: 1;
-  }
-
-  .study-drawer {
-    position: fixed;
-    z-index: 69;
-    inset: 0 0 0 auto;
-    width: min(22rem, 92vw);
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden auto;
-    overscroll-behavior: contain;
-    border-left: 1px solid var(--rule);
-    background-color: var(--paper);
-    box-shadow: -1rem 0 3rem var(--shadow);
-    color: var(--ink);
-    transform: translateX(103%);
-    visibility: hidden;
-    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 220ms;
-  }
-
-  .study-drawer[data-open] {
-    transform: translateX(0);
-    visibility: visible;
-    transition-delay: 0s;
-  }
-
-  .study-drawer[data-wallpaper='grid'] {
-    background-image:
-      linear-gradient(color-mix(in srgb, var(--rule-soft) 68%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--rule-soft) 68%, transparent) 1px, transparent 1px);
-    background-size: 1.5rem 1.5rem;
-  }
-
-  .study-drawer[data-wallpaper='orbit'] {
-    background-image:
-      radial-gradient(circle at 112% 18%, transparent 0 8.8rem, color-mix(in srgb, var(--rule) 52%, transparent) 8.84rem 8.9rem, transparent 8.95rem),
-      radial-gradient(circle at 112% 18%, transparent 0 5.6rem, color-mix(in srgb, var(--rule-soft) 70%, transparent) 5.64rem 5.7rem, transparent 5.75rem);
-  }
-
-  .drawer-topbar {
-    position: sticky;
-    z-index: 2;
-    top: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 3.35rem;
-    padding: 0.45rem 1rem 0.45rem 1.15rem;
-    border-bottom: 1px solid var(--rule-soft);
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(12px);
-  }
-
-  .drawer-topbar p {
-    margin: 0;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 0.64rem;
-    letter-spacing: 0.14em;
-  }
-
-  .drawer-topbar p span {
-    display: inline-block;
-    margin-right: 0.45rem;
-    color: var(--ink);
-  }
-
-  .drawer-close {
-    display: grid;
-    width: 2.75rem;
-    height: 2.75rem;
-    place-items: center;
-    padding: 0;
-    border: 1px solid transparent;
-    border-radius: 50%;
-    background: transparent;
-    cursor: pointer;
-    font-family: var(--latin-sans), var(--sans);
-    font-size: 1.55rem;
-    font-weight: 300;
-    line-height: 1;
-  }
-
-  .drawer-close:hover {
-    border-color: var(--rule);
-    background: var(--paper-soft);
-  }
-
-  .drawer-content {
-    position: relative;
-    z-index: 1;
-    padding: 0 1.15rem max(1.7rem, env(safe-area-inset-bottom));
-  }
-
-  .room-intro {
-    padding: 1.55rem 0 1.3rem;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .eyebrow {
-    margin: 0 0 0.45rem;
-    color: var(--muted);
-    font-family: var(--latin-sans), var(--sans);
-    font-size: 0.64rem;
-    font-weight: 680;
-    letter-spacing: 0.18em;
-  }
-
-  .room-intro h2 {
-    margin: 0;
-    font-family: var(--serif);
-    font-size: clamp(1.75rem, 7vw, 2.25rem);
-    font-weight: 590;
-    letter-spacing: 0.04em;
-    line-height: 1.18;
-  }
-
-  .room-section {
-    padding: 1.25rem 0;
-    border-bottom: 1px solid var(--rule-soft);
-  }
-
-  .section-heading {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.78rem;
-  }
-
-  .section-heading h3 {
-    margin: 0;
-    font-family: var(--serif);
-    font-size: 0.98rem;
-    font-weight: 660;
-    letter-spacing: 0.08em;
-  }
-
-  .section-heading span {
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 0.57rem;
-    letter-spacing: 0.13em;
-  }
-
-  .preference-row + .preference-row {
-    margin-top: 0.9rem;
-  }
-
-  .preference-row > p {
-    margin: 0 0 0.4rem;
-    color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 620;
-  }
-
-  .preference-row small {
-    display: block;
-    margin-top: 0.45rem;
-    color: var(--muted);
-    font-size: 0.67rem;
-    line-height: 1.55;
-  }
-
-  .segmented {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    border: 1px solid var(--rule);
-  }
-
-  .segmented button {
-    min-width: 0;
-    min-height: 2.75rem;
-    padding: 0.42rem 0.28rem;
-    border: 0;
-    border-right: 1px solid var(--rule);
-    background: color-mix(in srgb, var(--paper) 90%, transparent);
-    cursor: pointer;
-    font-size: 0.72rem;
-    line-height: 1.2;
-  }
-
-  .segmented button:last-child {
-    border-right: 0;
-  }
-
-  .segmented button:hover {
-    background: var(--paper-soft);
-  }
-
-  .segmented button[aria-pressed='true'] {
-    background: var(--ink);
-    color: var(--paper);
-  }
-
-  .recent-list {
-    display: grid;
-    gap: 0;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .recent-list li {
-    display: grid;
-    grid-template-columns: 1.55rem minmax(0, 1fr);
-    gap: 0.55rem;
-    padding: 0.62rem 0;
-    border-top: 1px solid var(--rule-soft);
-  }
-
-  .recent-list li:first-child {
-    border-top-color: var(--rule);
-  }
-
-  .recent-index {
-    padding-top: 0.12rem;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 0.62rem;
-  }
-
-  .recent-list a {
-    display: block;
-    overflow-wrap: anywhere;
-    font-family: var(--serif);
-    font-size: 0.82rem;
-    font-weight: 620;
-    line-height: 1.45;
-    text-decoration-thickness: 1px;
-  }
-
-  .recent-list p {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.65rem;
-    margin: 0.24rem 0 0;
-    color: var(--muted);
-    font-size: 0.64rem;
-    line-height: 1.4;
-  }
-
-  .recent-list time {
-    flex: 0 0 auto;
-    font-family: var(--mono);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .empty-state {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.75rem;
-  }
-
-  .stats-section {
-    padding-bottom: 1.1rem;
-  }
-
-  .drawer-colophon {
-    margin: 1.15rem 0 0;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 0.52rem;
-    letter-spacing: 0.12em;
-    text-align: center;
-  }
-
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .study-trigger { position: fixed; z-index: 58; right: max(0.85rem, env(safe-area-inset-right)); bottom: max(0.8rem, env(safe-area-inset-bottom)); display: grid; grid-template-columns: 2.35rem auto; align-items: center; gap: 0.42rem; min-height: 3rem; padding: 0.2rem 0.82rem 0.2rem 0.28rem; border: 0; border-radius: 999px; background: var(--paper-soft); box-shadow: 0 0.3rem 1rem var(--shadow); color: var(--ink); cursor: pointer; font-size: 0.8rem; font-weight: 600; line-height: 1; transition: background-color var(--ease); }
+  .study-trigger:hover { background: color-mix(in srgb, var(--ink) 10%, var(--paper)); }
+  .study-trigger img { display: block; width: 2.35rem; height: 2.35rem; object-fit: contain; filter: none !important; }
+  .study-backdrop { position: fixed; z-index: 68; inset: 0; background: rgb(10 10 10 / 28%); opacity: 0; transition: opacity 220ms ease; }
+  .study-backdrop[data-open] { opacity: 1; }
+  .study-drawer { position: fixed; z-index: 69; inset: 0.75rem 0.75rem auto auto; width: min(28rem, calc(100% - 1.5rem)); height: calc(100dvh - 1.5rem); overflow: hidden auto; overscroll-behavior: contain; border: 0; border-radius: 1rem; background: var(--paper); box-shadow: 0 1rem 3rem var(--shadow); color: var(--ink); transform: translateX(calc(100% + 1rem)); visibility: hidden; transition: transform 220ms cubic-bezier(0.22,1,0.36,1), visibility 0s linear 220ms; }
+  .study-drawer[data-open] { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+  .drawer-topbar { position: sticky; z-index: 2; top: 0; display: flex; align-items: center; justify-content: space-between; min-height: 4rem; padding: 0.6rem 2rem; background: var(--paper); }
+  .drawer-topbar p { margin: 0; color: var(--muted); font-size: 0.8rem; }
+  .drawer-close { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; padding: 0; border: 0; border-radius: 0.5rem; background: transparent; cursor: pointer; font-size: 1.55rem; font-weight: 300; line-height: 1; }
+  .drawer-close:hover { background: var(--paper-soft); }
+  .drawer-content { padding: 0 2rem max(2rem, env(safe-area-inset-bottom)); }
+  .room-intro { padding: 1.25rem 0 1.5rem; }
+  .room-intro h2 { margin: 0; font-family: var(--serif); font-size: 2.25rem; font-weight: 520; letter-spacing: -0.03em; line-height: 1.3; }
+  .room-description { margin: 0.85rem 0 0; font-size: 0.85rem; line-height: 1.8; color: var(--muted); }
+  .room-section { padding: 1.5rem 0; }
+  .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .section-heading h3 { margin: 0; font-family: var(--serif); font-size: 1.15rem; font-weight: 650; letter-spacing: 0; }
+  .preference-row + .preference-row { margin-top: 1.25rem; }
+  .preference-row > p { margin: 0 0 0.6rem; color: var(--ink-soft); font-size: 0.85rem; }
+  .preference-row small { display: block; margin-top: 0.6rem; color: var(--muted); font-size: 0.75rem; line-height: 1.6; }
+  .segmented { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0.3rem; padding: 0.3rem; border-radius: 0.75rem; background: var(--paper-soft); }
+  .segmented button { min-width: 0; min-height: 2.75rem; padding: 0.5rem 0.25rem; border: 0; border-radius: 0.5rem; background: transparent; color: var(--muted); cursor: pointer; font-size: 0.85rem; line-height: 1.2; transition: background-color var(--ease), color var(--ease); }
+  .segmented button:hover { color: var(--ink); }
+  .segmented button[aria-pressed='true'] { background: var(--paper); color: var(--ink); font-weight: 600; box-shadow: 0 1px 4px var(--shadow); }
+  .recent-list { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+  .recent-list li { position: relative; padding: 0.85rem 0.6rem; margin-inline: -0.6rem; border-radius: 0.5rem; }
+  .recent-list li:hover, .recent-list li:focus-within { background: var(--paper-soft); }
+  .recent-list a { display: block; overflow-wrap: anywhere; font-family: var(--serif); font-size: 1rem; font-weight: 620; line-height: 1.6; text-decoration: none; }
+  .recent-list a::after { content: ''; position: absolute; inset: 0; border-radius: 0.5rem; }
+  .recent-list p { display: flex; justify-content: space-between; gap: 0.65rem; margin: 0.45rem 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.5; }
+  .recent-list time { flex: none; font-variant-numeric: tabular-nums; }
+  .empty-state { margin: 0; color: var(--muted); font-size: 0.85rem; }
   :global(body.study-room-open) {
     overflow: hidden;
   }
@@ -717,6 +417,7 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
   }
 
   @media (max-width: 40rem) {
+    .drawer-topbar { padding-inline: 1rem; }
     .study-trigger {
       right: max(0.38rem, env(safe-area-inset-right));
       bottom: max(0.38rem, env(safe-area-inset-bottom));
@@ -750,6 +451,7 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
   }
 
   @media (max-width: 22rem) {
+    .drawer-topbar { padding-inline: 0.85rem; }
     .drawer-content {
       padding-inline: 0.85rem;
     }
@@ -759,7 +461,7 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
     }
 
     .segmented button {
-      font-size: 0.68rem;
+      font-size: 0.8rem;
     }
   }
 
