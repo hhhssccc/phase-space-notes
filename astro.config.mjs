@@ -4,7 +4,6 @@ import { unified } from '@astrojs/markdown-remark';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { rehypeMathVisibility } from './src/plugins/rehype-math-visibility.mjs';
 import { remarkObsidianCallouts } from './src/plugins/remark-obsidian-callouts.mjs';
 import { remarkWikiLinks } from './src/plugins/remark-wikilinks.mjs';
 
@@ -28,7 +27,7 @@ export default defineConfig({
         remarkObsidianCallouts,
         [remarkWikiLinks, { base }],
       ],
-      rehypePlugins: [rehypeKatex, rehypeMathVisibility],
+      rehypePlugins: [rehypeKatex],
     }),
     syntaxHighlight: {
       type: 'shiki',

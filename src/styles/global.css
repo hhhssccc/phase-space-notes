@@ -492,14 +492,6 @@ main { min-height: calc(100vh - 9rem); }
 .article-prose[data-math-display='plain'] .katex-display + p,
 .article-prose[data-math-display='plain'] p + .katex-display { margin-top: 0.85rem; }
 .article-prose .katex { font-size: 1.05em; }
-/* auto keeps native find, selection and anchors available. Screen-only means
-   print always lays out every formula, including those never scrolled into view. */
-@media screen {
-  .article-prose .math-deferred {
-    content-visibility: auto;
-    contain-intrinsic-block-size: auto var(--math-height);
-  }
-}
 .article-prose figure { margin: 2.2rem 0; }
 .article-prose figure img {
   display: block;
