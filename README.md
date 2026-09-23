@@ -44,6 +44,12 @@ npm run build
 
 静态产物生成在 `dist/`。推送到 GitHub 后，由 GitHub Pages 自动构建并发布。
 
+## 长文排版性能
+
+构建时为独立公式预估占位高度，浏览器通过 `content-visibility: auto` 延后排版屏幕外的公式。正文、原始 TeX 和辅助阅读使用的 MathML 始终保留，支持原生查找与目录跳转；打印不启用延后排版。不支持该 CSS 的浏览器直接使用普通排版。带编号或显式换行等无法可靠估算的公式保留普通排版。
+
+阅读进度通过尺寸观察更新总高度，滚动时只在动画帧内更新进度，不反复测量整篇文章。调整 KaTeX 版本或 `.katex` 字号时须同时检查 `src/plugins/rehype-math-visibility.mjs` 的高度估算，并运行 `node --test scripts/rehype-math-visibility.test.mjs`、完整构建及手机/桌面的目录、查找、打印回归。
+
 ## 尚未配置
 
 站名、作者、Slogan 与视觉方向已经确认。独立域名与评论仍未配置；正式域名确定后，用 `SITE_URL` 环境变量覆盖默认地址。
