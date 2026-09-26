@@ -1,0 +1,26 @@
+/* An identity 2D transform bounds Blink's hit testing for each display formula.
+   Edge tracing on the Jones page reduced HitTest time from ~310ms to ~166ms
+   for the same 90 pointer moves. No content is deferred, clipped or resized.
+   Keep this 2D: do not force a GPU layer for every formula with translateZ or
+   will-change. Print uses the original KaTeX fragmentation behavior. */
+@media screen {
+  .article-prose .katex-display { transform: translate(0); }
+}
+
+@supports (animation-timeline: --article-reading) and (timeline-scope: --article-reading) and (animation-range: contain) {
+  body[data-page-kind='article'] { timeline-scope: --article-reading; }
+  .article-main { view-timeline: --article-reading block; }
+  .reading-progress {
+    /* Use longhands: the CSS minifier otherwise folds the named timeline into
+       a new animation shorthand syntax that current Edge does not parse. */
+    animation-name: article-reading-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: --article-reading;
+    animation-range: contain;
+  }
+  @keyframes article-reading-progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+}
