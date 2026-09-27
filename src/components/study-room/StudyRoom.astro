@@ -20,6 +20,7 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
 ---
 
 <button
+  transition:persist="study-trigger"
   class="study-trigger"
   type="button"
   data-study-open
@@ -36,9 +37,10 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
   <span>书房</span>
 </button>
 
-<div class="study-backdrop" data-study-backdrop hidden aria-hidden="true"></div>
+<div transition:persist="study-backdrop" class="study-backdrop" data-study-backdrop hidden aria-hidden="true"></div>
 
 <aside
+  transition:persist="study-drawer"
   class="study-drawer"
   id="study-room-drawer"
   data-study-drawer
@@ -149,7 +151,7 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
   const backdrop = document.querySelector<HTMLElement>('[data-study-backdrop]');
   const closeButton = document.querySelector<HTMLButtonElement>('[data-study-close]');
   const root = document.documentElement;
-  const body = document.body;
+  let body = document.body;
   const wallpaperEnabled = drawer?.dataset.wallpaperEnabled === 'true';
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -301,6 +303,19 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
     const transitionDelay = reducedMotion.matches ? 0 : 230;
     closeTimer = window.setTimeout(finishClose, transitionDelay);
   };
+
+  document.addEventListener('astro:before-swap', () => {
+    closeDrawer();
+    window.clearTimeout(closeTimer);
+    finishClose();
+  });
+  document.addEventListener('astro:after-swap', () => {
+    body = document.body;
+    // Retain the in-memory setting even when browser storage is unavailable.
+    const wallpaper = drawer?.dataset.wallpaper ?? null;
+    applyWallpaper(isWallpaper(wallpaper) ? wallpaper : 'plain');
+    syncThemeControls();
+  });
 
   trigger?.addEventListener('click', (event) => {
     openDrawer(event.currentTarget instanceof HTMLElement ? event.currentTarget : trigger);

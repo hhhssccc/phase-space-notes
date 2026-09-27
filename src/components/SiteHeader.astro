@@ -40,18 +40,21 @@ const primaryItems = navItems.filter((item) => item.href !== '/search/');
 </header>
 
 <script>
-  const menu = document.querySelector<HTMLDetailsElement>('.mobile-menu');
-  const menuButton = menu?.querySelector('summary');
+  const currentMenu = () => document.querySelector<HTMLDetailsElement>('.mobile-menu');
   document.addEventListener('keydown', (event) => {
+    const menu = currentMenu();
+    const menuButton = menu?.querySelector('summary');
     if (event.key === 'Escape' && menu?.open) {
       menu.open = false;
       menuButton?.focus();
     }
   });
   document.addEventListener('click', (event) => {
+    const menu = currentMenu();
     if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
   });
   window.matchMedia('(min-width: 48.001rem)').addEventListener('change', (event) => {
+    const menu = currentMenu();
     if (event.matches && menu) menu.open = false;
   });
 </script>

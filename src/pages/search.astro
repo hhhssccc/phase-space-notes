@@ -51,7 +51,9 @@ const topics = [...new Set(index.flatMap((item) => item.tags))].slice(0, 6);
   </div>
   {searchEnabled && (
     <script>
+      document.addEventListener('astro:page-load', () => {
       const input = document.querySelector('#site-search');
+      if (!(input instanceof HTMLInputElement)) return;
       const status = document.querySelector('[data-search-status]');
       const clear = document.querySelector<HTMLButtonElement>('.search-clear');
       const heading = document.querySelector('[data-results-heading]');
@@ -98,6 +100,7 @@ const topics = [...new Set(index.flatMap((item) => item.tags))].slice(0, 6);
         });
       });
       update();
+      });
     </script>
   )}
 </BaseLayout>

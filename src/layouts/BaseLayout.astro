@@ -6,6 +6,7 @@ import '@fontsource-variable/source-serif-4';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import StudyRoom from '../components/study-room/StudyRoom.astro';
@@ -57,8 +58,9 @@ const articleStructuredData = pageKind === 'article' && publishedTime
 ---
 
 <!doctype html>
-<html lang={siteConfig.language} data-theme="system">
+<html lang={siteConfig.language} data-theme="system" transition:animate="none">
   <head>
+    <ClientRouter fallback="swap" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
@@ -120,14 +122,14 @@ const articleStructuredData = pageKind === 'article' && publishedTime
     <script>
       const root = document.documentElement;
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-      const themeColor = document.querySelector<HTMLMetaElement>('meta[data-theme-color]');
+
       const systemDark = () => systemTheme.matches;
       const resolvedDark = () => root.dataset.theme === 'dark' || (root.dataset.theme === 'system' && systemDark());
-      const themeButtons = document.querySelectorAll<HTMLButtonElement>('[data-theme-cycle]');
+      const themeButtons = () => document.querySelectorAll<HTMLButtonElement>('[data-theme-cycle]');
       const syncThemeButtons = () => {
         const dark = resolvedDark();
-        themeColor?.setAttribute('content', dark ? '#121212' : '#ffffff');
-        themeButtons.forEach((button) => {
+        document.querySelector<HTMLMetaElement>('meta[data-theme-color]')?.setAttribute('content', dark ? '#121212' : '#ffffff');
+        themeButtons().forEach((button) => {
           button.textContent = root.dataset.theme === 'system' ? '随系统' : dark ? '深色' : '浅色';
           button.setAttribute('aria-pressed', String(dark));
           button.setAttribute('aria-label', dark ? '切换到浅色模式' : '切换到深色模式');
@@ -142,13 +144,17 @@ const articleStructuredData = pageKind === 'article' && publishedTime
           // The theme still applies for this page when storage is unavailable.
         }
       };
-      themeButtons.forEach((button) => {
-        button.addEventListener('click', () => setTheme(resolvedDark() ? 'light' : 'dark'));
-      });
       new MutationObserver(syncThemeButtons).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
       systemTheme.addEventListener('change', syncThemeButtons);
-      syncThemeButtons();
-
+      document.addEventListener('astro:before-swap', (event) => {
+        event.newDocument.documentElement.dataset.theme = root.dataset.theme || 'system';
+      });
+      document.addEventListener('astro:page-load', async () => {
+        themeButtons().forEach((button) => {
+          button.addEventListener('click', () => setTheme(resolvedDark() ? 'light' : 'dark'));
+        });
+        syncThemeButtons();
+        const currentPage = document.querySelector('main');
       if (document.body.dataset.featureMermaid === 'true') {
         document.querySelectorAll('.article-prose pre > code.language-mermaid').forEach((code) => {
           const pre = code.parentElement;
@@ -161,6 +167,7 @@ const articleStructuredData = pageKind === 'article' && publishedTime
           const { default: mermaid } = await import('mermaid');
           mermaid.initialize({ startOnLoad: false, theme: resolvedDark() ? 'dark' : 'neutral', securityLevel: 'strict' });
           await mermaid.run({ querySelector: '.mermaid' });
+          if (!currentPage?.isConnected) return;
         }
       }
 
@@ -239,6 +246,7 @@ const articleStructuredData = pageKind === 'article' && publishedTime
         document.querySelector('[data-comments-root]')?.append(script);
         button.remove();
       }, { once: true });
+      });
     </script>
   </body>
 </html>

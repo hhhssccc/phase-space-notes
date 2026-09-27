@@ -1,0 +1,102 @@
+{
+  "retrieved": "2026-09-26",
+  "audio": "AAC/M4A 160 kbps; full decode verified; metadata stripped",
+  "tracks": [
+    {
+      "id": "moonlit-pages",
+      "title": "月落纸页",
+      "genre": "古典 · 钢琴",
+      "bvid": "BV1bW411r7Vu",
+      "url": "https://www.bilibili.com/video/BV1bW411r7Vu/",
+      "duration": 327.54,
+      "bytes": 6636184,
+      "sha256": "c8f38687c4e7db7dab405b24ec8a49ee01641258554b99bb51a539b05b94790b",
+      "formatId": "30280",
+      "validated": "full ffmpeg decode"
+    },
+    {
+      "id": "blue-margin",
+      "title": "蓝调留白",
+      "genre": "爵士 · 钢琴",
+      "bvid": "BV1aJ411N7Gr",
+      "url": "https://www.bilibili.com/video/BV1aJ411N7Gr/",
+      "duration": 405.196,
+      "bytes": 8109543,
+      "sha256": "dcc13ae98ed373dab55671f20e81afcd1fcc96bf92d07cbc774b93fe9fac78b7",
+      "formatId": "30280",
+      "validated": "full ffmpeg decode"
+    },
+    {
+      "id": "winter-letter",
+      "title": "雪夜来信",
+      "genre": "电影 · 钢琴",
+      "bvid": "BV1jY411d7qT",
+      "url": "https://www.bilibili.com/video/BV1jY411d7qT/",
+      "duration": 356.522,
+      "bytes": 7250715,
+      "sha256": "dfbf816785841e055617192c3432ff6922b6ceed5885e50b5f0b95c5af23e91c",
+      "formatId": "30280",
+      "validated": "full ffmpeg decode"
+    },
+    {
+      "id": "streetlight-beats",
+      "title": "街灯慢拍",
+      "genre": "爵士嘻哈 · 器乐",
+      "bvid": "BV1Uy4y1b7ba",
+      "url": "https://www.bilibili.com/video/BV1Uy4y1b7ba/",
+      "duration": 257.469,
+      "bytes": 5309674,
+      "sha256": "eba01e3acb3190972e4058efd5c97c76594382d145ae816f1756427c7e17e3de",
+      "formatId": "30280",
+      "validated": "full ffmpeg decode"
+    },
+    {
+      "id": "woodland-strings",
+      "title": "木弦晚风",
+      "genre": "民谣 · 吉他",
+      "bvid": "BV1fM4y1t7km",
+      "url": "https://www.bilibili.com/video/BV1fM4y1t7km/",
+      "duration": 82.569,
+      "bytes": 1671604,
+      "sha256": "6d669e482323cff1da55cc59599947ad3aa0d80d13d0d19f0dd4a6276d60b55f",
+      "formatId": "30280",
+      "validated": "full ffmpeg decode"
+    },
+    {
+      "id": "bamboo-moon",
+      "title": "竹影向月",
+      "genre": "东方 · 钢琴",
+      "bvid": "BV1HUTVzkEUq",
+      "url": "https://www.bilibili.com/video/BV1HUTVzkEUq/",
+      "duration": 173.222,
+      "bytes": 3488990,
+      "sha256": "2059ade45978a1b21205e9f3143540c7fa88501d4e72805e39ce9d6da6f3317e",
+      "formatId": "30280",
+      "validated": "full ffmpeg decode"
+    },
+    {
+      "id": "before-rain-ends",
+      "title": "雨停之前",
+      "genre": "动画 · 人声",
+      "bvid": "BV1tW411a71j",
+      "url": "https://www.bilibili.com/video/BV1tW411a71j/",
+      "duration": 263.274,
+      "bytes": 5485828,
+      "sha256": "0f1c33f430842b4a9b3d2efe66bdd9625b6d23cc31b7c8eeadf5047a489ee9eb",
+      "formatId": "30280",
+      "validated": "full ffmpeg decode"
+    },
+    {
+      "id": "late-summer-echo",
+      "title": "夏末回声",
+      "genre": "动画 · 抒情人声",
+      "bvid": "BV1d54y137H7",
+      "url": "https://www.bilibili.com/video/BV1d54y137H7/",
+      "duration": 352.916,
+      "bytes": 7149870,
+      "sha256": "ece145c08ac6101ab0ffe58fc8e534f7c90e67d3d9936ad0f546d2ec3d222d47",
+      "formatId": "30280",
+      "validated": "full ffmpeg decode"
+    }
+  ]
+}

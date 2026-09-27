@@ -47,6 +47,47 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
 
   <p class="track-description">{track.description}</p>
 
+  {selfHostedSource && <>
+    <div class="progress-row">
+      <output data-elapsed>0:00</output>
+      <input data-seek type="range" min="0" max="0" step="1" value="0" disabled aria-label="播放进度" />
+      <output data-duration>--:--</output>
+    </div>
+    <div class="transport-row">
+      <button type="button" data-previous aria-label="上一首">上一首</button>
+      <button type="button" data-next aria-label="下一首">下一首</button>
+      <select data-play-mode aria-label="播放模式">
+        <option value="list">列表循环</option>
+        <option value="one">单曲循环</option>
+        <option value="shuffle">随机播放</option>
+        <option value="order">顺序播放</option>
+      </select>
+      <button type="button" data-mute aria-pressed="false">静音</button>
+    </div>
+    <div class="player-options">
+      <label>定时停止
+        <select data-sleep aria-label="定时停止">
+          <option value="0">关闭</option>
+          <option value="15">15 分钟</option>
+          <option value="30">30 分钟</option>
+          <option value="60">60 分钟</option>
+          <option value="end">本曲结束</option>
+        </select>
+      </label>
+      <span data-sleep-status></span>
+    </div>
+    <details class="playlist">
+      <summary>播放列表 · {musicConfig.tracks.filter(item => item.source.kind === 'self-hosted').length} 首</summary>
+      <ol>
+        {musicConfig.tracks.map((item, index) => item.source.kind === 'self-hosted' && <li>
+          <button type="button" data-select-track={index} aria-current={index === 0 ? 'true' : undefined}>
+            <span>{item.title}</span><small>{item.subtitle}</small>
+          </button>
+        </li>)}
+      </ol>
+    </details>
+  </>}
+
   <div class="volume-row">
     <label for="study-music-volume">音量</label>
     <input
@@ -80,7 +121,7 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
     )}
   </p>
   {selfHostedSource && (
-    <audio data-music-audio preload="none" loop={selfHostedSource.loop ?? false}>
+    <audio data-music-audio preload="none">
       <source src={withBase(selfHostedSource.src)} type={selfHostedSource.mimeType} />
     </audio>
   )}
@@ -89,12 +130,13 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
 
 <script>
   import type { GeneratedMusicEngine } from './generated-music-engine';
+  import { setupPlaylist } from './music-playlist';
 
   type PlayerState = 'idle' | 'starting' | 'waiting' | 'playing' | 'paused' | 'error';
   const player = document.querySelector<HTMLElement>('[data-music-player]');
 
   if (player) {
-  const trackTitle = player.dataset.trackTitle || '书房音乐';
+  let trackTitle = player.dataset.trackTitle || '书房音乐';
   const trackKind = player.dataset.trackKind === 'self-hosted' ? 'self-hosted' : 'generated';
   const defaultVolume = Number(player.dataset.defaultVolume || '28');
   const volumeStorageKey = player.dataset.volumeStorageKey || 'asymptotic-freedom-music-volume';
@@ -106,6 +148,9 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
   const volume = player.querySelector<HTMLInputElement>('[data-music-volume]');
   const volumeValue = player.querySelector<HTMLOutputElement>('[data-music-volume-value]');
   const selfHostedAudio = player.querySelector<HTMLAudioElement>('[data-music-audio]');
+  // Keep the media element outside document swaps. The persisted drawer owns
+  // its controls; a detached audio element continues playing during navigation.
+  selfHostedAudio?.remove();
 
   let generatedContext: AudioContext | null = null;
   let generatedEngine: GeneratedMusicEngine | null = null;
@@ -175,7 +220,7 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
 
   const playingStatus = () => currentVolume === 0
     ? '正在播放 · 当前音量为 0%'
-    : '正在播放 · 仅在本页持续';
+    : '正在播放 · 全站连续播放';
 
   const setState = (state: PlayerState, message: string) => {
     if (!player || !toggle || !controlLabel || !status || !errorMessage) return;
@@ -295,6 +340,7 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
     try {
       if (trackKind === 'self-hosted') {
         if (!selfHostedAudio) throw new Error('The configured self-hosted audio element is unavailable.');
+        if (selfHostedAudio.error) selfHostedAudio.load();
         selfHostedAudio.volume = currentVolume / 100;
         const playing = waitForMediaPlaying(selfHostedAudio, controller.signal);
         const requested = selfHostedAudio.play();
@@ -365,7 +411,15 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
     }
   };
 
+  const playlist = selfHostedAudio ? setupPlaylist(player, selfHostedAudio, {
+    play: () => { void startPlayback(); },
+    pause: () => { void pausePlayback(); },
+    title: (title) => { trackTitle = title; },
+  }) : null;
+
   const teardown = () => {
+    playlist?.save();
+    playlist?.clearTimer();
     operationVersion += 1;
     startController?.abort();
     startController = null;
@@ -379,7 +433,7 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
     if (engine) void engine.close();
     else if (context && context.state !== 'closed') void context.close().catch(() => undefined);
     if (toggle) toggle.disabled = false;
-    setState('paused', '页面已离开，声音已停止。');
+    setState('paused', '页面已关闭，声音已停止。');
   };
 
   currentVolume = readStoredVolume();
@@ -418,6 +472,7 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
     });
 
     selfHostedAudio.addEventListener('pause', () => {
+      if (!selfHostedAudio.paused) return;
       if (startController) {
         operationVersion += 1;
         startController.abort();
@@ -438,6 +493,7 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
       isPlaying = false;
       if (toggle) toggle.disabled = false;
       setState('paused', '播放已结束。');
+      playlist?.ended();
     });
 
     selfHostedAudio.addEventListener('error', () => {
@@ -472,6 +528,33 @@ const initialStatus = '默认暂停，点击播放开始聆听。';
 </script>
 
 <style>
+  .progress-row {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
+    gap: 0.4rem;
+    align-items: center;
+    margin-top: 0.7rem;
+    font: 0.65rem var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-row input { width: 100%; min-width: 0; height: 2rem; accent-color: var(--ink); }
+  .progress-row output:last-child { text-align: right; }
+  .transport-row, .player-options { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.5rem; }
+  .transport-row button, select {
+    min-height: 2.3rem; max-width: 100%; padding: 0.35rem 0.5rem;
+    border: 1px solid var(--rule); border-radius: 0.5rem; background: var(--paper); color: var(--ink);
+    font: inherit; font-size: 0.7rem; cursor: pointer;
+  }
+  .transport-row button:hover, .playlist button:hover { background: var(--rule); }
+  .player-options { color: var(--muted); font-size: 0.66rem; justify-content: space-between; }
+  .player-options label { display: flex; align-items: center; gap: 0.5rem; }
+  .playlist { border-top: 1px solid var(--rule); margin-top: 0.8rem; font-size: 0.72rem; }
+  .playlist summary { padding-block: 0.6rem; cursor: pointer; }
+  .playlist ol { margin: 0; padding: 0; list-style: none; max-height: 13rem; overflow-y: auto; }
+  .playlist button { width: 100%; padding: 0.65rem 0.4rem; border: 0; text-align: left; background: transparent; color: var(--ink); cursor: pointer; font: inherit; }
+  .playlist button[aria-current='true'] { border-left: 2px solid var(--ink); font-weight: 650; background: var(--rule); }
+  .playlist small { display: block; color: var(--muted); font-size: 0.6rem; font-weight: 400; }
+  button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .music-player {
     min-width: 0;
     padding: 1.1rem;

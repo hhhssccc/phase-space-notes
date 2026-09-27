@@ -138,6 +138,13 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
   </div>
   {siteConfig.features.readingProgress && (
     <script>
+      let cleanupProgress = () => {};
+      document.addEventListener('astro:before-swap', () => cleanupProgress());
+      document.addEventListener('astro:page-load', () => {
+      cleanupProgress();
+      const controller = new AbortController();
+      const signal = controller.signal;
+      cleanupProgress = () => controller.abort();
       // Modern browsers drive the indicator without JS scroll/layout work.
       // Keep the ordinary full-document layout and a frame-coalesced fallback.
       const progress = document.querySelector('[data-reading-progress]');
@@ -158,14 +165,16 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
           progress.style.transform = `scaleX(${amount})`;
         };
         const scheduleProgress = () => {
-          if (!frame) frame = requestAnimationFrame(updateProgress);
+          if (!signal.aborted && !frame) frame = requestAnimationFrame(updateProgress);
         };
+        cleanupProgress = () => { controller.abort(); cancelAnimationFrame(frame); };
         scheduleProgress();
-        addEventListener('scroll', scheduleProgress, { passive: true });
-        addEventListener('resize', scheduleProgress);
-        addEventListener('load', scheduleProgress, { once: true });
+        addEventListener('scroll', scheduleProgress, { passive: true, signal });
+        addEventListener('resize', scheduleProgress, { signal });
+        addEventListener('load', scheduleProgress, { once: true, signal });
         document.fonts.ready.then(scheduleProgress);
       }
+      });
     </script>
   )}
 </BaseLayout>
