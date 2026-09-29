@@ -5,6 +5,7 @@ import { siteConfig } from '../../config/site';
 import { byRecentlyChanged, entryUrl, withBase } from '../../lib/content';
 import { getSiteStats } from '../../lib/site-stats';
 import MusicPlayer from './MusicPlayer.astro';
+import ReadingShelf from './ReadingShelf.astro';
 import SiteStats from './SiteStats.astro';
 
 const entries = (await getCollection('articles', ({ data }) => !data.draft)).sort(byRecentlyChanged);
@@ -66,6 +67,8 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
       <h2 id="study-room-title">夜读书房</h2>
       <p class="room-description">调好光线，留一点声音，继续阅读。</p>
     </header>
+
+    <ReadingShelf />
 
     <section class="room-section preference-section" aria-labelledby="appearance-title">
       <div class="section-heading">

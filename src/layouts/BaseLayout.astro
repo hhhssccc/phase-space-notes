@@ -6,6 +6,7 @@ import '@fontsource-variable/source-serif-4';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/global.css';
+import '../styles/reading-tools.css';
 import { ClientRouter } from 'astro:transitions';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
@@ -111,6 +112,7 @@ const articleStructuredData = pageKind === 'article' && publishedTime
       <slot />
     </main>
     <SiteFooter />
+    <script>import '../scripts/reading-memory';</script>
     {siteConfig.features.studyRoom && <StudyRoom />}
     {siteConfig.features.lightbox && (
       <dialog class="lightbox" data-lightbox aria-label="图片预览" aria-describedby="lightbox-caption">

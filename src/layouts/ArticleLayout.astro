@@ -1,4 +1,8 @@
 ---
+import ReadingPath from '../components/ReadingPath.astro';
+import SymbolGuide from '../components/SymbolGuide.astro';
+import FormulaTools from '../components/FormulaTools.astro';
+import PhysicsLab from '../components/PhysicsLab.astro';
 import BaseLayout from './BaseLayout.astro';
 import Comments from '../components/Comments.astro';
 import ArticleHistory from '../components/ArticleHistory.astro';
@@ -22,7 +26,7 @@ const minutes = readingMinutes(post.body || '');
 const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
 // Normalize line endings so the adaptive layout is identical on Windows and CI/Linux.
 const sourceBody = (post.body || '').replace(/\r\n?/g, '\n');
-const renderedHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const renderedHeadings = headings.filter((heading) => (heading.depth === 2 || heading.depth === 3) && heading.slug !== 'footnote-label');
 const sourceHeadings = extractSourceHeadings(sourceBody);
 const toc = await Promise.all(renderedHeadings.map(async (heading, index) => ({
   ...heading,
@@ -69,7 +73,7 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       <small>{minutes} 分钟 · {post.body?.length.toLocaleString('zh-CN')} 字符</small>
     </aside>
 
-    <article class="article-main">
+    <article class="article-main" id="article-start" data-reading-article data-reading-title={post.data.title}>
       <header class="article-title">
         <p class="eyebrow">{post.data.category.toUpperCase()} · {typeLabel}</p>
         <h1>{post.data.title}</h1>
@@ -80,6 +84,13 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
           {post.data.updated && <> · 正文实质修订 <time datetime={post.data.updated.toISOString()}>{formatDate(post.data.updated)}</time></>}
         </p>
       </header>
+
+      <div class="reading-toolbar print-hidden">
+        <a data-resume-reading hidden></a>
+        <button type="button" data-add-bookmark>夹一枚书签</button>
+        <span data-reading-status role="status"></span>
+      </div>
+      <SymbolGuide id={post.id} />
 
       {post.data.abstract && (
         <section class="abstract" aria-labelledby="abstract-title">
@@ -104,6 +115,7 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
 
       <div class="article-prose" data-math-display={effectiveMathDisplay}>
         <slot />
+        <PhysicsLab id={post.id} />
       </div>
 
       {(post.data.tags.length > 0) && (
@@ -111,6 +123,9 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
           <p class="article-tags">{post.data.tags.map((tag) => <a href={withBase(`/tags/${encodeURIComponent(tag)}/`)}>#{tag}</a>)}</p>
         </footer>
       )}
+
+      <FormulaTools />
+      <ReadingPath id={post.id} />
 
       <ArticleHistory slug={post.id} date={post.data.date} updated={post.data.updated} />
 

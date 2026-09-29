@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { readingPaths } from '../config/reading-paths';
+import { entryUrl, readingMinutes } from '../lib/content';
+const entries = await getCollection('articles', ({ data }) => !data.draft);
+const routes = readingPaths.map(path => ({ ...path, steps: path.steps.map(step => {
+  const entry = entries.find(entry => entry.id === step.id);
+  if (!entry) throw new Error(`Reading path ${path.id}: missing public article ${step.id}`);
+  return { ...step, entry };
+}) }));
+---
+<BaseLayout title="专题阅读｜渐近自由" description="沿着问题，连接物理文章与笔记。">
+  <div class="index-page reading-paths">
+    <header class="index-header"><p class="eyebrow">READING PATHS</p><h1>沿着问题读下去</h1><p>几条建议路线。可以顺着读，也可以从熟悉的问题进入。</p></header>
+    {routes.map(path => <section class="reading-route" id={path.id}>
+      <h2>{path.title}</h2><p>{path.question}</p>
+      <p class="route-prerequisites"><strong>建议基础</strong> · {path.prerequisites}</p>
+      <ol>{path.steps.map(({ entry, purpose }) => <li>
+        <a href={entryUrl(entry)}>{entry.data.title}</a>
+        <p>{purpose} <span class="entry-meta">约 {readingMinutes(entry.body || '')} 分钟</span></p>
+      </li>)}</ol>
+    </section>)}
+  </div>
+</BaseLayout>

@@ -1,21 +1,24 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { siteConfig } from '../config/site';
 import { byNewest, entryUrl, plainText } from '../lib/content';
+
+import { sourceSections } from '../lib/section-search';
 
 const searchEnabled = siteConfig.features.search;
 const entries = searchEnabled
   ? (await getCollection('articles', ({ data }) => !data.draft)).sort(byNewest)
   : [];
-const index = entries.map((entry) => ({
+const index = await Promise.all(entries.map(async (entry) => ({
   title: entry.data.title,
   description: entry.data.description,
   category: entry.data.category,
   tags: entry.data.tags,
   url: entryUrl(entry),
   text: plainText(entry.body || ''),
-}));
+  sections: sourceSections(entry.body || '', (await render(entry)).headings, plainText),
+})));
 const topics = [...new Set(index.flatMap((item) => item.tags))].slice(0, 6);
 ---
 
@@ -51,6 +54,7 @@ const topics = [...new Set(index.flatMap((item) => item.tags))].slice(0, 6);
   </div>
   {searchEnabled && (
     <script>
+      import { searchEntries, excerpt, type SearchEntry } from '../lib/section-search';
       document.addEventListener('astro:page-load', () => {
       const input = document.querySelector('#site-search');
       if (!(input instanceof HTMLInputElement)) return;
@@ -59,23 +63,29 @@ const topics = [...new Set(index.flatMap((item) => item.tags))].slice(0, 6);
       const heading = document.querySelector('[data-results-heading]');
       const empty = document.querySelector('[data-search-empty]');
       const raw = document.querySelector('#search-index')?.textContent || '[]';
-      interface SearchItem { title: string; description: string; category: string; tags: string[]; url: string; text: string; }
-      const entries = JSON.parse(raw) as SearchItem[];
-      const normalize = (value: string) => value.toLocaleLowerCase('zh-CN').normalize('NFKC');
+      const entries = JSON.parse(raw) as SearchEntry[];
+      const list = document.querySelector('[data-search-results]');
       const update = () => {
-        if (!(input instanceof HTMLInputElement)) return;
-        const terms = normalize(input.value).split(/\s+/).filter(Boolean);
-        let count = 0;
-        entries.forEach((entry, index) => {
-          const haystack = normalize([entry.title, entry.description, entry.category, entry.tags.join(' '), entry.text].join(' '));
-          const matched = terms.length > 0 ? terms.every((term) => haystack.includes(term)) : index < 3;
-          document.querySelector(`[data-search-item="${index}"]`)?.toggleAttribute('hidden', !matched);
-          if (matched) count += 1;
+        const query = input.value.trim();
+        const matches = searchEntries(entries, query);
+        list?.replaceChildren();
+        matches.forEach(({ entry, section }) => {
+          const li = document.createElement('li'); li.className = 'search-result';
+          const meta = document.createElement('span'); meta.className = 'entry-meta'; meta.textContent = entry.category;
+          const body = document.createElement('div'); const title = document.createElement('h2');
+          const link = document.createElement('a'); link.textContent = entry.title;
+          link.href = entry.url + (query && section?.slug ? `#${encodeURIComponent(section.slug)}` : '');
+          title.append(link);
+          const context = document.createElement('p');
+          context.textContent = query && section ? excerpt(section.prose || section.title, query) : entry.description;
+          const label = document.createElement('span'); label.className = 'entry-meta';
+          label.textContent = query && section ? `定位到：${section.title}` : entry.tags.join(' · ');
+          body.append(title, context, label); li.append(meta, body); list?.append(li);
         });
-        if (status) status.textContent = terms.length ? `找到 ${count} 条结果` : entries.length ? '先从这些文章与笔记开始。' : '还没有公开的文章与笔记。';
-        if (heading) heading.textContent = terms.length ? '搜索结果' : '最近发布';
-        if (clear) clear.hidden = input.value.length === 0;
-        empty?.toggleAttribute('hidden', !terms.length || count > 0);
+        if (status) status.textContent = query ? `找到 ${matches.length} 条结果` : entries.length ? '先从这些文章与笔记开始。' : '还没有公开的文章与笔记。';
+        if (heading) heading.textContent = query ? '搜索结果' : '最近发布';
+        if (clear) clear.hidden = !input.value.length;
+        empty?.toggleAttribute('hidden', !query || matches.length > 0);
       };
       input?.addEventListener('input', (event) => {
         if (!(event instanceof InputEvent) || !event.isComposing) update();

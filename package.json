@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build && npm run optimize:fonts && npm run validate:render",
+    "build": "astro check && astro build && npm run optimize:fonts && npm run validate:render && npm run validate:reading",
     "preview": "astro preview",
     "check": "astro check",
     "optimize:fonts": "node scripts/optimize-font-assets.mjs",
-    "validate:render": "node scripts/check-render-contracts.mjs"
+    "validate:render": "node scripts/check-render-contracts.mjs",
+    "validate:reading": "node scripts/check-reading-tools.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.2.2",

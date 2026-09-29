@@ -1,0 +1,11 @@
+---
+import { articleSymbols } from '../config/article-symbols';
+import InlineMarkup from './InlineMarkup.astro';
+import { renderInlineMarkup } from '../lib/inline-markup';
+const { id } = Astro.props as { id: string };
+const symbols = await Promise.all((articleSymbols[id] || []).map(async item => ({ ...item, html: await renderInlineMarkup(item.symbol) })));
+---
+{symbols.length > 0 && <details class="symbol-guide">
+  <summary>本文符号与约定</summary>
+  <dl>{symbols.map(item => <div><dt><InlineMarkup html={item.html} /></dt><dd>{item.meaning}</dd></div>)}</dl>
+</details>}

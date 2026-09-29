@@ -1,6 +1,7 @@
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
+import { katexOptions } from './katex-options.mjs';
 
 interface SourceHeading {
   depth: 2 | 3;
@@ -11,7 +12,7 @@ const inlineProcessor = createMarkdownProcessor({
   syntaxHighlight: false,
   smartypants: false,
   remarkPlugins: [remarkMath],
-  rehypePlugins: [rehypeKatex],
+  rehypePlugins: [[rehypeKatex, katexOptions]],
 });
 
 export async function renderInlineMarkup(source: string): Promise<string> {

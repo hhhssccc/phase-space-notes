@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { siteConfig } from '../config/site';
-import { byNewest, entryUrl, readingMinutes, withBase } from '../lib/content';
+import { byNewest, entryUrl, readingMinutes, formatDate, withBase } from '../lib/content';
 
 const entries = (await getCollection('articles', ({ data }) => !data.draft)).sort(byNewest);
 const featured = entries.filter((entry) => entry.data.type === 'essay' && entry.data.featured).slice(0, 3);
@@ -23,6 +23,8 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
         <p class="home-byline">{siteConfig.author}</p>
       </div>
     </section>
+
+    {entries[0] && <div class="home-latest"><span>最近发布</span><time datetime={entries[0].data.date.toISOString()}>{formatDate(entries[0].data.date, false)}</time><a href={entryUrl(entries[0])}>{entries[0].data.title}</a></div>}
 
     <section class="home-section" aria-labelledby="featured-title">
       <div class="section-heading"><h2 id="featured-title">精选文章</h2><a href={withBase('/articles/')}>全部文章 →</a></div>

@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { relatedFromPaths } from '../../config/reading-paths';
 import ArticleLayout from '../../layouts/ArticleLayout.astro';
 import type { ArticleEntry } from '../../lib/content';
 
@@ -11,7 +12,7 @@ export async function getStaticPaths() {
 const { post } = Astro.props as { post: ArticleEntry };
 const { Content, headings } = await render(post);
 const all = await getCollection('articles', ({ data }) => !data.draft);
-const relatedEntries = post.data.related.map((id) => all.find((entry) => entry.id === id)).filter(Boolean) as ArticleEntry[];
+const relatedEntries = [...new Set([...post.data.related, ...relatedFromPaths(post.id)])].map((id) => all.find((entry) => entry.id === id)).filter(Boolean) as ArticleEntry[];
 const backlinkEntries = post.data.backlinks.map((id) => all.find((entry) => entry.id === id)).filter(Boolean) as ArticleEntry[];
 ---
 

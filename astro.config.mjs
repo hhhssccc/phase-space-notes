@@ -1,4 +1,6 @@
 import { defineConfig } from 'astro/config';
+import { rehypeEquationLinks } from './src/plugins/rehype-equation-links.mjs';
+import { katexOptions } from './src/lib/katex-options.mjs';
 import sitemap from '@astrojs/sitemap';
 import { unified } from '@astrojs/markdown-remark';
 import remarkGfm from 'remark-gfm';
@@ -27,7 +29,7 @@ export default defineConfig({
         remarkObsidianCallouts,
         [remarkWikiLinks, { base }],
       ],
-      rehypePlugins: [rehypeKatex],
+      rehypePlugins: [[rehypeKatex, katexOptions], [rehypeEquationLinks, { tools: true }]],
     }),
     syntaxHighlight: {
       type: 'shiki',

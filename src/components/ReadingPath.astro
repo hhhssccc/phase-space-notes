@@ -1,0 +1,24 @@
+---
+import { getCollection } from 'astro:content';
+import { pathsFor } from '../config/reading-paths';
+import { entryUrl, withBase } from '../lib/content';
+const { id } = Astro.props as { id: string };
+const paths = pathsFor(id);
+const all = await getCollection('articles', ({ data }) => !data.draft);
+---
+{paths.length > 0 && <section class="article-routes print-hidden" aria-label="专题阅读顺序">
+  <h2>沿着这个问题</h2>
+  {paths.map(path => {
+    const index = path.steps.findIndex(step => step.id === id);
+    const previous = all.find(entry => entry.id === path.steps[index - 1]?.id);
+    const next = all.find(entry => entry.id === path.steps[index + 1]?.id);
+    return <div class="article-route">
+      <a href={`${withBase('/paths/')}#${path.id}`}>{path.title}</a><span class="entry-meta"> · 第 {index + 1} / {path.steps.length} 篇</span>
+      <p class="route-prerequisites">建议基础：{path.prerequisites}</p>
+      <div class="route-neighbors">
+        {previous && <a href={entryUrl(previous)}><small>前一篇</small>{previous.data.title}</a>}
+        {next ? <a href={entryUrl(next)}><small>接下来</small>{next.data.title}</a> : <span class="entry-meta">已到这条路线的最后一篇。</span>}
+      </div>
+    </div>;
+  })}
+</section>}
