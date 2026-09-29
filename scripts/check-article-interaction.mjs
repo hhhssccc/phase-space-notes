@@ -63,6 +63,18 @@ try {
         assert.ok(Math.abs(actual - fraction) < 0.025, `progress ${actual}, expected ${fraction}, width=${width}, fallback=${fallback}`);
       }
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+      // Exercise real pointer movement and wheel scrolling in headed Edge, then
+      // verify the settled page remains responsive without new scroll handlers.
+      await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+      for (let pass = 0; pass < 3; pass++) {
+        await page.mouse.move(width * .3, 300, { steps: 20 });
+        await page.mouse.move(width * .7, 700, { steps: 20 });
+        await page.mouse.wheel(0, 1100);
+        await page.waitForTimeout(120);
+      }
+      await page.mouse.wheel(0, -1400);
+      await page.waitForTimeout(400);
+      assert.equal(await page.evaluate(() => window.__scrollRegistrations), fallback ? 1 : 0);
     }
     assert.equal(await page.locator('.article-prose .katex').count(), 230);
     assert.equal(await page.locator('.article-prose math').count(), 230);
@@ -80,7 +92,7 @@ try {
     assert.deepEqual(errors, []);
     await context.close();
   }
-  console.log('ARTICLE_INTERACTION_PASS: native and fallback progress; desktop/mobile; all 230 HTML/MathML formulas; anchors; find; print.');
+  console.log('ARTICLE_INTERACTION_PASS: native and fallback progress; desktop/mobile; sustained pointer/wheel interaction; all 230 HTML/MathML formulas; anchors; find; print.');
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));

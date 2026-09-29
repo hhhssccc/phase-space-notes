@@ -1,0 +1,18 @@
+.index-page.reading-paths { max-width: 54rem; }
+.reading-route { padding: 1.5rem 0 2.5rem; scroll-margin-top: 6rem; }
+.reading-route h2 { font-family: var(--serif); font-size: 1.8rem; margin: 0 0 .6rem; }
+.reading-route > p { color: var(--ink-soft); }
+.reading-route ol { padding-left: 1.7rem; }
+.reading-route li { padding: .7rem .4rem; }
+.reading-route li a { font-family: var(--serif); font-size: 1.1rem; }
+.reading-route li p { margin: .3rem 0; color: var(--muted); font-size: .88rem; }
+.route-prerequisites { color: var(--muted); font-size: .85rem; line-height: 1.8; }
+.article-routes { margin: 2.5rem 0; }
+.article-routes h2 { font-family: var(--serif); font-size: 1.4rem; }
+.article-route { padding: 1rem 0; }
+.article-route > a { font-family: var(--serif); }
+.route-neighbors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; font-size: .88rem; }
+.route-neighbors a { padding: .75rem; background: var(--paper-soft); border-radius: .5rem; text-decoration: none; }
+.route-neighbors small { display: block; color: var(--muted); margin-bottom: .4rem; }
+@media(max-width:40rem){.route-neighbors{grid-template-columns:1fr}}
+@media print{.article-routes{display:none!important}}

@@ -1,9 +1,7 @@
-function normalizeBase(base) {
-  if (!base || base === '/') return '';
-  return `/${String(base).replace(/^\/+|\/+$/g, '')}`;
-}
+import { normalizeBase } from '../lib/urls.mjs';
+import { contentRoutes } from './content-routes.mjs';
 
-function transformText(node, basePrefix) {
+function transformText(node, basePrefix, routes) {
   const pattern = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
   const parts = [];
   let cursor = 0;
@@ -16,7 +14,8 @@ function transformText(node, basePrefix) {
     const clean = target.replace(/^\/+|\/+$/g, '');
     const route = clean.startsWith('notes/') || clean.startsWith('articles/')
       ? `/${clean}/`
-      : `/articles/${clean}/`;
+      : routes.get(clean);
+    if (!route || ![...routes.values()].includes(route)) throw new Error(`WikiLink target is not a public article: ${target}`);
     const url = `${basePrefix}${route}`;
     parts.push({ type: 'link', url, children: [{ type: 'text', value: label }] });
     cursor = pattern.lastIndex;
@@ -27,13 +26,13 @@ function transformText(node, basePrefix) {
   return parts;
 }
 
-function walk(node, basePrefix) {
+function walk(node, basePrefix, routes) {
   if (!node || !Array.isArray(node.children)) return;
   const next = [];
   for (const child of node.children) {
-    if (child.type === 'text') next.push(...(transformText(child, basePrefix) || [child]));
+    if (child.type === 'text') next.push(...(transformText(child, basePrefix, routes) || [child]));
     else {
-      walk(child, basePrefix);
+      walk(child, basePrefix, routes);
       next.push(child);
     }
   }
@@ -42,5 +41,5 @@ function walk(node, basePrefix) {
 
 export function remarkWikiLinks(options = {}) {
   const basePrefix = normalizeBase(options.base);
-  return (tree) => walk(tree, basePrefix);
+  return (tree) => walk(tree, basePrefix, options.routes ?? contentRoutes());
 }

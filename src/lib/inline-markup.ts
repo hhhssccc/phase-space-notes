@@ -3,10 +3,7 @@ import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import { katexOptions } from './katex-options.mjs';
 
-interface SourceHeading {
-  depth: 2 | 3;
-  text: string;
-}
+import { scanHeadings } from './content/analysis';
 
 const inlineProcessor = createMarkdownProcessor({
   syntaxHighlight: false,
@@ -26,32 +23,4 @@ export async function renderInlineMarkup(source: string): Promise<string> {
   return paragraph?.[1] ?? html;
 }
 
-export function extractSourceHeadings(source: string): SourceHeading[] {
-  const headings: SourceHeading[] = [];
-  let fenceCharacter = '';
-  let fenceLength = 0;
-
-  for (const line of source.replace(/\r\n?/g, '\n').split('\n')) {
-    const fence = line.match(/^ {0,3}(`{3,}|~{3,})/);
-    if (fence) {
-      const marker = fence[1];
-      if (!fenceCharacter) {
-        fenceCharacter = marker[0];
-        fenceLength = marker.length;
-      } else if (marker[0] === fenceCharacter && marker.length >= fenceLength) {
-        fenceCharacter = '';
-        fenceLength = 0;
-      }
-      continue;
-    }
-    if (fenceCharacter) continue;
-
-    const heading = line.match(/^ {0,3}(#{2,3})[ \t]+(.+?)[ \t]*$/);
-    if (!heading) continue;
-    const text = heading[2].replace(/[ \t]+#+[ \t]*$/, '').trim();
-    if (!text) continue;
-    headings.push({ depth: heading[1].length as 2 | 3, text });
-  }
-
-  return headings;
-}
+export const extractSourceHeadings = (source: string) => scanHeadings(source).filter(h => h.depth === 2 || h.depth === 3);

@@ -8,6 +8,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { remarkObsidianCallouts } from './src/plugins/remark-obsidian-callouts.mjs';
 import { remarkWikiLinks } from './src/plugins/remark-wikilinks.mjs';
+import { rehypeSiteUrls } from './src/plugins/rehype-site-urls.mjs';
 
 const site = process.env.SITE_URL || 'https://hhhssccc.github.io';
 const base = process.env.BASE_PATH || '/';
@@ -29,7 +30,7 @@ export default defineConfig({
         remarkObsidianCallouts,
         [remarkWikiLinks, { base }],
       ],
-      rehypePlugins: [[rehypeKatex, katexOptions], [rehypeEquationLinks, { tools: true }]],
+      rehypePlugins: [[rehypeKatex, katexOptions], [rehypeEquationLinks, { tools: true }], [rehypeSiteUrls, { base }]],
     }),
     syntaxHighlight: {
       type: 'shiki',

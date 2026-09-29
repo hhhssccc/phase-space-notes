@@ -1,0 +1,91 @@
+.entry-meta { color: var(--muted); font-size: 0.82rem; white-space: nowrap; }
+
+.index-page { max-width: 56rem; margin: 0 auto; padding: 5rem 1.5rem 6rem; }
+.index-header { margin-bottom: 3rem; padding-bottom: 1.5rem; }
+.index-header h1 { margin: 0.3rem 0 0.6rem; font-family: var(--serif); font-size: clamp(2.4rem, 6vw, 3.7rem); font-weight: 520; letter-spacing: -0.04em; }
+.index-header p:last-child { max-width: 38rem; margin: 0; color: var(--muted); }
+.entry-list { margin: 0; padding: 0; list-style: none; }
+.entry-list > li { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: 1.4rem; padding: 1.4rem 0; }
+.entry-list time { color: var(--muted); font-family: var(--latin-sans); font-size: 0.82rem; }
+.entry-list h2 { margin: 0; font-family: var(--serif); font-size: 1.35rem; font-weight: 650; line-height: 1.45; }
+.entry-list h2 a { text-decoration-thickness: 1px; }
+.entry-list p { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.92rem; }
+.entry-list .entry-meta { display: block; margin-top: 0.55rem; }
+.archive-year { display: grid; grid-template-columns: 6rem 1fr; gap: 1.5rem; padding: 1.8rem 0; }
+.archive-year h2 { margin: 0; font-family: var(--latin-serif); font-size: 1.5rem; font-weight: 550; }
+.archive-year ul { display: grid; gap: 0.7rem; margin: 0; padding: 0; list-style: none; }
+.archive-year li { display: grid; grid-template-columns: 3.6rem 1fr; gap: 1rem; }
+.archive-year time { color: var(--muted); font-size: 0.8rem; }
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+.tag-cloud a { padding: 0.45rem 0.85rem; border-radius: 999px; background: var(--paper-soft); text-decoration: none; }
+.tag-cloud a:hover { background: color-mix(in srgb, var(--ink) 10%, var(--paper)); }
+.tag-cloud span { color: var(--muted); font-size: 0.76rem; }
+.about-copy { max-width: 42rem; font-size: 1.03rem; line-height: 1.95; }
+.about-copy h2 { margin-top: 2.7rem; font-family: var(--serif); font-size: 1.5rem; }
+.about-signature { margin-top: 3rem !important; color: var(--muted); font-family: var(--latin-sans), var(--sans); }
+:is(.featured-list, .note-list, .entry-list) > li, .archive-year li {
+  position: relative;
+  isolation: isolate;
+  padding-right: 2rem;
+  border-radius: 0.5rem;
+  transition: background-color var(--ease);
+}
+.archive-year li { padding-block: 0.65rem; }
+:is(.featured-list, .note-list, .entry-list, .archive-year) a {
+  text-decoration: none;
+}
+:is(.featured-list, .note-list, .entry-list, .archive-year) li a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 0.5rem;
+}
+:is(.featured-list, .note-list, .entry-list, .archive-year) li::after {
+  content: '';
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  color: var(--muted);
+  opacity: 0;
+  transform: translate(-0.2rem, -50%) rotate(45deg);
+  transition: opacity var(--ease), transform var(--ease);
+  pointer-events: none;
+}
+:is(.featured-list, .note-list, .entry-list, .archive-year) li:focus-within {
+  background: var(--paper-soft);
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+:is(.featured-list, .note-list, .entry-list, .archive-year) li a:focus-visible {
+  outline: none;
+}
+:is(.featured-list, .note-list, .entry-list, .archive-year) li:focus-within::after {
+  opacity: 1;
+  transform: translate(0, -50%) rotate(45deg);
+}
+@media (hover: hover) {
+  :is(.featured-list, .note-list, .entry-list, .archive-year) li:hover {
+    background: var(--paper-soft);
+  }
+  :is(.featured-list, .note-list, .entry-list, .archive-year) li:hover::after {
+    opacity: 1;
+    transform: translate(0, -50%) rotate(45deg);
+  }
+}
+@media (hover: none) {
+  :is(.featured-list, .note-list, .entry-list, .archive-year) li::after { opacity: 1; }
+  :is(.featured-list, .note-list, .entry-list, .archive-year) li:active { background: var(--paper-soft); }
+}
+
+@media (max-width: 48rem) {
+  .entry-meta { white-space: normal; }
+  .index-page { padding: 3.5rem 1.2rem 5rem; }
+  .entry-list > li { grid-template-columns: 1fr; gap: 0.35rem; }
+  .entry-list h2 { font-size: 1.22rem; }
+  .archive-year { grid-template-columns: 1fr; gap: 0.6rem; }
+}

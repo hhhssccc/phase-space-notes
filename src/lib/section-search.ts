@@ -1,26 +1,18 @@
+import { scanHeadings } from './content/analysis.ts';
 export interface SearchSection { title: string; slug: string; text: string; prose?: string }
 export interface SearchEntry { title: string; description: string; category: string; tags: string[]; url: string; text: string; sections: SearchSection[] }
 export const normalizeSearch = (value: string) => value.toLocaleLowerCase('zh-CN').normalize('NFKC');
 
 export function sourceSections(source: string, headings: { depth: number; slug: string; text: string }[], plain: (s: string) => string): SearchSection[] {
   headings = headings.filter(heading => heading.slug !== 'footnote-label');
-  const sections: SearchSection[] = [{ title: '文章开头', slug: '', text: '' }];
-  let current = sections[0]; let index = 0; let fence = ''; let fenceLength = 0;
-  for (const line of source.replace(/\r\n?/g, '\n').split('\n')) {
-    const marker = line.match(/^ {0,3}(`{3,}|~{3,})/);
-    if (marker) {
-      if (!fence) { fence = marker[1][0]; fenceLength = marker[1].length; }
-      else if (fence === marker[1][0] && marker[1].length >= fenceLength) fence = '';
-      current.text += `${line}\n`; continue;
-    }
-    const heading = !fence && line.match(/^ {0,3}(#{1,6})\s+(.+?)\s*#*$/);
-    if (heading) {
-      const actual = headings[index++];
-      if (!actual || actual.depth !== heading[1].length) throw new Error('Search headings do not match the rendered article');
-      current = { title: plain(heading[2]), slug: actual.slug, text: '' }; sections.push(current);
-    } else current.text += `${line}\n`;
+  const sourceHeadings = scanHeadings(source);
+  if (sourceHeadings.length !== headings.length || sourceHeadings.some((h, i) => h.depth !== headings[i].depth)) {
+    throw new Error('Search headings do not match the rendered article');
   }
-  if (index !== headings.length) throw new Error('Unindexed article headings');
+  const lines = source.replace(/\r\n?/g, '\n').split('\n');
+  const sections: SearchSection[] = [{ title: '文章开头', slug: '', text: lines.slice(0, sourceHeadings[0]?.line ?? lines.length).join('\n') }];
+  sourceHeadings.forEach((heading, i) => sections.push({ title: plain(heading.text), slug: headings[i].slug,
+    text: lines.slice(heading.line + 1, sourceHeadings[i + 1]?.line ?? lines.length).join('\n') }));
   return sections.map(section => ({ ...section, text: plain(section.text),
     prose: plain(section.text.replace(/\$\$[\s\S]*?\$\$/g, ' ').replace(/\$[^$\n]+\$/g, ' ')) }));
 }

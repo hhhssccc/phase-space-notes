@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build && npm run optimize:fonts && npm run validate:render && npm run validate:reading",
+    "build": "npm run test:unit && astro check && astro build && npm run optimize:fonts && npm run validate:render && npm run validate:reading && npm run validate:regressions",
     "preview": "astro preview",
     "check": "astro check",
     "optimize:fonts": "node scripts/optimize-font-assets.mjs",
     "validate:render": "node scripts/check-render-contracts.mjs",
-    "validate:reading": "node scripts/check-reading-tools.mjs"
+    "validate:reading": "node scripts/check-reading-tools.mjs",
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "validate:regressions": "node tests/contracts/content-regressions.mjs",
+    "validate:music": "node scripts/check-music-playlist.mjs",
+    "validate:browser": "node scripts/check-site-browser.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.2.2",
@@ -29,7 +33,10 @@
     "remark-math": "6.0.0"
   },
   "devDependencies": {
-    "@astrojs/check": "latest",
-    "typescript": "latest"
+    "@astrojs/check": "0.9.10",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=24 <25"
   }
 }

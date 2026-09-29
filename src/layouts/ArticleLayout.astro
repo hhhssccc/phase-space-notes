@@ -1,15 +1,17 @@
 ---
+import '../features/reading/article-tools.css';
 import ReadingPath from '../components/ReadingPath.astro';
 import SymbolGuide from '../components/SymbolGuide.astro';
 import FormulaTools from '../components/FormulaTools.astro';
 import PhysicsLab from '../components/PhysicsLab.astro';
+import { analyzeArticle } from '../lib/content/analysis';
 import BaseLayout from './BaseLayout.astro';
 import Comments from '../components/Comments.astro';
 import ArticleHistory from '../components/ArticleHistory.astro';
 import InlineMarkup from '../components/InlineMarkup.astro';
 import { siteConfig } from '../config/site';
 import { entryUrl, formatDate, readingMinutes, withBase, type ArticleEntry } from '../lib/content';
-import { extractSourceHeadings, renderInlineMarkup } from '../lib/inline-markup';
+import { renderInlineMarkup } from '../lib/inline-markup';
 import 'katex/dist/katex.min.css';
 import '../styles/article-performance.css';
 
@@ -25,9 +27,9 @@ const { post, headings, relatedEntries, backlinkEntries } = Astro.props;
 const minutes = readingMinutes(post.body || '');
 const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
 // Normalize line endings so the adaptive layout is identical on Windows and CI/Linux.
-const sourceBody = (post.body || '').replace(/\r\n?/g, '\n');
+const analysis = analyzeArticle(post.body || '');
 const renderedHeadings = headings.filter((heading) => (heading.depth === 2 || heading.depth === 3) && heading.slug !== 'footnote-label');
-const sourceHeadings = extractSourceHeadings(sourceBody);
+const sourceHeadings = analysis.headings.filter(h => h.depth === 2 || h.depth === 3);
 const toc = await Promise.all(renderedHeadings.map(async (heading, index) => ({
   ...heading,
   html: await renderInlineMarkup(
@@ -39,17 +41,8 @@ const sidenotes = await Promise.all(post.data.sidenotes.map(async (note) => ({
   titleHtml: await renderInlineMarkup(note.title),
   bodyHtml: await renderInlineMarkup(note.body),
 })));
-const displayMathCount = Math.floor((sourceBody.match(/(?:^|\n)\s*\$\$\s*(?=\n|$)/g)?.length || 0) / 2);
-const proseCharacters = Array.from(
-  sourceBody
-    .replace(/(?:^|\n)\s*\$\$[\s\S]*?\$\$(?=\n|$)/g, ' ')
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/[\s#>*_`~|{}\[\]()-]+/g, ''),
-).length;
-const autoPlainMath = displayMathCount >= 6 && proseCharacters / displayMathCount <= 180;
 const effectiveMathDisplay = post.data.mathDisplay === 'auto'
-  ? (autoPlainMath ? 'plain' : 'ruled')
+  ? analysis.mathDisplay
   : post.data.mathDisplay;
 ---
 
@@ -88,7 +81,9 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       <div class="reading-toolbar print-hidden">
         <a data-resume-reading hidden></a>
         <button type="button" data-add-bookmark>夹一枚书签</button>
+        <button type="button" data-formula-mode aria-pressed="false" hidden>公式工具</button>
         <span data-reading-status role="status"></span>
+        <span class="formula-hint" data-formula-hint hidden></span>
       </div>
       <SymbolGuide id={post.id} />
 
@@ -152,44 +147,6 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
     )}
   </div>
   {siteConfig.features.readingProgress && (
-    <script>
-      let cleanupProgress = () => {};
-      document.addEventListener('astro:before-swap', () => cleanupProgress());
-      document.addEventListener('astro:page-load', () => {
-      cleanupProgress();
-      const controller = new AbortController();
-      const signal = controller.signal;
-      cleanupProgress = () => controller.abort();
-      // Modern browsers drive the indicator without JS scroll/layout work.
-      // Keep the ordinary full-document layout and a frame-coalesced fallback.
-      const progress = document.querySelector('[data-reading-progress]');
-      // Check the delivered CSS, not just API support: malformed/minified CSS
-      // must also take the fallback instead of silently losing the indicator.
-      const nativeProgress = progress instanceof HTMLElement
-        && getComputedStyle(progress).getPropertyValue('animation-timeline') === '--article-reading';
-      if (!nativeProgress) {
-        if (progress instanceof HTMLElement) progress.style.animation = 'none';
-        const article = document.querySelector('.article-main');
-        let frame = 0;
-        const updateProgress = () => {
-          frame = 0;
-          if (!(progress instanceof HTMLElement) || !(article instanceof HTMLElement)) return;
-          const start = article.offsetTop;
-          const total = article.offsetHeight - window.innerHeight;
-          const amount = Math.min(1, Math.max(0, (window.scrollY - start) / Math.max(total, 1)));
-          progress.style.transform = `scaleX(${amount})`;
-        };
-        const scheduleProgress = () => {
-          if (!signal.aborted && !frame) frame = requestAnimationFrame(updateProgress);
-        };
-        cleanupProgress = () => { controller.abort(); cancelAnimationFrame(frame); };
-        scheduleProgress();
-        addEventListener('scroll', scheduleProgress, { passive: true, signal });
-        addEventListener('resize', scheduleProgress, { signal });
-        addEventListener('load', scheduleProgress, { once: true, signal });
-        document.fonts.ready.then(scheduleProgress);
-      }
-      });
-    </script>
+    <script>import '../features/reading/progress-entry';</script>
   )}
 </BaseLayout>

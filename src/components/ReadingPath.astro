@@ -1,17 +1,16 @@
 ---
-import { getCollection } from 'astro:content';
-import { pathsFor } from '../config/reading-paths';
+import '../features/reading/paths.css';
+import { readingRoutes } from '../lib/content/service';
 import { entryUrl, withBase } from '../lib/content';
 const { id } = Astro.props as { id: string };
-const paths = pathsFor(id);
-const all = await getCollection('articles', ({ data }) => !data.draft);
+const paths = await readingRoutes(id);
 ---
 {paths.length > 0 && <section class="article-routes print-hidden" aria-label="专题阅读顺序">
   <h2>沿着这个问题</h2>
   {paths.map(path => {
     const index = path.steps.findIndex(step => step.id === id);
-    const previous = all.find(entry => entry.id === path.steps[index - 1]?.id);
-    const next = all.find(entry => entry.id === path.steps[index + 1]?.id);
+    const previous = path.steps[index - 1]?.entry;
+    const next = path.steps[index + 1]?.entry;
     return <div class="article-route">
       <a href={`${withBase('/paths/')}#${path.id}`}>{path.title}</a><span class="entry-meta"> · 第 {index + 1} / {path.steps.length} 篇</span>
       <p class="route-prerequisites">建议基础：{path.prerequisites}</p>

@@ -1,53 +1,42 @@
 ---
-import { groverSvg, gasSvg } from '../lib/physics-models';
+import { articleLabs, labs, type LabDefinition } from '../features/physics-lab/registry';
+import { groverSvg } from '../features/physics-lab/plots/grover';
+import { gasSvg } from '../features/physics-lab/plots/gas';
 import InlineMarkup from './InlineMarkup.astro';
 import { renderInlineMarkup } from '../lib/inline-markup';
+import '../features/physics-lab/styles.css';
 const { id } = Astro.props as { id: string };
-const kind = id === 'grover-algorithm-original-motivation' ? 'grover' : id === 'quantum-gas' ? 'gas' : null;
-const formula = kind === 'grover'
-  ? '$\\theta=\\arcsin(1/\\sqrt N),\\quad P_k=\\sin^2((2k+1)\\theta)$'
-  : '$\\bar n_{B/F}=1/(e^{(\\varepsilon-\\mu)/(k_BT)}\\mp1),\\quad \\bar n_{MB}=e^{-(\\varepsilon-\\mu)/(k_BT)}$';
+const kind = articleLabs[id];
+const definition: LabDefinition | undefined = kind ? labs[kind] : undefined;
+const plots = { grover: groverSvg, gas: gasSvg };
+const values = definition?.controls.map(control => control.value) ?? [];
 ---
-{kind && <section class="physics-lab" data-physics-lab={kind} aria-labelledby="physics-lab-title">
+{definition && <section class="physics-lab" data-physics-lab={kind} aria-labelledby="physics-lab-title">
   <p class="eyebrow">文后实验 · 阅读辅助</p>
-  <h2 id="physics-lab-title">{kind === 'grover' ? '把振幅旋转看见' : '三种统计分布，放在一起看'}</h2>
-  <p>{kind === 'grover' ? '接着文末的两次反射，把理想 Grover 迭代画在二维平面上。假设只有一个目标态，初态是均匀叠加；横、纵坐标是有正负号的振幅。' : '比较理想气体单个量子态的平均占据数，而非能量概率密度。取固定能量单位 E₀，基态能量为 0；为共同展示三种分布，化学势限制在 0 以下。'}</p>
-  <p class="lab-equation"><InlineMarkup html={await renderInlineMarkup(formula)} /></p>
+  <h2 id="physics-lab-title">{definition.title}</h2>
+  <p>{definition.description}</p>
+  <p class="lab-equation"><InlineMarkup html={await renderInlineMarkup(definition.formula)} /></p>
   <div class="lab-static" data-static-plot>
-    <div class="lab-plot" set:html={kind === 'grover' ? groverSvg(16, 0) : gasSvg(1, -.5)} />
-    <p class="lab-caption">{kind === 'grover' ? '静态示例：N = 16，尚未迭代，目标态概率为 1/16 = 6.25%。' : '静态示例：kBT/E₀ = 1，μ/E₀ = −0.5。实线为 B–E，点线为 F–D，虚线为 M–B。'}</p>
+    <div class="lab-plot" set:html={plots[kind](values[0], values[1])} />
+    <p class="lab-caption">{definition.staticCaption}</p>
   </div>
   <button type="button" class="lab-start print-hidden" data-lab-start>打开互动演示</button>
   <div class="lab-interactive print-hidden" data-lab-interactive hidden>
-    {kind === 'grover' ? <div class="lab-controls">
-      <label>搜索空间 N <select data-lab-size><option value="4">4</option><option value="16" selected>16</option><option value="64">64</option><option value="256">256</option></select></label>
-      <label>迭代次数 k <output data-iteration-value>0</output><input data-lab-iterations type="range" min="0" max="24" step="1" value="0" /></label>
-    </div> : <div class="lab-controls">
-      <label>温度 kBT / E₀ <output data-temperature-value>1.00</output><input data-lab-temperature type="range" min="0.25" max="2" step="0.05" value="1" /></label>
-      <label>化学势 μ / E₀ <output data-chemical-value>−0.50</output><input data-lab-chemical type="range" min="-3" max="-0.05" step="0.05" value="-0.5" /></label>
-    </div>}
+    <div class="lab-controls">
+      {definition.controls.map(control => <label>{control.label}{' '}
+        {control.options ? <select {...{ [`data-lab-${control.key}`]: '' }}>
+          {control.options.map(value => <option value={value} selected={value === control.value}>{value}</option>)}
+        </select> : <>
+          <output {...{ [`data-${control.output}`]: '' }}>{control.display}</output>
+          <input {...{ [`data-lab-${control.key}`]: '' }} type="range" min={control.min} max={control.max} step={control.step} value={control.value} />
+        </>}
+      </label>)}
+    </div>
     <div class="lab-plot" data-live-plot></div>
     <p class="lab-result" data-lab-result role="status" aria-live="polite"></p>
     <button type="button" class="text-control" data-lab-reset>恢复初始值</button>
   </div>
-  <p class="lab-caption">{kind === 'grover' ? '迭代次数超过第一个峰值后，成功概率会回落。图中的概率来自理想模型，不包含设备噪声。' : '实线 B–E · 点线 F–D · 虚线 M–B。纵轴随参数调整；M–B 仅在稀薄极限近似量子分布。这里独立调节温度与化学势，不固定总粒子数。'}</p>
-  <p class="lab-source">模型参考：<a href={kind === 'grover' ? 'https://quantum.cloud.ibm.com/learning/en/courses/fundamentals-of-quantum-algorithms/grover-algorithm/analysis' : 'https://www.damtp.cam.ac.uk/user/tong/statphys/statmechhtml/S3.html'}>{kind === 'grover' ? 'IBM Quantum · Grover 算法分析' : 'David Tong · Quantum Gases'}</a></p>
+  <p class="lab-caption">{definition.caption}</p>
+  <p class="lab-source">模型参考：<a href={definition.source.href}>{definition.source.label}</a></p>
 </section>}
-<script>
-  let cleanup = () => {};
-  document.addEventListener('astro:before-swap', () => cleanup());
-  document.addEventListener('astro:page-load', () => {
-    cleanup(); const controller = new AbortController(); const { signal } = controller;
-    cleanup = () => controller.abort();
-    document.querySelectorAll<HTMLElement>('[data-physics-lab]').forEach(lab => {
-      const start = lab.querySelector<HTMLButtonElement>('[data-lab-start]')!;
-      start.addEventListener('click', async () => {
-        start.disabled = true; start.textContent = '正在打开…';
-        try {
-          const { activateLab } = await import('../scripts/physics-lab');
-          if (!signal.aborted) { activateLab(lab, signal); start.hidden = true; lab.querySelector<HTMLInputElement>('input, select')?.focus(); }
-        } catch { if (!signal.aborted) { start.disabled = false; start.textContent = '加载未完成，点击重试'; } }
-      }, { signal });
-    });
-  });
-</script>
+<script>import '../features/physics-lab/entry';</script>

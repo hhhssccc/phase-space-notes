@@ -21,14 +21,15 @@ AsyaInTheCosmicStatic 的中文理论物理博客：从模型出发，向结构�
 - 右下角莲子头像书房：三态主题、全站纸面、默认暂停的音乐、最近动态与构建期内容统计
 - 文章首次公开/正文实质修订日期，以及可核验的 Git 文件版本时间线
 - 评论采用配置开关；缺少配置时自动隐藏
+- 专题阅读路线、阅读位置与书签、符号表、按需显示的公式复制菜单，以及 Grover / 量子气体互动实验
 
 ## 书房音乐
 
-书房使用单一固定曲目，音频文件接口是 `public/audio/study-room-current.m4a`；前端仍保持默认暂停，只在用户点击后加载。未来由 Codex 更换时，必须按 `AGENTS.md` 的“更换书房固定音乐”流程执行，并更新 `src/config/music.ts` 中的来源页与缓存版本。
+书房使用 `src/config/music.ts` 配置的九首歌单，默认暂停，首次点击播放才加载音频。曲目维护按 `AGENTS.md` 的“维护书房音乐歌单”流程执行；音频与既有文件名保持稳定。
 
 ## 固定角色接口
 
-- `public/assets/mascot-idle.webp`：首页首屏
+- `public/assets/mascot-idle.webp`：保留素材，首页首屏不显示人物
 - `public/assets/mascot-study-avatar.webp`：书房入口的莲子 Q 版头像
 - `public/assets/mascot-reading.webp`：保留的全身阅读素材，当前界面不显示
 
@@ -43,12 +44,22 @@ AsyaInTheCosmicStatic 的中文理论物理博客：从模型出发，向结构�
 音频来源、时长和 SHA-256 记录于 `docs/music-sources.json`；执行 `node scripts/check-music-playlist.mjs` 检查播放模式、进度恢复和定时停止逻辑。
 
 ```bash
-npm install
+npm ci
 npm run dev
 npm run build
 ```
 
 静态产物生成在 `dist/`。推送到 GitHub 后，由 GitHub Pages 自动构建并发布。
+
+使用 Node.js 24。`npm run build` 包含单元检查、Astro 类型检查、构建、字体优化、通用渲染合同和特定文章回归。测试与工程边界见 [架构与维护](docs/architecture.md)。
+
+生产子路径预览须设置 `SITE_URL=https://hhhssccc.github.io`、`BASE_PATH=/phase-space-notes` 和 `ASTRO_TELEMETRY_DISABLED=1` 后再构建。Markdown 的站内图片与链接在构建时处理；发布脚本只复制已验证的产物，不再改写 URL。
+
+`npm run validate:browser` 使用已有 Playwright 与 Edge，检查桌面/手机、深浅色、公式菜单、阅读记录、实验、打印、跨页音乐和搜索。用 `PLAYWRIGHT_MODULE` 指定外部 Playwright 包目录，`EDGE_EXECUTABLE` 指定浏览器；`BROWSER_HEADED=1` 可带窗口运行，`QA_DIR` 指定截图目录（默认 `.qa/`）。此命令不会自动安装依赖。
+
+## 公式工具
+
+正常阅读时隐藏逐公式操作文字。桌面悬停或键盘聚焦出现 `⋯`，点击打开全篇共用的菜单；手机先在文章顶部开启“公式工具”，再轻点公式。横滑和长按选择保留。菜单不占正文高度，支持复制原始 LaTeX、稳定公式链接及手动复制降级；打印隐藏全部操作。
 
 ## 长文章的交互性能
 

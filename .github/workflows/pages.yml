@@ -38,7 +38,7 @@ jobs:
       - run: npm run build
       - run: node scripts/prepare-pages.mjs
       - name: Validate prepared Pages artifact
-        run: node scripts/check-render-contracts.mjs
+        run: npm run validate:render && npm run validate:reading && npm run validate:regressions
         env:
           RENDER_OUTPUT_DIR: .pages-dist
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0

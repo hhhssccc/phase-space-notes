@@ -1,0 +1,8 @@
+.reading-shelf { padding: 1.1rem 0; }
+.reading-shelf h3 { font-family: var(--serif); margin: 0; font-size: 1.15rem; }
+.reading-shelf ol { list-style: none; padding: 0; margin: .8rem 0; }
+.reading-shelf li { margin: .8rem 0; }
+.reading-shelf li a { display: block; font-family: var(--serif); font-size: .95rem; }
+.reading-shelf li small { display: block; font-size: .75rem; color: var(--muted); overflow-wrap: anywhere; }
+.shelf-note, .shelf-empty { color: var(--muted); font-size: .78rem; }
+@media print{.reading-shelf{display:none!important}}

@@ -21,13 +21,19 @@ export function rehypeEquationLinks({ tools = true } = {}) {
         node.properties.id = count === 1 ? base : `${base}-${count}`;
         node.properties['data-equation'] = '';
         const id = node.properties.id;
-        const button = (label, properties) => ({ type: 'element', tagName: 'button', properties: { type: 'button', disabled: true, ...properties }, children: [{ type: 'text', value: label }] });
-        if (tools) node.children.push({ type: 'element', tagName: 'span', properties: { className: ['equation-actions', 'print-hidden'] }, children: [
-          button('公式工具', { 'data-formula-toggle': '', ariaLabel: '展开公式工具', ariaExpanded: 'false', ariaControls: `${id}-tools` }),
-          { type: 'element', tagName: 'span', properties: { hidden: true, id: `${id}-tools` }, children: [
-            button('复制 LaTeX', { 'data-formula-copy': 'tex' }), button('复制公式链接', { 'data-formula-copy': 'link' }),
-          ] },
-        ] });
+        if (tools) {
+          // Keep tools outside KaTeX's horizontal scroller and performance transform.
+          const equation = { ...node };
+          node.tagName = 'span';
+          node.properties = { className: ['equation-block'], 'data-equation-block': '' };
+          node.children = [equation, {
+            type: 'element', tagName: 'button',
+            properties: { type: 'button', className: ['equation-trigger', 'print-hidden'], disabled: true,
+              'data-formula-toggle': id, ariaLabel: '打开公式工具', ariaExpanded: 'false', ariaControls: 'formula-menu', ariaHasPopup: 'dialog' },
+            children: [{ type: 'text', value: '⋯' }],
+          }];
+        }
+        return;
       }
       node.children?.forEach(visit);
     }

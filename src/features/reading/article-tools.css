@@ -1,0 +1,10 @@
+.reading-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin: 0 0 1.5rem; font-size: .8rem; }
+.reading-toolbar > a { flex-basis: 100%; }
+.reading-toolbar [role='status'] { color: var(--muted); }
+.symbol-guide { margin: 1.2rem 0 1.8rem; padding: .8rem 1rem; background: var(--paper-soft); border-radius: .6rem; font-size: .88rem; }
+.symbol-guide summary, .reading-shelf summary { cursor: pointer; }
+.symbol-guide dl { margin-bottom: 0; }
+.symbol-guide dl > div { padding: .5rem 0; }
+.symbol-guide dt { overflow-x: auto; }
+.symbol-guide dd { margin: .25rem 0 .5rem; color: var(--muted); }
+@media print{.reading-toolbar{display:none!important}.symbol-guide > dl{display:block!important}.symbol-guide{background:white}}

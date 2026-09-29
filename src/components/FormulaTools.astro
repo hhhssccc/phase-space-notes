@@ -1,40 +1,15 @@
-<p class="formula-status print-hidden" data-formula-status role="status" aria-live="polite"></p>
+---
+import '../features/reading/formulas.css';
+---
+<div id="formula-menu" class="formula-menu print-hidden" data-formula-menu role="dialog" aria-label="公式工具" hidden>
+  <button type="button" data-formula-copy="tex">复制 LaTeX</button>
+  <button type="button" data-formula-copy="link">复制公式链接</button>
+  <span class="formula-feedback" data-formula-feedback role="status" aria-live="polite"></span>
+</div>
+<p class="visually-hidden print-hidden" data-formula-status role="status" aria-live="polite"></p>
 <dialog class="copy-dialog print-hidden" data-copy-dialog aria-labelledby="copy-dialog-title">
   <h2 id="copy-dialog-title">复制内容</h2><p>自动复制不可用，请选中下面的内容后复制。</p>
   <textarea aria-label="待复制内容" readonly></textarea>
   <button type="button" data-copy-close>关闭</button>
 </dialog>
-<script>
-  let cleanup = () => {};
-  document.addEventListener('astro:before-swap', () => cleanup());
-  document.addEventListener('astro:page-load', () => {
-    cleanup(); const controller = new AbortController(); const { signal } = controller;
-    cleanup = () => controller.abort();
-    const prose = document.querySelector('.article-prose'); if (!prose) return;
-    const status = document.querySelector('[data-formula-status]');
-    const dialog = document.querySelector<HTMLDialogElement>('[data-copy-dialog]');
-    prose.querySelectorAll<HTMLElement>('[data-equation]').forEach((equation, i) => {
-      const toggle = equation.querySelector<HTMLButtonElement>('[data-formula-toggle]');
-      const panel = document.getElementById(`${equation.id}-tools`);
-      if (!toggle || !panel) return;
-      equation.querySelectorAll<HTMLButtonElement>('.equation-actions button').forEach(button => { button.disabled = false; });
-      toggle.setAttribute('aria-label', `展开第 ${i + 1} 个公式的工具`); toggle.setAttribute('aria-expanded', 'false');
-      toggle.addEventListener('click', () => { panel.hidden = !panel.hidden; toggle.setAttribute('aria-expanded', String(!panel.hidden)); }, { signal });
-    });
-    prose.addEventListener('click', async event => {
-      const button = (event.target as Element).closest<HTMLButtonElement>('[data-formula-copy]'); if (!button) return;
-      const eq = button.closest('[data-equation]'); if (!eq) return;
-      const url = new URL(location.pathname, location.origin); url.hash = eq.id;
-      const text = button.dataset.formulaCopy === 'tex' ? eq.querySelector('annotation[encoding="application/x-tex"]')?.textContent || '' : url.href;
-      try {
-        await navigator.clipboard.writeText(text);
-        if (!signal.aborted) button.textContent = button.dataset.formulaCopy === 'tex' ? 'LaTeX 已复制' : '链接已复制';
-        if (!signal.aborted && status) status.textContent = button.dataset.formulaCopy === 'tex' ? '已复制 LaTeX。' : '已复制公式链接。';
-      } catch {
-        if (signal.aborted || !dialog) return;
-        const input = dialog.querySelector('textarea')!; input.value = text; dialog.showModal(); input.focus(); input.select();
-      }
-    }, { signal });
-    dialog?.querySelector('[data-copy-close]')?.addEventListener('click', () => dialog.close(), { signal });
-  });
-</script>
+<script>import '../features/reading/formulas';</script>

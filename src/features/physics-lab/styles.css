@@ -1,0 +1,18 @@
+.physics-lab { margin-block: 3rem; padding: 1.3rem 1.1rem; border-radius: .8rem; background: var(--paper-soft); }
+.article-prose .physics-lab h2 { margin-top: .5rem; font-size: 1.5rem; }
+.article-prose .physics-lab p { font-size: .9rem; }
+.physics-lab .lab-equation { overflow-x: auto; padding-bottom: .25rem; }
+.lab-plot { max-width: 27rem; margin: 1rem auto; color: var(--ink); }
+.lab-plot svg { display: block; width: 100%; height: auto; }
+.lab-plot text { font: 13px var(--sans); fill: currentColor; }
+.article-prose .physics-lab .lab-caption, .article-prose .physics-lab .lab-source { font-size: .78rem; color: var(--muted); }
+.lab-controls { display: grid; gap: 1rem; margin-top: 1rem; }
+.lab-controls label { display: block; font-size: .88rem; }
+.lab-controls output { float: right; font-variant-numeric: tabular-nums; }
+.lab-controls input { display: block; width: 100%; accent-color: var(--ink); margin-top: .6rem; }
+.lab-controls select { margin-left: .7rem; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: .3rem; font: inherit; padding: .35rem; }
+.lab-active .lab-static { display: none; }
+.lab-interactive[hidden] { display: none; }
+.lab-result { min-height: 3.5em; font-variant-numeric: tabular-nums; }
+@media(max-width:40rem){.physics-lab{padding-inline:.7rem}}
+@media print{.lab-start,.lab-interactive{display:none!important}.lab-active .lab-static{display:block!important}.physics-lab{background:white;color:black;border:1px solid #ccc;break-inside:avoid}.lab-plot{max-width:8cm}}

@@ -40,9 +40,9 @@
 - `src/content.config.ts`：Frontmatter 数据结构的唯一工程定义。
 - `templates/article.md`：新文章起稿模板。
 - `src/config/site.ts`：站名、署名、导航、功能开关和角色资源接口。
-- `src/components/study-room/`：书房抽屉、音乐控件和站点内容统计。
+- `src/components/study-room/`：书房、音乐与统计的 Astro 展示组件；持久抽屉和音乐实现位于 `src/features/study-room/`。
 - `src/lib/article-history.ts`、`src/components/ArticleHistory.astro`：文章 Git 文件版本与日期语义的公开展示。
-- `src/styles/global.css`：全站排版、响应式、深浅色与打印样式。
+- `src/styles/global.css`：按明确层叠顺序聚合全站基础、外壳、正文和打印样式；阅读/实验功能样式位于对应 `src/features/` 下，共享辅助类在 `src/styles/utilities.css`。
 - `public/figures/`：文章插图；新文章优先使用 `public/figures/<文章文件名>/` 子目录。
 - `public/assets/mascot-idle.webp`、`public/assets/mascot-reading.webp`、`public/assets/mascot-study-avatar.webp`：固定角色资源接口，文件名不得改变。
 - `src/plugins/remark-wikilinks.mjs`：WikiLink 转换逻辑。
@@ -100,7 +100,7 @@ sidenotes:
 | `category` | 必填，只选一个稳定学科名称，如“统计力学”“量子力学”“理论力学”。 |
 | `tags` | 建议 2–6 个中文标签；复用已有标签，避免同义词分裂。 |
 | `featured` | 仅 `essay` 可设为 `true`；首页最多保留 3 篇精选。 |
-| `draft` | 写作和检查阶段必须为 `true`；通过发布检查后才能改为 `false`。 |
+| `draft` | 必填；写作和检查阶段必须为 `true`；通过发布检查后才能改为 `false`，遗漏字段时构建失败。 |
 | `related` | 相关内容的文件 ID，不含路径和 `.md`。只填写确实相关且已存在的内容。 |
 | `backlinks` | 明确链接到本文的内容 ID。新增 WikiLink 后同步检查是否应更新。 |
 | `mathDisplay` | `auto`、`ruled` 或 `plain`。默认 `auto`：文字多公式少时保留上下细线，公式密集时自动使用无框紧凑样式；只有自动判断不合适时才手动覆盖。 |
@@ -309,9 +309,18 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 
 - `src/config/reading-paths.ts` 是专题路线的编辑入口；`/paths/` 为专题页。相关阅读合并文章原有 `related` 与专题相邻篇目，不伪造反向链接。
 - `src/config/article-symbols.ts` 维护可选的“本文符号与约定”，须与对应文章一致；这是阅读辅助，不是新的正文源稿。
-- `src/scripts/reading-memory.ts` 与书房的 `ReadingShelf.astro` 管理阅读位置与书签。数据只在当前浏览器保存，存储不可用时降级为当前浏览期间可用。站内跳转不得重复绑定监听或中断音乐。
+- `src/features/reading/` 的 `store.ts`、`position.ts`、`shelf.ts`、`memory.ts` 与 `ReadingShelf.astro` 管理阅读位置与书签；`src/scripts/reading-memory.ts` 保留兼容入口。数据只在当前浏览器保存，存储不可用时降级为当前浏览期间可用。站内跳转不得重复绑定监听或中断音乐。
 - `rehype-equation-links.mjs` 按公式内容产生稳定锚点，公式复制保留原始 LaTeX；插入其他公式不能导致已有公式链接整体改变。
 - `src/lib/katex-options.mjs` 明确允许原稿数学环境中的中文文本（KaTeX 的 `unicodeTextInMathMode` 扩展），正文与边注共用此约定；其他严格模式诊断、语法错误和渲染合同仍须处理。
 - 搜索结果使用构建时的真实章节锚点，命中摘要须面向读者，不暴露零碎 LaTeX 命令。首页“最近发布”按首次公开日期排列，书房动态继续按实质修订日期排序。
-- `PhysicsLab.astro` 与 `physics-models.ts` 管理物理小实验。新增或修改模型时，补充数值极限或独立算法交叉检查。
+- `PhysicsLab.astro` 与 `src/features/physics-lab/` 的注册表、模型、SVG 和控制器管理物理小实验；`physics-models.ts` 保留导出入口。新增或修改模型时，补充数值极限或独立算法交叉检查。
 - 发布阅读工具改动前，除完整构建与桌面、手机、深浅色、打印验收外，运行 `node scripts/check-reading-tools.mjs`，核验搜索锚点、专题引用、公式链接稳定性与实验数值。
+
+## 16. 重构后的工程边界（2026-09-30）
+
+- 页面交互通过 `src/lib/browser/lifecycle.ts` 注册，换页前清理。书房和音频会话是文档级生命周期，不能随每次换页销毁。
+- 主题和纸面状态统一在 `src/lib/browser/preferences.ts`；防闪烁脚本使用同一主题配置。不得在组件内另建状态来源。
+- 公开内容查询与引用检查统一通过 `src/lib/content/service.ts`；失效的 related、backlinks、专题、符号或实验引用须明确报错。schema 同时检查非空标题/说明/分类、修订日期顺序与仅文章可精选。
+- 公式工具默认不占公式下方一行；桌面悬停/键盘聚焦显示小入口，手机从文章顶部开启后轻点公式。同篇只开一个浮层，保持横滑、长按选择、稳定锚点和打印隐藏。不得用逐公式滚动测量维持浮层。
+- `npm run build` 包含单元检查、类型检查、通用构建合同与特定文章回归。浏览器验证使用 `npm run validate:browser`；长文仍需已有带窗口 Edge 交互检查。
+- Markdown 资源 URL 在构建期按 base 解析，Pages 准备脚本只复制已验证产物。详细扩展方式和验证入口见 `docs/architecture.md`。

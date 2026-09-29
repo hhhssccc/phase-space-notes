@@ -1,11 +1,10 @@
+import { siteUrl } from './urls.mjs';
 import type { CollectionEntry } from 'astro:content';
 
 export type ArticleEntry = CollectionEntry<'articles'>;
 
 export function withBase(path: string) {
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-  const normalized = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${normalized}` || '/';
+  return siteUrl(path.startsWith('/') ? path : `/${path}`, import.meta.env.BASE_URL);
 }
 
 export function entryUrl(entry: ArticleEntry) {
@@ -41,13 +40,4 @@ export function formatDate(date: Date, includeYear = true) {
   }).format(date).replaceAll('/', '·');
 }
 
-export function plainText(markdown: string) {
-  return markdown
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/[#>*_`$|\[\]{}()-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+export { plainText } from './content/analysis';

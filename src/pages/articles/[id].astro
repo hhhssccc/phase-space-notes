@@ -1,19 +1,11 @@
 ---
-import { getCollection, render } from 'astro:content';
-import { relatedFromPaths } from '../../config/reading-paths';
+import { render } from 'astro:content';
+import { articlePaths, articleContext } from '../../lib/content/service';
 import ArticleLayout from '../../layouts/ArticleLayout.astro';
 import type { ArticleEntry } from '../../lib/content';
-
-export async function getStaticPaths() {
-  const entries = await getCollection('articles', ({ data }) => !data.draft && data.type === 'essay');
-  return entries.map((post) => ({ params: { id: post.id }, props: { post } }));
-}
-
+export const getStaticPaths = () => articlePaths('essay');
 const { post } = Astro.props as { post: ArticleEntry };
 const { Content, headings } = await render(post);
-const all = await getCollection('articles', ({ data }) => !data.draft);
-const relatedEntries = [...new Set([...post.data.related, ...relatedFromPaths(post.id)])].map((id) => all.find((entry) => entry.id === id)).filter(Boolean) as ArticleEntry[];
-const backlinkEntries = post.data.backlinks.map((id) => all.find((entry) => entry.id === id)).filter(Boolean) as ArticleEntry[];
+const { relatedEntries, backlinkEntries } = await articleContext(post);
 ---
-
 <ArticleLayout {post} {headings} {relatedEntries} {backlinkEntries}><Content /></ArticleLayout>

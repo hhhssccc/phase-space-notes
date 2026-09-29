@@ -6,7 +6,7 @@ import '@fontsource-variable/source-serif-4';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/global.css';
-import '../styles/reading-tools.css';
+import { applyInitialTheme, themeConfig } from '../lib/browser/theme-config';
 import { ClientRouter } from 'astro:transitions';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
@@ -84,21 +84,7 @@ const articleStructuredData = pageKind === 'article' && publishedTime
     <meta name="twitter:description" content={description} />
     {articleStructuredData && <script is:inline type="application/ld+json" set:html={articleStructuredData}></script>}
     <title>{title}</title>
-    <script is:inline>
-      (() => {
-        try {
-          const saved = localStorage.getItem('asymptotic-freedom-theme') || 'system';
-          const theme = ['light', 'dark', 'system'].includes(saved) ? saved : 'system';
-          document.documentElement.dataset.theme = theme;
-          const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-          document.querySelector('meta[data-theme-color]')?.setAttribute('content', dark ? '#121212' : '#ffffff');
-        } catch {
-          document.documentElement.dataset.theme = 'system';
-          const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-          document.querySelector('meta[data-theme-color]')?.setAttribute('content', dark ? '#121212' : '#ffffff');
-        }
-      })();
-    </script>
+    <script is:inline set:html={`(${applyInitialTheme.toString()})(${JSON.stringify(themeConfig)});`}></script>
   </head>
   <body
     data-page-kind={pageKind}
@@ -121,134 +107,6 @@ const articleStructuredData = pageKind === 'article' && publishedTime
         <p id="lightbox-caption" data-lightbox-caption></p>
       </dialog>
     )}
-    <script>
-      const root = document.documentElement;
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-
-      const systemDark = () => systemTheme.matches;
-      const resolvedDark = () => root.dataset.theme === 'dark' || (root.dataset.theme === 'system' && systemDark());
-      const themeButtons = () => document.querySelectorAll<HTMLButtonElement>('[data-theme-cycle]');
-      const syncThemeButtons = () => {
-        const dark = resolvedDark();
-        document.querySelector<HTMLMetaElement>('meta[data-theme-color]')?.setAttribute('content', dark ? '#121212' : '#ffffff');
-        themeButtons().forEach((button) => {
-          button.textContent = root.dataset.theme === 'system' ? '随系统' : dark ? '深色' : '浅色';
-          button.setAttribute('aria-pressed', String(dark));
-          button.setAttribute('aria-label', dark ? '切换到浅色模式' : '切换到深色模式');
-          button.title = dark ? '切换到浅色模式' : '切换到深色模式';
-        });
-      };
-      const setTheme = (value: string) => {
-        root.dataset.theme = value;
-        try {
-          localStorage.setItem('asymptotic-freedom-theme', value);
-        } catch {
-          // The theme still applies for this page when storage is unavailable.
-        }
-      };
-      new MutationObserver(syncThemeButtons).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
-      systemTheme.addEventListener('change', syncThemeButtons);
-      document.addEventListener('astro:before-swap', (event) => {
-        event.newDocument.documentElement.dataset.theme = root.dataset.theme || 'system';
-      });
-      document.addEventListener('astro:page-load', async () => {
-        themeButtons().forEach((button) => {
-          button.addEventListener('click', () => setTheme(resolvedDark() ? 'light' : 'dark'));
-        });
-        syncThemeButtons();
-        const currentPage = document.querySelector('main');
-      if (document.body.dataset.featureMermaid === 'true') {
-        document.querySelectorAll('.article-prose pre > code.language-mermaid').forEach((code) => {
-          const pre = code.parentElement;
-          const diagram = document.createElement('div');
-          diagram.className = 'mermaid';
-          diagram.textContent = code.textContent;
-          pre?.replaceWith(diagram);
-        });
-        if (document.querySelector('.mermaid')) {
-          const { default: mermaid } = await import('mermaid');
-          mermaid.initialize({ startOnLoad: false, theme: resolvedDark() ? 'dark' : 'neutral', securityLevel: 'strict' });
-          await mermaid.run({ querySelector: '.mermaid' });
-          if (!currentPage?.isConnected) return;
-        }
-      }
-
-      const lightbox = document.querySelector('[data-lightbox]');
-      const lightboxImage = document.querySelector('[data-lightbox-image]');
-      const lightboxCaption = document.querySelector('[data-lightbox-caption]');
-      if (document.body.dataset.featureLightbox === 'true') {
-        const openLightbox = (image: HTMLImageElement) => {
-          if (!(lightbox instanceof HTMLDialogElement) || !(lightboxImage instanceof HTMLImageElement)) return;
-          const caption = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim() || '';
-          lightboxImage.src = image.src;
-          lightboxImage.alt = image.alt;
-          if (lightboxCaption) lightboxCaption.textContent = caption;
-          lightbox.showModal();
-        };
-        document.querySelectorAll<HTMLImageElement>('.article-prose figure img').forEach((image) => {
-          const caption = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim();
-          image.dataset.lightboxTarget = '';
-          image.tabIndex = 0;
-          image.setAttribute('role', 'button');
-          image.setAttribute('aria-haspopup', 'dialog');
-          image.setAttribute('aria-label', `放大查看：${caption || image.alt || '文章图片'}`);
-          image.addEventListener('click', (event) => {
-            event.preventDefault();
-            openLightbox(image);
-          });
-          image.addEventListener('keydown', (event) => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            openLightbox(image);
-          });
-        });
-      }
-      document.querySelector('[data-lightbox-close]')?.addEventListener('click', () => {
-        if (lightbox instanceof HTMLDialogElement) lightbox.close();
-      });
-
-      document.querySelectorAll<HTMLAnchorElement>('.article-prose a[data-footnote-ref]').forEach((reference, index) => {
-        const href = reference.getAttribute('href');
-        if (!href?.startsWith('#')) return;
-        const target = document.getElementById(decodeURIComponent(href.slice(1)));
-        if (!target || reference.closest('.citation-wrap')) return;
-        const previewText = target.textContent?.replace(/↩|Back to reference/gi, '').replace(/\s+/g, ' ').trim();
-        if (!previewText) return;
-        const wrap = document.createElement('span');
-        wrap.className = 'citation-wrap';
-        reference.before(wrap);
-        wrap.append(reference);
-        const preview = document.createElement('span');
-        preview.className = 'citation-popover';
-        preview.id = `citation-preview-${index + 1}`;
-        preview.setAttribute('role', 'tooltip');
-        preview.textContent = previewText;
-        reference.setAttribute('aria-describedby', preview.id);
-        wrap.append(preview);
-      });
-
-      document.querySelector('[data-load-comments]')?.addEventListener('click', (event) => {
-        const button = event.currentTarget;
-        if (!(button instanceof HTMLElement)) return;
-        const script = document.createElement('script');
-        script.src = 'https://giscus.app/client.js';
-        script.async = true;
-        script.crossOrigin = 'anonymous';
-        script.dataset.repo = button.dataset.repo || '';
-        script.dataset.repoId = button.dataset.repoId || '';
-        script.dataset.category = 'Announcements';
-        script.dataset.categoryId = button.dataset.categoryId || '';
-        script.dataset.mapping = 'pathname';
-        script.dataset.strict = '0';
-        script.dataset.reactionsEnabled = '1';
-        script.dataset.emitMetadata = '0';
-        script.dataset.inputPosition = 'top';
-        script.dataset.theme = resolvedDark() ? 'dark' : 'light';
-        script.dataset.lang = 'zh-CN';
-        document.querySelector('[data-comments-root]')?.append(script);
-        button.remove();
-      }, { once: true });
-      });
-    </script>
+    <script>import '../features/page-features';</script>
   </body>
 </html>

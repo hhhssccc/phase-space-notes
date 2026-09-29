@@ -1,0 +1,11 @@
+import { registerPageFeature } from '../lib/browser/lifecycle';
+import { initializePreferences } from '../lib/browser/preferences';
+import { mountLightbox } from './reading/lightbox';
+import { mountFootnotes } from './reading/footnotes';
+import { mountComments } from './reading/comments';
+import { mountMermaid } from './reading/mermaid';
+initializePreferences();
+registerPageFeature('lightbox', mountLightbox);
+registerPageFeature('footnotes', mountFootnotes);
+registerPageFeature('comments', mountComments);
+registerPageFeature('mermaid', mountMermaid);

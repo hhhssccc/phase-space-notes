@@ -1,14 +1,9 @@
 ---
-import { getCollection } from 'astro:content';
+import '../features/reading/paths.css';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { readingPaths } from '../config/reading-paths';
+import { readingRoutes } from '../lib/content/service';
 import { entryUrl, readingMinutes } from '../lib/content';
-const entries = await getCollection('articles', ({ data }) => !data.draft);
-const routes = readingPaths.map(path => ({ ...path, steps: path.steps.map(step => {
-  const entry = entries.find(entry => entry.id === step.id);
-  if (!entry) throw new Error(`Reading path ${path.id}: missing public article ${step.id}`);
-  return { ...step, entry };
-}) }));
+const routes = await readingRoutes();
 ---
 <BaseLayout title="专题阅读｜渐近自由" description="沿着问题，连接物理文章与笔记。">
   <div class="index-page reading-paths">
