@@ -9,9 +9,13 @@ import rehypeKatex from 'rehype-katex';
 import { remarkObsidianCallouts } from './src/plugins/remark-obsidian-callouts.mjs';
 import { remarkWikiLinks } from './src/plugins/remark-wikilinks.mjs';
 import { rehypeSiteUrls } from './src/plugins/rehype-site-urls.mjs';
+import { fileURLToPath } from 'node:url';
+import { prepareCoverImages } from './src/lib/build/cover-images.mjs';
+import { rehypeCoverImages } from './src/plugins/rehype-cover-images.mjs';
 
 const site = process.env.SITE_URL || 'https://hhhssccc.github.io';
 const base = process.env.BASE_PATH || '/';
+const covers = await prepareCoverImages(fileURLToPath(new URL('.', import.meta.url)));
 
 export default defineConfig({
   site,
@@ -30,7 +34,7 @@ export default defineConfig({
         remarkObsidianCallouts,
         [remarkWikiLinks, { base }],
       ],
-      rehypePlugins: [[rehypeKatex, katexOptions], [rehypeEquationLinks, { tools: true }], [rehypeSiteUrls, { base }]],
+      rehypePlugins: [[rehypeKatex, katexOptions], [rehypeEquationLinks, { tools: true }], [rehypeCoverImages, { base, covers }], [rehypeSiteUrls, { base }]],
     }),
     syntaxHighlight: {
       type: 'shiki',

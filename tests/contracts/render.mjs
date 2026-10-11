@@ -204,6 +204,19 @@ for (const file of htmlFiles) {
     if (/^<img\b/i.test(tag) && attribute(tag, 'alt') === undefined) {
       throw new Error(`Image is missing alt text: ${file}`);
     }
+    if (attribute(tag, 'data-fullsize-src') !== undefined) {
+      if (attribute(tag, 'alt') !== '' || attribute(tag, 'fetchpriority') !== 'high') {
+        throw new Error(`Cover must have empty alt and high fetch priority: ${file}`);
+      }
+      const candidates = decodedAttribute(tag, 'srcset')?.split(',') || [];
+      if (!candidates.length) throw new Error(`Cover is missing responsive variants: ${file}`);
+      for (const candidate of candidates) {
+        const url = new URL(candidate.trim().split(/\s+/)[0], buildRoot);
+        if (!url.href.startsWith(buildRoot.href)) throw new Error(`Cover escapes build base: ${url}`);
+        const relative = decodeURIComponent(url.pathname.slice(buildRoot.pathname.length));
+        if (!existsSync(path.join(distRoot, relative))) throw new Error(`Missing cover variant: ${relative}`);
+      }
+    }
     for (const name of ['href', 'src', 'action']) {
       const value = decodedAttribute(tag, name);
       if (!value || !value.startsWith('/') || value.startsWith('//')) continue;

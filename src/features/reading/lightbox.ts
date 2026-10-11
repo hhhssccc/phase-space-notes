@@ -6,7 +6,7 @@ export function mountLightbox(signal: AbortSignal) {
     const openLightbox = (image: HTMLImageElement) => {
       if (!(lightbox instanceof HTMLDialogElement) || !(lightboxImage instanceof HTMLImageElement)) return;
       const caption = image.closest('figure')?.querySelector('figcaption')?.textContent?.trim() || '';
-      lightboxImage.src = image.src;
+      lightboxImage.src = image.dataset.fullsizeSrc || image.currentSrc || image.src;
       lightboxImage.alt = image.alt;
       if (lightboxCaption) lightboxCaption.textContent = caption;
       lightbox.showModal();
