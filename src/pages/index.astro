@@ -49,5 +49,9 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
         </ol>
       </section>
     )}
+    <section class="home-columns" aria-label="更多栏目">
+      <a href={withBase('/reflections/')}><span class="eyebrow">REFLECTIONS</span><h2>杂感</h2><p>推导之外，生活之中。<br />最近的感想与偶然的收获。</p></a>
+      <a href={withBase('/lab/')}><span class="eyebrow">THE VISUAL LAB</span><h2>演算室</h2><p>用代码把想法画出来。<br />调一调参数，看看会发生什么。</p></a>
+    </section>
   </div>
 </BaseLayout>

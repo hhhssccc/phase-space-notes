@@ -1,4 +1,5 @@
 import { siteUrl } from './urls.mjs';
+import { contentPath } from './content-kinds.mjs';
 import type { CollectionEntry } from 'astro:content';
 
 export type ArticleEntry = CollectionEntry<'articles'>;
@@ -8,10 +9,7 @@ export function withBase(path: string) {
 }
 
 export function entryUrl(entry: ArticleEntry) {
-  const path = entry.data.type === 'note'
-    ? `/notes/${entry.id}/`
-    : `/articles/${entry.id}/`;
-  return withBase(path);
+  return withBase(contentPath(entry.data.type, entry.id));
 }
 
 export function byNewest(a: ArticleEntry, b: ArticleEntry) {

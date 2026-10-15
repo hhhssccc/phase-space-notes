@@ -1,14 +1,13 @@
 import { getCollection } from 'astro:content';
 import { readingPaths, pathsFor, relatedFromPaths } from '../../config/reading-paths';
 import { articleSymbols } from '../../config/article-symbols';
-import { articleLabs } from '../../features/physics-lab/registry';
 import { createContentIndex } from './references';
 import type { ArticleEntry } from '../content';
 
 export async function getPublicContent() {
-  return createContentIndex(await getCollection('articles'), readingPaths, Object.keys(articleSymbols), Object.keys(articleLabs));
+  return createContentIndex(await getCollection('articles'), readingPaths, Object.keys(articleSymbols));
 }
-export async function articlePaths(type: 'essay' | 'note') {
+export async function articlePaths(type: ArticleEntry['data']['type']) {
   const { entries } = await getPublicContent();
   return entries.filter(post => post.data.type === type).map(post => ({ params: { id: post.id }, props: { post } }));
 }

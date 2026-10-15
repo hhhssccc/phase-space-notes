@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseFrontmatter } from '@astrojs/markdown-remark';
+import { contentPath } from '../lib/content-kinds.mjs';
 let signature = '';
 let routes = new Map();
 export function contentRoutes(directory = 'content') {
@@ -12,7 +13,7 @@ export function contentRoutes(directory = 'content') {
     const { frontmatter } = parseFrontmatter(readFileSync(join(directory, name), 'utf8'));
     if (frontmatter.draft !== false) continue;
     const id = name.slice(0, -3);
-    index.set(id, `/${frontmatter.type === 'note' ? 'notes' : 'articles'}/${id}/`);
+    index.set(id, contentPath(frontmatter.type || 'essay', id));
   }
   signature = next; routes = index;
   return routes;

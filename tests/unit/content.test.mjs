@@ -6,6 +6,14 @@ import { sourceSections, searchEntries } from '../../src/lib/section-search.ts';
 import { siteUrl } from '../../src/lib/urls.mjs';
 import { remarkWikiLinks } from '../../src/plugins/remark-wikilinks.mjs';
 import { rehypeSiteUrls } from '../../src/plugins/rehype-site-urls.mjs';
+import { contentPath } from '../../src/lib/content-kinds.mjs';
+test('new columns have stable distinct URLs and preserve the original routes', () => {
+  for (const [type, folder] of [['essay','articles'],['note','notes'],['reflection','reflections'],['visualization','lab']]) {
+    assert.equal(contentPath(type,'example'),`/${folder}/example/`);
+    assert.equal(siteUrl(contentPath(type,'example'),'/phase-space-notes'),`/phase-space-notes/${folder}/example/`);
+  }
+  assert.throws(() => contentPath('unknown','example'), /Unknown content type/);
+});
 const entry = (id, data = {}) => ({ id, data: { draft: false, related: [], backlinks: [], ...data } });
 test('references reject missing, draft, self, duplicate and invalid editorial targets', () => {
   assert.throws(() => createContentIndex([entry('a', { related: ['missing'] })], []), /missing public/);

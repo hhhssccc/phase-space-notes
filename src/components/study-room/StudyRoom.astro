@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import { contentKinds } from '../../lib/content-kinds.mjs';
 import { musicConfig } from '../../config/music';
 import { siteConfig } from '../../config/site';
 import { byRecentlyChanged, entryUrl, withBase } from '../../lib/content';
@@ -119,7 +120,7 @@ const formatUpdateDate = new Intl.DateTimeFormat('zh-CN', {
                 <div>
                   <a href={entryUrl(entry)}>{entry.data.title}</a>
                   <p>
-                    <span>{entry.data.type === 'essay' ? '文章' : '笔记'} · {entry.data.category}</span>
+                    <span>{contentKinds[entry.data.type].label} · {entry.data.category}</span>
                     <time datetime={updated.toISOString()}>{formatUpdateDate.format(updated)}</time>
                   </p>
                 </div>

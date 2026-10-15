@@ -42,13 +42,7 @@ try {
       }
     }
     assert.equal(media.length,0,'audio must not load before play');
-    await page.locator('[data-lab-start]').click();
-    await page.locator('.physics-lab.lab-active').waitFor();
-    await page.locator('[data-lab-temperature]').fill('2');
-    await page.locator('[data-lab-temperature]').dispatchEvent('input');
-    assert.equal(await page.locator('[data-temperature-value]').textContent(),'2.00');
-    await page.locator('[data-lab-reset]').click();assert.equal(await page.locator('[data-lab-temperature]').inputValue(),'1');
-    await shot(page,`lab-active-${suffix}`);
+    assert.equal(await page.locator('[data-physics-lab]').count(),0,'legacy note-end lab removed');
     await page.goto(server.url+article);await ready(page);
     const equation=page.locator('[data-equation]').first();
     const trigger=page.locator('[data-formula-toggle]').first();
@@ -111,15 +105,11 @@ try {
     await page.locator('a[href$="/search/"]:visible').first().click();await page.waitForURL('**/search/');
     await page.locator('#site-search').fill('Grover');assert.match(await page.locator('[data-search-results]').innerText(),/Grover/);
     await page.locator('[data-search-results] a').first().click();await page.waitForURL('**/articles/grover-algorithm-original-motivation/**');
-    await page.locator('[data-lab-start]').click();await page.locator('.physics-lab.lab-active').waitFor();
-    await page.locator('[data-lab-size]').selectOption('4');await page.locator('[data-lab-iterations]').fill('1');await page.locator('[data-lab-iterations]').dispatchEvent('input');
-    assert.match(await page.locator('[data-lab-result]').innerText(),/100.00%/);
+    assert.equal(await page.locator('[data-physics-lab]').count(),0,'legacy article-end lab removed');
     await page.locator('[data-study-open]').click();await page.locator('[data-music-toggle]').click();
     await page.waitForFunction(()=>window.__testAudio.paused);
     await page.locator('[data-study-wallpaper="plain"]').click();await page.keyboard.press('Escape');
     await page.emulateMedia({media:'print'});
-    assert.equal(await page.locator('[data-static-plot]').isVisible(),true);
-    assert.equal(await page.locator('[data-lab-interactive]').isVisible(),false);
     assert.equal(await page.locator('[data-study-open]').isVisible(),false);
     assert.ok(await page.locator('.katex-display').evaluateAll(elements=>elements.every(el=>getComputedStyle(el).transform==='none')));
     await shot(page,`print-${suffix}`);
@@ -133,5 +123,5 @@ try {
   assert.equal(await page.locator('[data-reading-bookmarks] a').count(),1);
   assert.match(await page.locator('[data-reading-storage-note]').innerText(),/本次浏览/);await blocked.close();
   await writeFile(path.join(output,'results.json'),JSON.stringify(reports,null,2));
-  console.log('SITE_BROWSER_PASS: desktop/mobile, light/dark, formula menu/clipboard fallback/swipe, shelf, storage fallback, both labs, print, search after navigation, continuous music, themes and wallpaper.');
+  console.log('SITE_BROWSER_PASS: desktop/mobile, light/dark, formula menu/clipboard fallback/swipe, shelf, storage fallback, legacy labs absent, print, search after navigation, continuous music, themes and wallpaper.');
 } finally {await browser.close();await server.close();}

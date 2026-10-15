@@ -3,7 +3,7 @@ import { plainText, readingMinutes } from './content';
 export interface SiteStatsEntry {
   body?: string;
   data: {
-    type: 'essay' | 'note';
+    type: 'essay' | 'note' | 'reflection' | 'visualization';
     draft: boolean;
     category: string;
     tags: readonly string[];
@@ -15,6 +15,8 @@ export interface SiteStatsEntry {
 export interface SiteStats {
   articleCount: number;
   noteCount: number;
+  reflectionCount: number;
+  visualizationCount: number;
   totalWords: number;
   totalReadingMinutes: number;
   categoryCount: number;
@@ -40,6 +42,8 @@ export function contentWordCount(markdown: string) {
 export function getSiteStats(entries: readonly SiteStatsEntry[]): SiteStats {
   let articleCount = 0;
   let noteCount = 0;
+  let reflectionCount = 0;
+  let visualizationCount = 0;
   let totalWords = 0;
   let totalReadingMinutes = 0;
   let latestTimestamp: number | null = null;
@@ -51,6 +55,8 @@ export function getSiteStats(entries: readonly SiteStatsEntry[]): SiteStats {
 
     if (entry.data.type === 'essay') articleCount += 1;
     if (entry.data.type === 'note') noteCount += 1;
+    if (entry.data.type === 'reflection') reflectionCount += 1;
+    if (entry.data.type === 'visualization') visualizationCount += 1;
 
     const body = entry.body ?? '';
     totalWords += contentWordCount(body);
@@ -73,6 +79,8 @@ export function getSiteStats(entries: readonly SiteStatsEntry[]): SiteStats {
   return {
     articleCount,
     noteCount,
+    reflectionCount,
+    visualizationCount,
     totalWords,
     totalReadingMinutes,
     categoryCount: categories.size,

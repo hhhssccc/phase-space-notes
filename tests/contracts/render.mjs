@@ -174,6 +174,11 @@ let musicPlayerPages = 0;
 for (const file of htmlFiles) {
   const html = await readFile(file, 'utf8');
   const relative = outputRelativePath(file);
+  if (/^lab\/embed\/[a-z0-9-]+\.html$/.test(relative)) {
+    if (!html.includes('id="visualization-root"') || !html.includes('visualization-ready') || !html.includes('visualization-size')) throw new Error(`Incomplete visualization document: ${file}`);
+    if (/<script\b[^>]*\bsrc=/i.test(html) || /<link\b[^>]*\bhref=/i.test(html)) throw new Error(`Offline visualization has external runtime dependencies: ${file}`);
+    continue; // Isolated, downloadable documents deliberately have no site shell.
+  }
   const publicUrl = publicUrlForHtml(file);
   const isNotFoundPage = relative === '404.html';
   const expectedCanonical = isNotFoundPage ? undefined : publicUrl;
@@ -289,7 +294,7 @@ for (const file of htmlFiles) {
   if (!html.includes('class="article-prose"')) continue;
   articlePages += 1;
 
-  const route = relative.match(/^(articles|notes)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/index\.html$/);
+  const route = relative.match(/^(articles|notes|reflections|lab)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/index\.html$/);
   if (!route) throw new Error(`Rendered article has no safe content mapping: ${file}`);
   const sourcePath = `content/${route[2]}.md`;
   try {

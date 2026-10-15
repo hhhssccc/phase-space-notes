@@ -17,6 +17,8 @@ const formatDate = new Intl.DateTimeFormat('zh-CN', {
 const rows = [
   ['文章数', formatNumber.format(stats.articleCount)],
   ['笔记数', formatNumber.format(stats.noteCount)],
+  ['杂感数', formatNumber.format(stats.reflectionCount)],
+  ['可视化数', formatNumber.format(stats.visualizationCount)],
   ['总字数', formatNumber.format(stats.totalWords)],
   ['总阅读时长', `${formatNumber.format(stats.totalReadingMinutes)} 分钟`],
   ['分类数', formatNumber.format(stats.categoryCount)],

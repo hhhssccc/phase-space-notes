@@ -24,7 +24,7 @@ export default defineConfig({
   integrations: [sitemap({
     // The local search UI is intentionally noindex and should not be advertised
     // as a content page in the sitemap.
-    filter: (page) => !new URL(page).pathname.endsWith('/search/'),
+    filter: (page) => !new URL(page).pathname.endsWith('/search/') && !new URL(page).pathname.includes('/lab/embed/'),
   })],
   markdown: {
     processor: unified({

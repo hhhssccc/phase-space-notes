@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublicContent } from '../../lib/content/service';
+import { byNewest, entryUrl, formatDate } from '../../lib/content';
+const entries = (await getPublicContent()).entries.filter(entry => entry.data.type === 'reflection').sort(byNewest);
+---
+<BaseLayout title="杂感｜渐近自由" description="记录最近的感想、生活中的收获，以及尚未整理成答案的心事。">
+  <div class="index-page reflections-page">
+    <header class="index-header"><p class="eyebrow">REFLECTIONS</p><h1>杂感</h1><p>推导之外，生活之中。<br />记下最近的感想、偶然的收获，还有一些尚未想明白的事。</p></header>
+    {entries.length ? <ol class="entry-list">{entries.map(entry => <li><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time><div><h2><a href={entryUrl(entry)}>{entry.data.title}</a></h2><p>{entry.data.description}</p></div></li>)}</ol> : <div class="reflection-empty"><span aria-hidden="true">一页留白</span><p>这里留给生活里的回声。<br />第一篇杂感，还在路上。</p></div>}
+  </div>
+</BaseLayout>
+<style>
+  .reflection-empty { margin: 2rem 0 5rem; padding: 2rem 0; }
+  .reflection-empty span { font-family: var(--serif); font-size: 1.4rem; }
+  .reflection-empty p { color: var(--muted); line-height: 2; margin-top: 1rem; }
+</style>

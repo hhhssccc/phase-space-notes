@@ -9,7 +9,7 @@
 - `src/layouts/` 负责页面外壳与文章结构。`components/` 保存 Astro 展示组件，交互代码归 `features/`。
 - `features/reading/` 管理书签、位置恢复、公式菜单、脚注、图片放大和进度；`features/search/` 管理搜索界面。
 - `features/study-room/` 管理持久抽屉和音乐。音乐内部拆为播放会话、纯歌单状态、界面、存储、启动/取消与系统媒体适配。
-- `features/physics-lab/` 将模型计算、SVG、控制器与实验注册表分离；点击后才加载相应控制器。
+- `features/visualizations/` 管理演算室的独立图解、统一样式与隔离加载；`features/physics-lab/` 仅保留历史模型参考，不再注入文章。详情见 `docs/columns.md`。
 - `lib/browser/` 是少量共享能力：页面生命周期、存储容错和主题/纸面偏好；不承载业务 DOM。
 - `lib/content/analysis.ts` 提供统一源码标题扫描、纯文本及公式密度分析。章节 URL 始终使用 Astro 渲染锚点。
 - `plugins/` 完成 Markdown 转换。公式 ID 仍由原始 LaTeX 的摘要得到；WikiLink 使用内容实际类型；站内资源只在构建时加一次 base。
@@ -34,7 +34,7 @@
 
 ## 扩展入口
 
-新增专题/符号仍修改 `config/reading-paths.ts` / `config/article-symbols.ts`；引用必须指向公开内容。新增实验时添加模型、图形、控制器，在 `physics-lab/registry.ts` 配置文章映射、说明和参数，并在 `entry.ts` 与 `PhysicsLab.astro` 注册对应加载器/静态绘图。参数默认值只有注册表一份，模型需独立数值检查。
+新增专题/符号仍修改 `config/reading-paths.ts` / `config/article-symbols.ts`；引用必须指向公开内容。可视化独立收录于演算室，不增加文章映射。图解源码、注册、截图和说明遵循 `docs/columns.md`，模型需独立数值检查。
 
 新增页面交互先决定文档级或页面级生命周期。只有被两个以上功能实际使用的能力才进入 `lib/browser`，不要增加全局事件总线。
 

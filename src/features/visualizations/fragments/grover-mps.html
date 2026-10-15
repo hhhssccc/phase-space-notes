@@ -1,0 +1,63 @@
+<div id="grover-mps">
+ <h3>一个大向量，只有两条乘积通道</h3>
+ <div class="viz-controls"><label class="form-label">读取哪一个振幅？<select class="form-select" data-bitstring><option>000</option><option>001</option><option>010</option><option>011</option><option>100</option><option selected>101</option><option>110</option><option>111</option></select></label></div>
+ <div class="gm-column-labels text-small"><span>通道与入口</span><span>第 1 位</span><span>第 2 位</span><span>第 3 位</span></div>
+ <div class="gm-path" data-channel="background"><span>均匀通道<br><span class="text-small">入口权重 1</span></span><span class="gm-node">0.707</span><span class="gm-node">0.707</span><span class="gm-node">0.707</span></div>
+ <div class="gm-path" data-channel="target"><span>101 通道<br><span class="text-small">入口权重 −0.707</span></span><span class="gm-node" data-delta="0">1</span><span class="gm-node" data-delta="1">1</span><span class="gm-node" data-delta="2">1</span></div>
+ <div class="gm-result tabular-nums" aria-live="polite" data-amplitude></div>
+ <div class="text-small">每列是一个对角小矩阵的两条通道；入口、各列依次相乘，出口相加。</div>
+ <hr>
+ <h3>同样的最终状态，中途可以更大</h3>
+ <div class="text-small">6 比特已知目标玩具电路 · 固定排列：输入位在前，辅助位在后</div>
+ <div class="gm-rank-plot" data-rank-plot role="img" aria-label="八个计算阶段的全链最大Schmidt秩依次为1、2、4、8、8、4、3、2"></div>
+ <div class="gm-scale text-small"><span>初始</span><span>复制到辅助位</span><span>标记</span><span>反计算</span></div>
+ <label class="form-label">计算阶段：<span data-stage-label></span><input type="range" min="0" max="7" step="1" value="4" class="form-range" data-stage></label>
+ <div class="gm-bonds" data-bonds></div>
+ <div class="gm-rank-detail tabular-nums" aria-live="polite" data-rank-detail></div>
+ <div class="text-small">逐门精确计算示例；可化简、可换排列，不是困难 oracle 的证据。</div>
+</div>
+<style>
+#grover-mps .gm-column-labels,#grover-mps .gm-path{display:grid;grid-template-columns:1.55fr repeat(3,1fr);gap:12px;align-items:center;margin:16px 0}
+#grover-mps .gm-column-labels{text-align:center}
+#grover-mps .gm-path{position:relative}
+#grover-mps .gm-node{text-align:center;background:color-mix(in srgb,var(--viz-series-1) 15%,transparent);padding:14px 3px;position:relative}
+#grover-mps [data-channel="target"] .gm-node{background:color-mix(in srgb,var(--viz-series-2) 15%,transparent)}
+#grover-mps .gm-node:before{content:"";position:absolute;left:-12px;top:50%;width:12px;height:1px;background:var(--border)}
+#grover-mps .gm-node[data-zero="true"]{background:var(--muted)}
+#grover-mps .gm-result{margin:16px 0 8px}
+#grover-mps .gm-rank-plot{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;height:122px;margin-top:30px;align-items:end}
+#grover-mps .gm-rank-mark{position:relative;background:color-mix(in srgb,var(--viz-series-1) 30%,transparent);transition:background .2s}
+#grover-mps .gm-rank-mark[data-active="true"]{background:var(--viz-series-1)}
+#grover-mps .gm-rank-mark span{position:absolute;left:50%;top:-24px;transform:translateX(-50%)}
+#grover-mps .gm-scale{display:grid;grid-template-columns:1fr 3fr 1fr 3fr;gap:8px;text-align:center;margin:10px 0 20px}
+#grover-mps .gm-bonds{display:grid;grid-template-columns:repeat(5,1fr .72fr) 1fr;align-items:center;margin:20px 0 12px;text-align:center}
+#grover-mps .gm-qubit{background:var(--muted);padding:9px 0}
+#grover-mps .gm-bond{position:relative;color:var(--foreground)}
+#grover-mps .gm-bond:after{content:"";height:1px;background:var(--border);position:absolute;left:0;right:0;bottom:-6px}
+#grover-mps .gm-rank-detail{margin:8px 0}
+@media(max-width:390px){#grover-mps .gm-column-labels,#grover-mps .gm-path{gap:8px;grid-template-columns:1.5fr repeat(3,1fr)}#grover-mps .gm-node:before{left:-8px;width:8px}#grover-mps .gm-rank-plot{gap:7px}}
+@media(prefers-reduced-motion:reduce){#grover-mps .gm-rank-mark{transition:none}}
+</style>
+<script>
+(()=>{
+ const root=document.getElementById('grover-mps'),select=root.querySelector('[data-bitstring]'),step=root.querySelector('[data-stage]');
+ const ranks=[[1,1,1,1,1],[2,2,2,1,1],[2,4,4,2,1],[2,4,8,4,2],[2,4,8,4,2],[2,4,4,2,1],[2,3,2,1,1],[2,2,1,1,1]];
+ const labels=['初始 |+++000⟩','复制第 1 位','复制第 2 位','复制第 3 位','在辅助位上标记 101','反计算第 3 位','反计算第 2 位','反计算第 1 位，完成'];
+ const plot=root.querySelector('[data-rank-plot]');ranks.forEach((r,i)=>{let e=document.createElement('div');e.className='gm-rank-mark';e.style.height=(Math.max(...r)/8*100)+'%';e.innerHTML='<span class="tabular-nums">'+Math.max(...r)+'</span>';e.setAttribute('data-tooltip',labels[i]+'：最大键维 '+Math.max(...r));plot.appendChild(e)});
+ const qubits=['x₁','x₂','x₃','a₁','a₂','a₃'],bonds=root.querySelector('[data-bonds]');qubits.forEach((q,i)=>{const e=document.createElement('span');e.className='gm-qubit';e.textContent=q;bonds.appendChild(e);if(i<5){const b=document.createElement('span');b.className='gm-bond tabular-nums';bonds.appendChild(b)}});
+ function draw(){
+  let x=select.value;let match=1;root.querySelectorAll('[data-delta]').forEach((e,i)=>{const d=Number(x[i]==='101'[i]);match*=d;e.textContent=d;e.dataset.zero=String(!d)});
+  const bg=1/Math.sqrt(8),target=-2/Math.sqrt(8)*match;
+  root.querySelector('[data-amplitude]').textContent='两路贡献：+0.3536 '+(target===0?'+ 0':'− 0.7071')+' → '+x+' 的振幅 '+(bg+target).toFixed(4);
+  const i=+step.value;root.querySelector('[data-stage-label]').textContent=labels[i];
+  plot.querySelectorAll('.gm-rank-mark').forEach((e,j)=>e.dataset.active=String(i===j));
+  bonds.querySelectorAll('.gm-bond').forEach((e,j)=>e.textContent=ranks[i][j]);
+  root.querySelector('[data-rank-detail]').textContent='连线数字＝该切分的精确 Schmidt 秩；当前最大键维 χ = '+Math.max(...ranks[i])+'，最终 χ = 2。';
+ }
+ function apply(s){if(/^[01]{3}$/.test(s?.bitstring||''))select.value=s.bitstring;if(Number.isInteger(s?.step)&&s.step>=0&&s.step<=7)step.value=s.step;draw()}
+ function save(){if(window.openai?.setWidgetState)window.openai.setWidgetState({modelContent:{view:'grover-mps',bitstring:select.value,stage:+step.value,maxBond:Math.max(...ranks[+step.value])},privateContent:{bitstring:select.value,step:+step.value}}).catch(()=>{})}
+ select.addEventListener('change',()=>{draw();save()});step.addEventListener('input',draw);step.addEventListener('change',save);
+ window.addEventListener('openai:set_globals',e=>{const s=e.detail?.globals?.widgetState;if(s)apply(s.privateContent)});
+ apply(window.openai?.widgetState?.privateContent);
+})();
+</script>

@@ -22,16 +22,16 @@ const index = await Promise.all(entries.map(async (entry) => ({
 const topics = [...new Set(index.flatMap((item) => item.tags))].slice(0, 6);
 ---
 
-<BaseLayout title="搜索｜渐近自由" description="搜索渐近自由的文章、笔记和标签。" pageKind="utility" noindex>
+<BaseLayout title="搜索｜渐近自由" description="搜索渐近自由的文章、笔记、杂感与可视化。" pageKind="utility" noindex>
   <div class="index-page search-page">
     <header class="index-header"><p class="eyebrow">SEARCH</p><h1>寻找一个问题</h1><p>从一个概念、一条公式，或一个尚未想明白的问题开始。</p></header>
     {searchEnabled ? (
       <>
         <form class="search-form" role="search">
-          <label class="visually-hidden" for="site-search">搜索文章与笔记</label>
+          <label class="visually-hidden" for="site-search">搜索内容</label>
           <div class="search-field">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
-            <input id="site-search" type="search" inputmode="search" autocomplete="off" placeholder="搜索文章、笔记或概念" aria-describedby="search-hint" aria-controls="search-results" />
+            <input id="site-search" type="search" inputmode="search" autocomplete="off" placeholder="搜索内容或概念" aria-describedby="search-hint" aria-controls="search-results" />
             <button class="search-clear" type="button" aria-label="清空搜索" hidden>×</button>
           </div>
           <p id="search-hint" class="search-hint">输入即搜索，也可以试试下面的主题。</p>
@@ -41,13 +41,13 @@ const topics = [...new Set(index.flatMap((item) => item.tags))].slice(0, 6);
         </div>
         <div class="search-results-heading">
           <h2 data-results-heading>最近发布</h2>
-          <p class="search-status" data-search-status role="status" aria-live="polite">{index.length ? '先从这些文章与笔记开始。' : '还没有公开的文章与笔记。'}</p>
+          <p class="search-status" data-search-status role="status" aria-live="polite">{index.length ? '先从这些内容开始。' : '还没有公开的内容。'}</p>
         </div>
         <div class="search-empty" data-search-empty hidden><h3>暂时没有找到</h3><p>试试更短的关键词，或选择上方的主题。</p></div>
         <ol class="entry-list" id="search-results" data-search-results>
           {index.map((item, indexNumber) => <li class="search-result" data-search-item={indexNumber} hidden={indexNumber >= 3}><span class="entry-meta">{item.category}</span><div><h2><a href={item.url}>{item.title}</a></h2><p>{item.description}</p><span class="entry-meta">{item.tags.join(' · ')}</span></div></li>)}
         </ol>
-        <noscript><p class="search-hint">启用 JavaScript 后即可搜索；也可以通过导航浏览全部文章与笔记。</p></noscript>
+        <noscript><p class="search-hint">启用 JavaScript 后即可搜索；也可以通过导航浏览全部内容。</p></noscript>
         <script is:inline type="application/json" id="search-index" set:html={JSON.stringify(index).replaceAll('<', '\\u003c')}></script>
       </>
     ) : <p class="empty-state">搜索功能当前未启用。</p>}

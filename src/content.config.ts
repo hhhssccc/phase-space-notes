@@ -10,7 +10,8 @@ const articles = defineCollection({
     abstract: z.string().optional(),
     date: z.coerce.date(),
     updated: z.coerce.date().optional(),
-    type: z.enum(['essay', 'note']).default('essay'),
+    type: z.enum(['essay', 'note', 'reflection', 'visualization']).default('essay'),
+    visualization: z.enum(['grover-subtraction', 'grover-mps', 'grover-counting', 'grover-noise']).optional(),
     category: z.string().trim().min(1),
     tags: z.array(z.string()).default([]),
     featured: z.boolean().default(false),
@@ -24,7 +25,8 @@ const articles = defineCollection({
       body: z.string(),
     })).default([]),
   }).refine(data => !data.updated || data.updated >= data.date, { message: 'updated must not precede date', path: ['updated'] })
-    .refine(data => data.type !== 'note' || !data.featured, { message: 'Only essays may be featured', path: ['featured'] }),
+    .refine(data => data.type === 'essay' || !data.featured, { message: 'Only essays may be featured', path: ['featured'] })
+    .refine(data => (data.type === 'visualization') === Boolean(data.visualization), { message: 'Only visualization entries must specify a registered visualization', path: ['visualization'] }),
 });
 
 export const collections = { articles };

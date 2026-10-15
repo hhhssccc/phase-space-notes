@@ -1,0 +1,43 @@
+---
+import { visualizations, type VisualizationId } from '../features/visualizations/registry';
+import { withBase } from '../lib/content';
+import previews from '../features/visualizations/previews.json';
+interface Props { id: VisualizationId; title: string; }
+const { id, title } = Astro.props;
+const source = withBase(`/lab/embed/${id}.html`);
+---
+<section class="visualization" data-visualization aria-label={title}>
+  <div class="visualization-actions print-hidden">
+    <button type="button" data-viz-start aria-expanded="false">开始探索</button>
+    <button type="button" data-viz-reset hidden>恢复初始状态</button>
+    <a href={source} download={`${id}.html`} data-astro-reload>下载 HTML 与代码</a>
+  </div>
+  <p class="visualization-cue">{visualizations[id].cue}</p>
+  <div data-viz-preview class="visualization-preview">
+    <img class="preview-light" src={withBase(`/visualizations/${id}.png`)} alt={`${title}的默认示例，点击开始探索可调整参数。`} width={previews[id].width} height={previews[id].height} loading="lazy" />
+    <img class="preview-dark" src={withBase(`/visualizations/${id}-dark.png`)} alt={`${title}的默认示例，点击开始探索可调整参数。`} width={previews[id].width} height={previews[id].height} loading="lazy" />
+    <p class="entry-meta">默认示例 · 开始探索后可调整参数</p>
+  </div>
+  <iframe title={title} data-viz-frame data-src={source} sandbox="allow-scripts" referrerpolicy="no-referrer" hidden></iframe>
+  <p data-viz-status class="entry-meta print-hidden" role="status"></p>
+  <noscript><p>当前显示静态示例。启用 JavaScript 后可以调整参数，也可下载后在浏览器中打开。</p></noscript>
+</section>
+<script>import '../features/visualizations/controller';</script>
+<style>
+  .visualization { margin: 1rem 0 3rem; }
+  .visualization-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .visualization-actions button { padding: .65rem 1rem; border: 0; border-radius: .5rem; background: var(--ink); color: var(--paper); cursor: pointer; font: inherit; font-size: .9rem; }
+  .visualization-actions a { font-size: .85rem; color: var(--muted); }
+  .visualization-cue { color: var(--muted); font-size: .9rem; }
+  iframe { display: block; width: 100%; height: 620px; border: 0; }
+  iframe[hidden], [hidden] { display: none; }
+  .visualization-preview img { display: block; width: 100%; height: auto; background: #fff; border-radius: .3rem; }
+  .visualization-preview .preview-dark { display: none; background: #181818; }
+  :global(html[data-theme='dark']) .preview-light { display: none; }
+  :global(html[data-theme='dark']) .visualization-preview .preview-dark { display: block; }
+  @media (prefers-color-scheme: dark) {
+    :global(html[data-theme='system']) .preview-light { display: none; }
+    :global(html[data-theme='system']) .visualization-preview .preview-dark { display: block; }
+  }
+  @media print { iframe { display: none !important; } .visualization-preview[hidden] { display: block !important; } .visualization-preview .preview-light { display: block !important; } .visualization-preview .preview-dark { display: none !important; } }
+</style>

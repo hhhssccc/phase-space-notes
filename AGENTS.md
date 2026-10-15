@@ -59,6 +59,8 @@
 - 文件名一旦公开，除非用户明确要求，不要改名；改名会破坏旧链接、WikiLink、相关阅读和搜索索引。
 - `type: essay` 发布到 `/articles/<id>/`。
 - `type: note` 发布到 `/notes/<id>/`。
+- `type: reflection` 发布到 `/reflections/<id>/`（杂感）。
+- `type: visualization` 发布到 `/lab/<id>/`（演算室），必须指定已注册的 `visualization` ID。
 - 不在正文中再写一级标题 `#`；页面会从 Frontmatter 的 `title` 生成唯一 H1。
 
 ## 5. Frontmatter 合同
@@ -96,7 +98,7 @@ sidenotes:
 | `abstract` | 长文建议填写，短笔记可省略。不得只是重复 `description`。 |
 | `date` | 必填，使用 `YYYY-MM-DD`，表示首次公开日期。 |
 | `updated` | 仅在实质性修订后填写；修正错字不必更新。 |
-| `type` | `essay` 或 `note`。完整论证用 `essay`，单一问题/推导卡片用 `note`。 |
+| `type` | `essay`、`note`、`reflection` 或 `visualization`。完整论证、知识笔记、个人杂感、独立图解分别使用对应类型。 |
 | `category` | 必填，只选一个稳定学科名称，如“统计力学”“量子力学”“理论力学”。 |
 | `tags` | 建议 2–6 个中文标签；复用已有标签，避免同义词分裂。 |
 | `featured` | 仅 `essay` 可设为 `true`；首页最多保留 3 篇精选。 |
@@ -105,6 +107,8 @@ sidenotes:
 | `backlinks` | 明确链接到本文的内容 ID。新增 WikiLink 后同步检查是否应更新。 |
 | `mathDisplay` | `auto`、`ruled` 或 `plain`。默认 `auto`：文字多公式少时保留上下细线，公式密集时自动使用无框紧凑样式；只有自动判断不合适时才手动覆盖。 |
 | `sidenotes` | 可选。宽屏显示在右侧，手机折叠；控制在 1–4 条，不要复制脚注内容。 |
+
+`visualization` 仅演算室条目填写，为 schema 与注册表中的合法 ID。新栏目模板见 `templates/reflection.md`、`templates/visualization.md`。
 
 禁止添加未经 `src/content.config.ts` 定义的 Frontmatter 字段；需要新字段时，先更新 schema、模板和本文件。
 
@@ -251,8 +255,8 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 ### 11.1 新文章的专题与物理小实验（用户长期要求，2026-09-29）
 
 - 每次发布新文章或新笔记，都必须检查并维护 `src/config/reading-paths.ts` 中的专题归属、前置知识、阅读顺序和每篇的导读说明；确认专题页、文章前后篇导航及从专题派生的相关阅读一致。没有合适专题时，不要强行塞入无关路线；判断是否值得新建专题，或向用户说明暂时独立收录。
-- 发布前主动询问用户是否希望为这篇内容加入物理小实验，并给出一个贴合正文的具体建议；若当前请求已明确同意或拒绝，则遵从该指令，不重复询问。未收到答复不视为同意添加实验，可继续不依赖该答复的整理和验证工作。
-- 实验须明确模型假设、符号、单位与适用范围，并核对模型来源。点击后才加载交互代码，默认展示静态图，打印保留静态图；保留文章原有论证，不把演示补充冒充原稿。
+- 2026-10-15 用户明确要求移除所有旧文末可视化（已移除 Grover 与量子气体两处）。不得重新自动附加，也不再例行询问是否添加文末实验。
+- 可视化统一放在「演算室」，以用户指定聊天 `01a13347-109f-76f3-a065-7915567ee347` 的视觉风格为准：无外框图表、蓝橙配色、直接标注与可操作参数。保持模型假设、来源、静态预览、打印和按需加载；正文只通过相关链接连接图解。
 - 维护专题和实验不改变文章首次公开日期；仅站点功能或导读变化不能记作正文实质修订。
 
 不得仅因为本地能打开就宣称已经上线；也不得在构建或发布失败时把工作标为完成。
@@ -314,7 +318,7 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 - `rehype-equation-links.mjs` 按公式内容产生稳定锚点，公式复制保留原始 LaTeX；插入其他公式不能导致已有公式链接整体改变。
 - `src/lib/katex-options.mjs` 明确允许原稿数学环境中的中文文本（KaTeX 的 `unicodeTextInMathMode` 扩展），正文与边注共用此约定；其他严格模式诊断、语法错误和渲染合同仍须处理。
 - 搜索结果使用构建时的真实章节锚点，命中摘要须面向读者，不暴露零碎 LaTeX 命令。首页“最近发布”按首次公开日期排列，书房动态继续按实质修订日期排序。
-- `PhysicsLab.astro` 与 `src/features/physics-lab/` 的注册表、模型、SVG 和控制器管理物理小实验；`physics-models.ts` 保留导出入口。新增或修改模型时，补充数值极限或独立算法交叉检查。
+- `PhysicsLab.astro` 与 `src/features/physics-lab/` 仅保留历史模型参考，不再注入文章；新图解由 `src/features/visualizations/` 管理。新增或修改模型时，补充数值极限或独立算法交叉检查。
 - 发布阅读工具改动前，除完整构建与桌面、手机、深浅色、打印验收外，运行 `node scripts/check-reading-tools.mjs`，核验搜索锚点、专题引用、公式链接稳定性与实验数值。
 
 ## 16. 重构后的工程边界（2026-09-30）
@@ -325,3 +329,10 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 - 公式工具默认不占公式下方一行；桌面悬停/键盘聚焦显示小入口，手机从文章顶部开启后轻点公式。同篇只开一个浮层，保持横滑、长按选择、稳定锚点和打印隐藏。不得用逐公式滚动测量维持浮层。
 - `npm run build` 包含单元检查、类型检查、通用构建合同与特定文章回归。浏览器验证使用 `npm run validate:browser`；长文仍需已有带窗口 Edge 交互检查。
 - Markdown 资源 URL 在构建期按 base 解析，Pages 准备脚本只复制已验证产物。详细扩展方式和验证入口见 `docs/architecture.md`。
+
+## 17. 新栏目（2026-10-15）
+
+- 「杂感」用于非知识性的生活感想和收获，不套用学术文章必须有摘要、推导、参考文献的要求；不得编造作者经历。空栏目显示留白。
+- 「演算室」独立收录代码可视化；以指定聊天的四份 Grover 图解为首批作品。技术路线、来源、添加入口和验证步骤见 `docs/columns.md`。
+- 统一类型映射在 `src/lib/content-kinds.mjs`；四类内容均须接入搜索、RSS、归档、标签和书房统计。schema 要求仅 essay 可精选、仅 visualization 必须有图解 ID。
+- 图解使用隔离 iframe，只开放 allow-scripts；代码下载是同源生成的完整离线 HTML。页面级控制器须清理监听，并验证 iframe 消息来源。

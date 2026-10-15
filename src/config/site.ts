@@ -7,6 +7,8 @@ export const siteConfig = {
   nav: [
     { label: '文章', href: '/articles/' },
     { label: '笔记', href: '/notes/' },
+    { label: '杂感', href: '/reflections/' },
+    { label: '演算室', href: '/lab/' },
     { label: '专题', href: '/paths/' },
     { label: '归档', href: '/archive/' },
     { label: '关于', href: '/about/' },

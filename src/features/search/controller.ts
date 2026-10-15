@@ -27,7 +27,7 @@ registerPageFeature('search', signal => {
       label.textContent = query && section ? `定位到：${section.title}` : entry.tags.join(' · ');
       body.append(title, context, label); li.append(meta, body); list?.append(li);
     });
-    if (status) status.textContent = query ? `找到 ${matches.length} 条结果` : entries.length ? '先从这些文章与笔记开始。' : '还没有公开的文章与笔记。';
+    if (status) status.textContent = query ? `找到 ${matches.length} 条结果` : entries.length ? '先从这些内容开始。' : '还没有公开的内容。';
     if (heading) heading.textContent = query ? '搜索结果' : '最近发布';
     if (clear) clear.hidden = !input.value.length;
     empty?.toggleAttribute('hidden', !query || matches.length > 0);

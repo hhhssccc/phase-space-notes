@@ -1,0 +1,66 @@
+<div id="grover-subtraction">
+  <h3>把共同背景减掉，答案就显出来</h3>
+  <div class="viz-controls">
+    <label class="form-label">目标集合
+      <select class="form-select" data-solution>
+        <option value="5">单解：101</option><option value="2">单解：010</option><option value="2,5,7">多解：010、101、111</option>
+      </select>
+    </label>
+  </div>
+  <div class="gs-grid" data-panels></div>
+  <div class="text-small" aria-live="polite" data-detail></div>
+</div>
+<style>
+#grover-subtraction .gs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:24px 20px;margin:20px 0}
+#grover-subtraction .gs-panel{min-width:0}
+#grover-subtraction .gs-heading{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+#grover-subtraction .gs-plot{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;padding:20px 0 25px;position:relative}
+#grover-subtraction .gs-cell{position:relative;min-width:0;text-align:center}
+#grover-subtraction .gs-track{position:relative;height:108px;background:color-mix(in srgb,var(--muted) 38%,transparent)}
+#grover-subtraction .gs-track:after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border)}
+#grover-subtraction .gs-bar{position:absolute;left:18%;width:64%;background:var(--viz-series-1);transition:height .3s,top .3s}
+#grover-subtraction .gs-bar[data-negative="true"]{background:var(--viz-series-2)}
+#grover-subtraction .gs-number{position:absolute;top:-21px;left:50%;transform:translateX(-50%);white-space:nowrap}
+#grover-subtraction .gs-bit{position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);white-space:nowrap}
+#grover-subtraction .gs-foot{margin-top:6px;min-height:20px}
+#grover-subtraction .gs-mini{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+#grover-subtraction .gs-dot{width:10px;height:10px;background:var(--viz-series-1);display:inline-block}
+#grover-subtraction .gs-dot.neg{background:var(--viz-series-2)}
+@media(prefers-reduced-motion:reduce){#grover-subtraction .gs-bar{transition:none}}
+</style>
+<script>
+(()=>{
+ const root=document.getElementById('grover-subtraction');
+ const select=root.querySelector('[data-solution]');
+ const defs=[['均匀态','全部振幅相同'],['相位 oracle 之后','只有解的振幅反号'],['经典相减','未归一化的数学向量'],['归一化后','只在解上有非零振幅']];
+ const panels=root.querySelector('[data-panels]');
+ defs.forEach((d,k)=>{
+  const section=document.createElement('div');section.className='gs-panel';
+  section.innerHTML='<div class="gs-heading"><span>'+d[0]+'</span><span class="text-small">'+d[1]+'</span></div><div class="gs-plot" role="img"></div><div class="gs-foot text-small" data-foot></div>';
+  const plot=section.querySelector('.gs-plot');plot.dataset.stage=k;
+  for(let x=0;x<8;x++){
+   const c=document.createElement('div');c.className='gs-cell';c.innerHTML='<div class="gs-track"><div class="gs-bar"></div></div><span class="gs-number text-small tabular-nums"></span><span class="gs-bit text-small">'+x.toString(2).padStart(3,'0')+'</span>';plot.appendChild(c);
+  }panels.appendChild(section);
+ });
+ const legend=document.createElement('div');legend.className='gs-mini text-small';legend.innerHTML='<span class="gs-dot"></span><span>正振幅</span><span class="gs-dot neg"></span><span>负振幅</span><span>各图相同刻度：−1 至 +1；横线为 0</span>';root.insertBefore(legend,root.querySelector('[data-detail]'));
+ function apply(value){if(['5','2','2,5,7'].includes(value))select.value=value;draw()}
+ function draw(){
+  const solutions=select.value.split(',').map(Number);const S=solutions.length;const a=1/Math.sqrt(8);
+  const values=defs.map((_,k)=>Array.from({length:8},(_,x)=>k===0?a:k===1?(solutions.includes(x)?-a:a):k===2?(solutions.includes(x)?-2*a:0):(solutions.includes(x)?-1/Math.sqrt(S):0)));
+  panels.querySelectorAll('.gs-panel').forEach((panel,k)=>{
+   panel.querySelectorAll('.gs-cell').forEach((cell,x)=>{
+    const v=values[k][x];const bar=cell.querySelector('.gs-bar');bar.style.height=(Math.abs(v)*50)+'%';bar.style.top=(v>=0?50-Math.abs(v)*50:50)+'%';bar.dataset.negative=String(v<0);
+    cell.querySelector('.gs-number').textContent=v===0?'0':v.toFixed(2);
+    cell.setAttribute('data-tooltip',x.toString(2).padStart(3,'0')+'：振幅 '+v.toFixed(6));
+   });
+   panel.querySelector('.gs-plot').setAttribute('aria-label',defs[k][0]+'；振幅按000至111为 '+values[k].map(v=>v.toFixed(3)).join('，'));
+   panel.querySelector('[data-foot]').textContent=k<2?'直接测量：每个候选仍为 12.5%':k===2?'范数平方 '+(4*S/8).toFixed(2)+'；此行不是测量概率':'每个解的概率 '+(100/S).toFixed(1)+'%；其余为 0';
+  });
+  root.querySelector('[data-detail]').textContent='构造 oracle 后的表示 → 相减 → 归一化 → 取解；构造成本尚须另算。';
+ }
+ function save(){if(window.openai?.setWidgetState)window.openai.setWidgetState({modelContent:{view:'grover-subtraction',solutions:select.value},privateContent:{solutions:select.value}}).catch(()=>{})}
+ select.addEventListener('change',()=>{draw();save()});
+ window.addEventListener('openai:set_globals',e=>{const s=e.detail?.globals?.widgetState;if(s)apply(s.privateContent?.solutions)});
+ apply(window.openai?.widgetState?.privateContent?.solutions);
+})();
+</script>

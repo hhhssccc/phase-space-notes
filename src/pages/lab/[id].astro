@@ -1,0 +1,11 @@
+---
+import { render } from 'astro:content';
+import { articlePaths, articleContext } from '../../lib/content/service';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import type { ArticleEntry } from '../../lib/content';
+export const getStaticPaths = () => articlePaths('visualization');
+const { post } = Astro.props as { post: ArticleEntry };
+const { Content, headings } = await render(post);
+const { relatedEntries, backlinkEntries } = await articleContext(post);
+---
+<ArticleLayout {post} {headings} {relatedEntries} {backlinkEntries}><Content /></ArticleLayout>

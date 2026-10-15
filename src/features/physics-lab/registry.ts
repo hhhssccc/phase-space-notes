@@ -33,6 +33,7 @@ export const labs = {
   },
 } satisfies Record<string, LabDefinition>;
 export type LabKind = keyof typeof labs;
+/** Historical mappings retained for removal-regression checks only; never auto-inject these labs. */
 export const articleLabs: Record<string, LabKind> = {
   'grover-algorithm-original-motivation': 'grover',
   'quantum-gas': 'gas',

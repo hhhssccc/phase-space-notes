@@ -8,3 +8,5 @@
 @import './article-prose.css';
 @import './print.css';
 @import './utilities.css';
+
+@import './columns.css';

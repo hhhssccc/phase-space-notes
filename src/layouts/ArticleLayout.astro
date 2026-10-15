@@ -3,7 +3,8 @@ import '../features/reading/article-tools.css';
 import ReadingPath from '../components/ReadingPath.astro';
 import SymbolGuide from '../components/SymbolGuide.astro';
 import FormulaTools from '../components/FormulaTools.astro';
-import PhysicsLab from '../components/PhysicsLab.astro';
+import Visualization from '../components/Visualization.astro';
+import { contentKinds } from '../lib/content-kinds.mjs';
 import { analyzeArticle } from '../lib/content/analysis';
 import BaseLayout from './BaseLayout.astro';
 import Comments from '../components/Comments.astro';
@@ -25,7 +26,8 @@ interface Props {
 
 const { post, headings, relatedEntries, backlinkEntries } = Astro.props;
 const minutes = readingMinutes(post.body || '');
-const typeLabel = post.data.type === 'note' ? 'NOTE' : 'ESSAY';
+const kind = contentKinds[post.data.type];
+const typeLabel = kind.eyebrow;
 // Normalize line endings so the adaptive layout is identical on Windows and CI/Linux.
 const analysis = analyzeArticle(post.body || '');
 const renderedHeadings = headings.filter((heading) => (heading.depth === 2 || heading.depth === 3) && heading.slug !== 'footnote-label');
@@ -55,7 +57,7 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
   headline={post.data.title}
 >
   {siteConfig.features.readingProgress && <div class="reading-progress" data-reading-progress aria-hidden="true"></div>}
-  <div class="article-shell">
+  <div class:list={['article-shell', { 'visualization-shell': post.data.type === 'visualization', 'reflection-shell': post.data.type === 'reflection' }]}>
     <aside class="article-toc print-hidden" aria-label="文章目录">
       <p>目录</p>
       <ol>
@@ -68,6 +70,7 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
 
     <article class="article-main" id="article-start" data-reading-article data-reading-title={post.data.title}>
       <header class="article-title">
+        {(post.data.type === 'reflection' || post.data.type === 'visualization') && <a class="column-return print-hidden" href={withBase(`/${kind.path}/`)}>返回{kind.label}</a>}
         <p class="eyebrow">{post.data.category.toUpperCase()} · {typeLabel}</p>
         <h1>{post.data.title}</h1>
         <p class="article-dek">{post.data.description}</p>
@@ -94,7 +97,7 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
         </section>
       )}
 
-      {toc.length > 0 && (
+      {toc.length > 0 && post.data.type !== 'visualization' && (
         <details class="mobile-toc print-hidden">
           <summary>目录</summary>
           <ol>{toc.map((heading) => <li class:list={{ nested: heading.depth === 3 }}><a href={`#${heading.slug}`}><InlineMarkup html={heading.html} /></a></li>)}</ol>
@@ -109,8 +112,8 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       )}
 
       <div class="article-prose" data-math-display={effectiveMathDisplay}>
+        {post.data.visualization && <Visualization id={post.data.visualization} title={post.data.title} />}
         <slot />
-        <PhysicsLab id={post.id} />
       </div>
 
       {(post.data.tags.length > 0) && (
