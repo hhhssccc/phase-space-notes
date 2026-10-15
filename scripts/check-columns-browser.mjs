@@ -30,7 +30,7 @@ try{
    if(['articles/','notes/'].includes(route)){
     const count=await page.locator('.entry-list > li').count();total+=count;
     assert.equal(await page.locator('.entry-list .entry-preview').count(),count,'every essay and note has preview');
-    assert.ok((await page.locator('.entry-preview').first().getAttribute('src')).includes('/_covers/'));
+    assert.ok((await page.locator('.entry-preview').first().getAttribute('src')).includes('/previews/'));
     await page.locator('.entry-preview').first().scrollIntoViewIfNeeded();
     const box=await page.locator('.entry-preview').first().boundingBox();
     await page.mouse.click(box.x+box.width/2,box.y+box.height/2);await page.waitForURL(/\/(articles|notes)\/[^/]+\/$/);

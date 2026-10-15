@@ -1,4 +1,4 @@
-import { readdir, readFile, mkdir, access, writeFile } from 'node:fs/promises';
+import { readdir, readFile, mkdir, access } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -39,7 +39,7 @@ export async function prepareCoverImages(root) {
     const metadata = await sharp(input).metadata();
     if (!metadata.width || !metadata.height) throw new Error(`Invalid cover dimensions: ${source}`);
     const hash = createHash('sha256').update('cover-webp-82-v1').update(input).digest('hex').slice(0, 16);
-    const widths = [...new Set([320, 640, 960, 1440].map(width => Math.min(width, metadata.width)))];
+    const widths = [...new Set([640, 960, 1440].map(width => Math.min(width, metadata.width)))];
     const variants = [];
     for (const width of widths) {
       const name = `${hash}-${width}.webp`;
@@ -50,6 +50,5 @@ export async function prepareCoverImages(root) {
     }
     manifest[source] = { width: metadata.width, height: metadata.height, variants };
   }
-  await writeFile(path.join(output, 'manifest.json'), JSON.stringify(manifest));
   return manifest;
 }

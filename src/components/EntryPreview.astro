@@ -3,7 +3,7 @@ import { entryPreview } from '../lib/entry-preview';
 import { withBase, type ArticleEntry } from '../lib/content';
 interface Props { entry: ArticleEntry; compact?: boolean; }
 const { entry, compact = false } = Astro.props;
-const preview = await entryPreview(entry);
+const preview = entryPreview(entry);
 const variants = preview?.variants.filter(item => item.width <= 640);
 const images = variants?.length ? variants : preview?.variants;
 ---
