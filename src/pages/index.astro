@@ -1,6 +1,7 @@
 ---
 import '../styles/home-latest.css';
 import { getCollection } from 'astro:content';
+import EntryPreview from '../components/EntryPreview.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { siteConfig } from '../config/site';
 import { byNewest, entryUrl, readingMinutes, formatDate, withBase } from '../lib/content';
@@ -31,9 +32,10 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
       <div class="section-heading"><h2 id="featured-title">精选文章</h2><a href={withBase('/articles/')}>全部文章 →</a></div>
       <ol class="featured-list">
         {featured.map((entry) => (
-          <li>
-            <a href={entryUrl(entry)}>{entry.data.title}</a>
-            <span class="entry-meta">{entry.data.category} · {readingMinutes(entry.body || '')} 分钟</span>
+          <li class="home-preview-row">
+            <EntryPreview entry={entry} compact />
+            <div><a href={entryUrl(entry)}>{entry.data.title}</a>
+            <span class="entry-meta">{entry.data.category} · {readingMinutes(entry.body || '')} 分钟</span></div>
           </li>
         ))}
       </ol>
@@ -44,7 +46,7 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
         <div class="section-heading"><h2 id="notes-title">近期笔记</h2><a href={withBase('/notes/')}>全部笔记 →</a></div>
         <ol class="note-list">
           {notes.map((entry) => (
-            <li><time datetime={entry.data.date.toISOString()}>{String(entry.data.date.getMonth() + 1).padStart(2, '0')}.{String(entry.data.date.getDate()).padStart(2, '0')}</time><a href={entryUrl(entry)}>{entry.data.title}</a></li>
+            <li class="home-preview-row"><EntryPreview entry={entry} compact /><div><time datetime={entry.data.date.toISOString()}>{String(entry.data.date.getMonth() + 1).padStart(2, '0')}.{String(entry.data.date.getDate()).padStart(2, '0')}</time><a href={entryUrl(entry)}>{entry.data.title}</a></div></li>
           ))}
         </ol>
       </section>
@@ -55,3 +57,12 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
     </section>
   </div>
 </BaseLayout>
+
+<style>
+  .home-preview-row { grid-template-columns: 6rem minmax(0, 1fr); align-items: center; gap: 1.4rem; padding-block: 1rem; }
+  .home-preview-row a { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; line-height: 1.5; }
+  .home-preview-row .entry-meta { display: block; margin-top: .45rem; }
+  .home-preview-row time { display: block; margin-bottom: .3rem; }
+  @media (max-width: 48rem) { .home-preview-row { gap: 1rem; } .home-preview-row a { font-size: 1.05rem; } }
+  @media print { .home-preview-row { grid-template-columns: 1fr; } }
+</style>

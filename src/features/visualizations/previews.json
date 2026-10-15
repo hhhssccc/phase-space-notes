@@ -2,17 +2,5 @@
   "grover-subtraction": {
     "width": 736,
     "height": 601
-  },
-  "grover-mps": {
-    "width": 736,
-    "height": 744
-  },
-  "grover-counting": {
-    "width": 736,
-    "height": 574
-  },
-  "grover-noise": {
-    "width": 736,
-    "height": 530
   }
 }

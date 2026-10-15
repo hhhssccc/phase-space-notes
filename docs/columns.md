@@ -2,29 +2,24 @@
 
 ## 使用
 
-- 杂感：复制 `templates/reflection.md` 到 `content/<稳定英文ID>.md`，填写标题、说明、首次公开日期，写正文。`type: reflection`，检查后设 `draft: false`。不用写学术摘要或参考文献。
-- 演算室：复制 `templates/visualization.md`；`type: visualization`，`visualization` 指定注册表 ID。独立页面包含预览、互动、模型边界、相关原文和 HTML 下载。
-- 两类内容均进入全站搜索、RSS、标签、归档和书房统计。草稿不会生成详情或可下载图解；旧文章的 URL、正文和日期不变。
-- 不代作者撰写个人经历。杂感没有公开稿时显示留白。
+- 杂感：复制 `templates/reflection.md` 到 `content/<稳定英文ID>.md`，填写元数据和正文。不要编造作者经历；空栏目显示留白。
+- 演算室：按用户最新要求仅保留「减掉背景，让答案显影」。栏目主页显示预览，详情直接操作，不放正文预览图、开始/下载/重置按钮或说明段落。
+- 类型和 URL 由 `src/lib/content-kinds.mjs` 定义，统一进入搜索、RSS、标签、归档和书房统计；草稿不发布。
 
-## 技术路线
+## 技术与来源
 
-沿用 Astro 静态构建和 GitHub Pages 子路径，无新运行时框架、数据库或服务。内容类型与 URL 统一由 `src/lib/content-kinds.mjs` 定义。
+沿用 Astro 静态构建和 GitHub Pages。图解使用 `sandbox="allow-scripts"` iframe，页面进入后自动加载；通过验证消息来源的 postMessage 同步高度和主题。页面切换清理监听和定时器，不抢焦点。打印使用静态初始状态图。
 
-演算室采用静态说明页 + `sandbox="allow-scripts"` 的隔离图解文档。点击后才加载计算代码；页面切换按既有生命周期清理。图解通过校验消息来源的 `postMessage` 同步高度与主题，不开放 same-origin、顶层导航、弹窗或表单权限。默认与打印展示真实初始状态截图。
+视觉源自用户指定聊天 `01a13347-109f-76f3-a065-7915567ee347`：无框图表、蓝橙配色、直接标注、原生控件。原文件在 `reading-essays/grover算法综述/outputs/grover_black_box_lesson/`，保持不变；网站片段在 `src/features/visualizations/fragments/`，统一样式为 `surface.css`。其他三份示例的发布内容、片段、截图与仅供噪声图使用的 D3 已移除。
 
-参考：[Astro 页面脚本](https://docs.astro.build/en/guides/client-side-scripts/)、[MDN iframe sandbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe)。
+保留示例的模型边界：经典程序操作态的数学表示，相减前仍须计算 oracle 后的状态；枚举八个候选用于说明机制，不代表任意搜索都能常数时间完成。来源：E. M. Stoudenmire 与 Xavier Waintal, Opening the Black Box Inside Grover’s Algorithm, Physical Review X 14, 041029 (2024), https://doi.org/10.1103/PhysRevX.14.041029 。相关原文由条目 related 链接。
 
-## 风格与来源
+现有文章不再自动附带文末实验；历史 physics-lab 模型只保留作数值参考。
 
-用户指定聊天 `01a13347-109f-76f3-a065-7915567ee347` 的四份图解为首批作品与风格基准。源文件来自 `reading-essays/grover算法综述/outputs/grover_black_box_lesson/grover-*.html`，原文件保持不变。统一采用透明、无外框的图表区域，蓝橙主色、直接标注、原生控件、手机重排及深浅色适配。
+## 文章和笔记预览
 
-可视化源码在 `src/features/visualizations/fragments/`；统一样式为 `surface.css`。后者提取自参考作品导出预览的公共样式，并补齐独立运行时字体默认值。D3 7.9.0 固定保存于 `vendor/`，附 ISC 许可证，构建时内联到噪声图中；HTML 下载不依赖 CDN，可离线运行。
-
-新增图解时：在 fragments 添加 HTML，登记 registry，更新 schema 的合法 ID，创建 Markdown 说明与真实静态截图（`public/visualizations/`，深浅各一份），更新 previews.json 尺寸。所有计算必须自足，并说明假设、单位、边界；确认代码可信后才能收录。源代码下载与网站互动从同一片段构建。
-
-现有物理文章和笔记不再自动附带文末实验。历史 physics-lab 模型文件保留作数值参考，ArticleLayout 不导入、加载或显示它们。两处移除回归检查保留。演算室四个作品独立收录，以链接指向相关原文，不改既有专题路线的阅读顺序。
+所有现有文章/笔记复用原题图。构建的 cover manifest 提供 320/640px 缩略图，EntryPreview 读取题图引用，EntryListItem 用于文章、笔记、标签列表；首页和归档复用 EntryPreview。无需新增 Frontmatter，编辑正文题图后列表自动更新。列表预览不裁剪、不反色、不添加到正文。新文章须提供适合预览的题图。
 
 ## 验证
 
-`npm run build` 检查 schema、链接、搜索锚点、RSS、文末实验移除和旧文章回归。`npm run validate:browser` 检查书房、音乐、搜索、公式等既有功能。`node scripts/check-columns-browser.mjs` 检查新栏目、四图互动、导航重入、主题、移动端、打印、离线源码及隔离边界。
+`npm run build` 检查类型、链接和内容回归；`node scripts/check-columns-browser.mjs` 检查所有文章/笔记缩略图、单例图解自动加载、导航重入、主题、手机、打印及隔离边界。`npm run validate:browser` 检查既有书房、音乐和阅读功能。

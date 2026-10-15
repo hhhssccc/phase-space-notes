@@ -11,7 +11,7 @@ const articles = defineCollection({
     date: z.coerce.date(),
     updated: z.coerce.date().optional(),
     type: z.enum(['essay', 'note', 'reflection', 'visualization']).default('essay'),
-    visualization: z.enum(['grover-subtraction', 'grover-mps', 'grover-counting', 'grover-noise']).optional(),
+    visualization: z.enum(['grover-subtraction']).optional(),
     category: z.string().trim().min(1),
     tags: z.array(z.string()).default([]),
     featured: z.boolean().default(false),

@@ -30,7 +30,7 @@
 
 由 Markdown、`innerHTML` 或脚本生成的内容不拥有 Astro 组件作用域属性，因此公式、书架、实验 SVG 等使用明确的全局功能类。不要机械改为 scoped 样式。`article-performance.css` 的实测性能策略仍独立保留。
 
-题图 `.lead-figure` 由 `lib/build/cover-images.mjs` 在配置加载时生成 640/960/1440px WebP（不放大较小原图），按内容哈希缓存到忽略的 `public/_covers/`。`rehype-cover-images.mjs` 写入响应式来源、高优先级和空 `alt`；源稿与原图保留，灯箱按 `data-fullsize-src` 加载原图。正文科学图表的替代说明不变。新题图沿用本地 `public/figures/` 路径与 `.lead-figure`，无须手工生成缩略图。`node scripts/check-cover-images.mjs` 检查全部题图、手机候选选择与下载失败状态。
+题图 `.lead-figure` 由 `lib/build/cover-images.mjs` 在配置加载时生成 320/640/960/1440px WebP（不放大较小原图），按内容哈希缓存到忽略的 `public/_covers/`。`rehype-cover-images.mjs` 写入响应式来源、高优先级和空 `alt`；源稿与原图保留，灯箱按 `data-fullsize-src` 加载原图。正文科学图表的替代说明不变。列表通过 `EntryPreview.astro` 读取同批生成的 manifest 与 320/640px 资源，复用原题图而不向正文插入新图片。新题图沿用本地 `public/figures/` 路径与 `.lead-figure`，无须手工生成缩略图。`node scripts/check-cover-images.mjs` 检查全部题图、手机候选选择与下载失败状态。
 
 ## 扩展入口
 

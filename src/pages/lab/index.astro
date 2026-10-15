@@ -9,16 +9,14 @@ const entries = (await getPublicContent()).entries.filter(entry => entry.data.ty
 <BaseLayout title="演算室｜渐近自由" description="用代码把想法画出来：可以调节、比较和反复观察的交互图解。">
   <div class="index-page lab-index">
     <header class="index-header"><p class="eyebrow">THE VISUAL LAB</p><h1>演算室</h1><p>让抽象的想法，变成可以拨动的图景。<br />改一个参数，换一个例子，看看理解在哪里发生。</p></header>
-    <p class="lab-index-note">每份图解都可独立探索，也可以下载代码，接着改写。</p>
     <ol class="lab-list">
-      {entries.map((entry, i) => <li><a href={entryUrl(entry)}><div class="lab-thumbnail" aria-hidden="true"><img src={withBase(`/visualizations/${entry.data.visualization}.png`)} alt="" width="736" height="600" loading="lazy" /></div><div class="lab-summary"><span class="eyebrow">{String(i + 1).padStart(2, '0')} / {entry.data.category}</span><h2>{entry.data.title}</h2><p>{entry.data.description}</p><span class="lab-enter">进入图解 <span aria-hidden="true">↗</span></span></div></a></li>)}
+      {entries.map((entry, i) => <li><a href={entryUrl(entry)}><div class="lab-thumbnail" aria-hidden="true"><img src={withBase(`/visualizations/${entry.data.visualization}.png`)} alt="" width="736" height="601" loading="lazy" /></div><div class="lab-summary"><span class="eyebrow">{String(i + 1).padStart(2, '0')} / {entry.data.category}</span><h2>{entry.data.title}</h2><p>{entry.data.description}</p><span class="lab-enter">进入图解 <span aria-hidden="true">↗</span></span></div></a></li>)}
     </ol>
     {!entries.length && <p>新的图解正在准备中。</p>}
   </div>
 </BaseLayout>
 <style>
   .lab-index { max-width: 64rem; }
-  .lab-index-note { color: var(--muted); font-size: .85rem; margin: -1rem 0 2rem; }
   .lab-list { padding: 0; margin: 0; list-style: none; display: grid; gap: 2.5rem; }
   .lab-list a { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: 2.5rem; padding: 1rem; margin-inline: -1rem; text-decoration: none; border-radius: .6rem; }
   .lab-list a:hover { background: var(--paper-soft); }
