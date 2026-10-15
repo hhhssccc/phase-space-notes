@@ -88,7 +88,43 @@ function gas() {
   }).join('');
 }
 
+function qiga() {
+  const a = 1 / Math.sqrt(8);
+  return [0, 1, 2, 3].map(stage => {
+    const left = 62 + (stage % 2) * 318;
+    const top = stage < 2 ? 40 : 230;
+    return Array.from({ length: 8 }, (_, i) => {
+      const value = stage === 0 ? a : stage === 1 ? (i === 5 ? -a : a) : i === 5 ? (stage === 2 ? -2*a : -1) : 0;
+      const height = Math.abs(value) * 60;
+      return rect(left+i*26,top,23,120,'#f5f6f7') +
+        rect(left+i*26+4,top+60-(value>0?height:0),15,height,value<0?orange:blue);
+    }).join('') + line(left,top+60,left+205,top+60,gray,1.5);
+  }).join('');
+}
+
+function qigaTree() {
+  const kept = new Set(['', '1', '10', '101']);
+  const empty = new Set(['0', '100']);
+  const position = (bits: string) => ({ x: bits ? (parseInt(bits,2)+.5)*640/(2**bits.length) : 320, y: 42+bits.length*98 });
+  let edges = '', nodes = '';
+  for(let depth=0;depth<=3;depth++)for(let i=0;i<2**depth;i++) {
+    const bits = depth ? i.toString(2).padStart(depth,'0') : '';
+    const p = position(bits);
+    if(depth) {
+      const parent = position(bits.slice(0,-1));
+      edges += line(parent.x,parent.y,p.x,p.y,kept.has(bits)?blue:'#e5e8ec',kept.has(bits)?4:2);
+    }
+    if(!depth) { nodes += dot(p.x,p.y,blue,11); continue; }
+    const fill = bits==='101' ? orange : kept.has(bits) ? '#e3f1ff' : '#f3f4f5';
+    nodes += `<rect x="${p.x-24}" y="${p.y-17}" width="48" height="34" rx="6" fill="${fill}" stroke="${empty.has(bits)?orange:fill}" stroke-width="2"/>` +
+      text(p.x,p.y+7,bits,bits==='101'?'#fff':kept.has(bits)?blue:empty.has(bits)?orange:'#a7afb8',20);
+  }
+  return edges + nodes;
+}
+
 export const previewDiagrams: Record<string, { label: string; draw: () => string }> = {
+  'grover-subtraction': {label:'QiGA 的四组振幅',draw:qiga},
+  'grover-counting': {label:'QiGA-2 的逐位计数树',draw:qigaTree},
   'grover-algorithm-original-motivation': {label:'Grover 搜索的一步振幅放大',draw:grover},
   'group-theory-bedtime-story': {label:'正方形旋转与循环群',draw:group},
   'information-entropy-and-everything': {label:'二元信息熵',draw:entropy},

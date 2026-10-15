@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getPublicContent } from '../../lib/content/service';
-import { byNewest, entryUrl, withBase } from '../../lib/content';
+import { byNewest, entryUrl } from '../../lib/content';
 import { visualizations } from '../../features/visualizations/registry';
-import previews from '../../features/visualizations/previews.json';
+import EntryPreview from '../../components/EntryPreview.astro';
 const order = Object.keys(visualizations);
 const entries = (await getPublicContent()).entries.filter(entry => entry.data.type === 'visualization').sort((a,b) => b.data.date.valueOf() - a.data.date.valueOf() || order.indexOf(a.data.visualization!) - order.indexOf(b.data.visualization!) || byNewest(a,b));
 ---
@@ -11,7 +11,7 @@ const entries = (await getPublicContent()).entries.filter(entry => entry.data.ty
   <div class="index-page lab-index">
     <header class="index-header"><p class="eyebrow">THE VISUAL LAB</p><h1>演算室</h1><p>让抽象的想法，变成可以拨动的图景。<br />改一个参数，换一个例子，看看理解在哪里发生。</p></header>
     <ol class="lab-list">
-      {entries.map((entry, i) => <li><a href={entryUrl(entry)}><div class="lab-thumbnail" aria-hidden="true"><img src={withBase(`/visualizations/${entry.data.visualization}.png`)} alt="" width={previews[entry.data.visualization!].width} height={previews[entry.data.visualization!].height} loading="lazy" /></div><div class="lab-summary"><span class="eyebrow">{String(i + 1).padStart(2, '0')} / {entry.data.category}</span><h2>{entry.data.title}</h2><p>{entry.data.description}</p><span class="lab-enter">进入图解 <span aria-hidden="true">↗</span></span></div></a></li>)}
+      {entries.map((entry, i) => <li><a href={entryUrl(entry)}><div class="lab-thumbnail" aria-hidden="true"><EntryPreview entry={entry} /></div><div class="lab-summary"><span class="eyebrow">{String(i + 1).padStart(2, '0')} / {entry.data.category}</span><h2>{entry.data.title}</h2><p>{entry.data.description}</p><span class="lab-enter">进入图解 <span aria-hidden="true">↗</span></span></div></a></li>)}
     </ol>
     {!entries.length && <p>新的图解正在准备中。</p>}
   </div>
@@ -22,9 +22,9 @@ const entries = (await getPublicContent()).entries.filter(entry => entry.data.ty
   .lab-list a { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: 2.5rem; padding: 1rem; margin-inline: -1rem; text-decoration: none; border-radius: .6rem; }
   .lab-list a:hover { background: var(--paper-soft); }
   .lab-thumbnail { background: white; padding: .5rem; border-radius: .3rem; }
-  .lab-thumbnail img { width: 100%; height: 13rem; object-fit: contain; display: block; }
+  .lab-thumbnail :global(img) { width: 100%; height: 13rem; object-fit: contain; display: block; }
   .lab-summary h2 { font-family: var(--serif); font-weight: 550; font-size: 1.45rem; margin: .6rem 0; }
   .lab-summary p { color: var(--muted); font-size: .9rem; line-height: 1.8; margin: 0; }
   .lab-enter { display: inline-block; margin-top: 1.2rem; font-size: .85rem; }
-  @media (max-width: 40rem) { .lab-list a { grid-template-columns: 1fr; gap: 1.1rem; } .lab-thumbnail img { height: 12rem; } .lab-list { gap: 2rem; } }
+  @media (max-width: 40rem) { .lab-list a { grid-template-columns: 1fr; gap: 1.1rem; } .lab-thumbnail :global(img) { height: 12rem; } .lab-list { gap: 2rem; } }
 </style>

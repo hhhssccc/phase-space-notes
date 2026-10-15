@@ -20,7 +20,7 @@
 
 按用户最新要求，10 篇文章与笔记均使用与演算室一致的白底蓝橙概念图，不再使用正文题图作预览。原创 SVG 定义在 `src/features/previews/diagrams.ts`，静态资源路由为 `/previews/<id>.svg`；没有外部素材、字体或运行时脚本。图内内容取自对应文章：旋转群、辫子交叉、二元熵、Grover 振幅、围道与 Fourier 模式、Gibbs 权重、Born 概率、势阱、等能轨道以及单态占据。示意图用于识别主题，不替代正文推导。
 
-EntryPreview 与 EntryListItem 继续覆盖文章、笔记、标签、归档、首页。新增公开文章/笔记必须在 diagrams 注册图解，缺图构建失败。正文的 lead-figure、源图和日期均不改；演算室继续使用真实截图。
+EntryPreview 与 EntryListItem 继续覆盖文章、笔记、标签、归档、首页。新增公开文章/笔记必须在 diagrams 注册图解，缺图构建失败。正文的 lead-figure、源图和日期均不改；演算室列表同样使用核心图形 SVG：QiGA 四组振幅与 QiGA-2 计数树，不含下拉框、滑块和说明文字；完整截图仅供详情打印。
 
 ## 验证
 

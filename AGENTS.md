@@ -343,3 +343,5 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 - 图解定义在 `src/features/previews/diagrams.ts`，由 `/previews/<id>.svg` 静态路由生成，`EntryPreview.astro` 与 `EntryListItem.astro` 共享接入文章、笔记、标签、归档和首页列表。新增公开文章须登记对应图解，缺图时构建失败；不回退到正文题图。
 - SVG 以 640×400 原生矢量绘制，保持白底且不反色。预览为空 alt 避免重复读出标题，图内 title 保留示意主题。图片与同一行标题共享链接命中区域。
 - 验证桌面、手机、深浅色及打印，确认预览资源可加载、没有横向溢出且不向正文插入重复图片。
+
+- 演算室主页也使用核心图形 SVG 预览：QiGA 只保留四组振幅，QiGA-2 只保留计数树与位串标记，不把下拉框、滑块和说明文字截入预览。详情交互与原论文引用照常保留，完整截图仅供打印。
