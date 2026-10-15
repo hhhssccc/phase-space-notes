@@ -41,11 +41,11 @@ try{
    if(width!==320){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`.qa/columns/${route.replaceAll('/','-')||'home'}-${width}-${theme}.png`,fullPage:true});}
   }
   assert.equal(total,10);
-  assert.equal(await page.locator('.lab-list > li').count(),1);
-  assert.equal(await page.locator('.lab-thumbnail img').count(),1);
+  assert.equal(await page.locator('.lab-list > li').count(),2);
+  assert.equal(await page.locator('.lab-thumbnail img').count(),2);
   // Repeat navigation to verify Astro's page lifecycle initializes each new iframe.
-  for(let visit=0;visit<2;visit++){
-   await page.locator('.lab-list a').click();await page.waitForURL('**/lab/grover-subtraction/');
+  for(const id of ['grover-subtraction','grover-counting'])for(let visit=0;visit<2;visit++){
+   await page.locator(`.lab-list a[href$="/${id}/"]`).click();await page.waitForURL(`**/lab/${id}/`);
    await page.locator('[data-viz-frame][data-ready="true"]').waitFor();
    const frame=page.frames().find(f=>f.url().includes('/lab/embed/'));
    await frame.waitForFunction(expected=>getComputedStyle(document.documentElement).colorScheme===expected,theme);
@@ -54,16 +54,45 @@ try{
    assert.equal(await page.locator('.visualization-print').isVisible(),false);
    assert.equal(await page.locator('[data-viz-frame]').getAttribute('sandbox'),'allow-scripts');
    assert.equal(await frame.evaluate(()=>{try{return Boolean(parent.document)}catch{return false}}),false);
-   await frame.locator('[data-solution]').selectOption('2,5,7');
-   assert.match(await frame.locator('[data-stage="3"]').getAttribute('aria-label'),/-0.577/);
-   assert.match(await frame.locator('[data-foot]').last().innerText(),/33.3%/);
+   assert.equal(await page.locator('[data-viz-source] a').getAttribute('href'),'https://doi.org/10.1103/PhysRevX.14.041029');
+   assert.match(await page.locator('[data-viz-source]').innerText(),/Stoudenmire.*Waintal/);
+   if(id==='grover-subtraction'){
+    await frame.locator('[data-solution]').selectOption('2,5,7');
+    assert.match(await frame.locator('[data-stage="3"]').getAttribute('aria-label'),/-0.577/);
+    assert.match(await frame.locator('[data-foot]').last().innerText(),/33.3%/);
+   }else{
+    assert.match(await page.locator('[data-viz-source]').innerText(),/VI A.*图 9/);
+    for(const example of ['single','multiple']){
+     await frame.locator('#gc-example').selectOption(example);
+     const solutions=example==='single'?[5]:[2,5,7];
+     let prefix='';
+     for(let step=0;step<=3;step++){
+      await frame.locator('#gc-step').fill(String(step));
+      await frame.locator('#gc-step').dispatchEvent('input');
+      assert.match(await frame.locator('#gc-cost-count').innerText(),new RegExp(`已计算 ${step+1} 个精确振幅`));
+      const trial=step ? prefix+'0' : '';
+      // Independent closed-oracle calculation on an explicit 16-component state:
+      // project the bit-flip oracle output onto |prefix,+...+> tensor |1>.
+      const candidates=Array.from({length:8},(_,x)=>x).filter(x=>x.toString(2).padStart(3,'0').startsWith(trial));
+      const input=Array(16).fill(0), output=Array(16).fill(0);
+      for(const x of candidates)input[2*x]=1/Math.sqrt(candidates.length);
+      for(let x=0;x<8;x++)for(let ancilla=0;ancilla<2;ancilla++)output[2*x+(ancilla^(solutions.includes(x)?1:0))]=input[2*x+ancilla];
+      const expected=candidates.reduce((sum,x)=>sum+output[2*x+1]/Math.sqrt(candidates.length),0);
+      const label=await frame.locator('#gc-values').innerText();
+      const fraction=label.match(/振幅 A₀?=([0-9/]+)/)[1].split('/').map(Number);
+      assert.ok(Math.abs(fraction[0]/(fraction[1]||1)-expected)<1e-12,label);
+      if(step){prefix+=expected>0?'0':'1';assert.ok((await frame.locator('#gc-decision').innerText()).includes('保留 '+prefix));}
+     }
+     assert.equal(prefix,example==='single'?'101':'010');
+    }
+   }
    await fit(page,'detail');await fit(frame,'diagram');
    const other=theme==='dark'?'light':'dark';
    await page.evaluate(value=>document.documentElement.dataset.theme=value,other);
    await frame.waitForFunction(value=>getComputedStyle(document.documentElement).colorScheme===value,other);
    await page.evaluate(value=>document.documentElement.dataset.theme=value,theme);
    await frame.waitForFunction(value=>getComputedStyle(document.documentElement).colorScheme===value,theme);
-   if(visit===0 && width!==320){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`.qa/columns/detail-${width}-${theme}.png`,fullPage:true});}
+   if(visit===0 && width!==320){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`.qa/columns/${id}-${width}-${theme}.png`,fullPage:true});}
    await page.emulateMedia({media:'print'});
    assert.equal(await page.locator('[data-viz-frame]').isVisible(),false);
    assert.equal(await page.locator('.visualization-print').isVisible(),true);
@@ -78,11 +107,11 @@ try{
   assert.deepEqual(errors,[],width+' '+theme+' runtime errors');assert.deepEqual(remote,[],'no external assets or audio fetched');
   reports.push({width,theme,passed:true});await context.close();
  }
- for(const id of ['grover-mps','grover-counting','grover-noise']){
+ for(const id of ['grover-mps','grover-noise']){
   assert.equal((await fetch(server.url+`lab/${id}/`)).status,404);
   assert.equal((await fetch(server.url+`lab/embed/${id}.html`)).status,404);
   assert.ok(!(await readFile(output+'/search/index.html','utf8')).includes(id));
  }
  await writeFile('.qa/columns/results.json',JSON.stringify(reports,null,2));
- console.log('COLUMNS_BROWSER_PASS: all 10 covers, single automatic diagram, theme, isolation, navigation reentry, print, legacy labs absent, removed entries absent; 1440/390/320 light/dark.');
+ console.log('COLUMNS_BROWSER_PASS: all 10 previews, QiGA/QiGA-2 with independent amplitude checks and paper citations, theme, isolation, navigation reentry, print, legacy labs absent, removed entries absent; 1440/390/320 light/dark.');
 }finally{await browser.close();await server.close();}

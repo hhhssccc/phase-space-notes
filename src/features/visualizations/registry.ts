@@ -1,8 +1,17 @@
 import subtraction from './fragments/grover-subtraction.html?raw';
+import counting from './fragments/grover-counting.html?raw';
 import css from './surface.css?raw';
 
+export const groverPaper = {
+  title: 'Opening the Black Box inside Grover’s Algorithm',
+  authors: 'E. M. Stoudenmire 与 Xavier Waintal',
+  publication: 'Physical Review X 14, 041029 (2024)',
+  url: 'https://doi.org/10.1103/PhysRevX.14.041029',
+};
+
 export const visualizations = {
-  'grover-subtraction': { fragment: subtraction, title: '减掉背景，让答案显影' },
+  'grover-subtraction': { fragment: subtraction, title: 'QiGA：减掉背景，让答案显影', sourceLocation: '第 IV 节' },
+  'grover-counting': { fragment: counting, title: 'QiGA-2：沿着前缀，一步步找到解', sourceLocation: '第 VI A 节 · 图 9 · 公式 (21)–(24)' },
 } as const;
 export type VisualizationId = keyof typeof visualizations;
 

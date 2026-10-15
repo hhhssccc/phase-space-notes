@@ -1,5 +1,5 @@
 ---
-import type { VisualizationId } from '../features/visualizations/registry';
+import { visualizations, groverPaper, type VisualizationId } from '../features/visualizations/registry';
 import { withBase } from '../lib/content';
 import previews from '../features/visualizations/previews.json';
 interface Props { id: VisualizationId; title: string; }
@@ -10,12 +10,19 @@ const { id, title } = Astro.props;
   <img class="visualization-print" src={withBase(`/visualizations/${id}.png`)} alt={`${title}的默认示例`} width={previews[id].width} height={previews[id].height} loading="lazy" />
   <p data-viz-status class="entry-meta print-hidden" role="status"></p>
   <noscript><p>启用 JavaScript 后可以操作图解。</p></noscript>
+  <p class="visualization-source" data-viz-source>
+    原论文：{groverPaper.authors}，<cite><a href={groverPaper.url}>{groverPaper.title}</a></cite>，{groverPaper.publication}。
+    <span>本图对应{visualizations[id].sourceLocation}。</span>
+  </p>
 </section>
 <script>import '../features/visualizations/controller';</script>
 <style>
   .visualization { margin: 1rem 0 3rem; }
   iframe { display: block; width: 100%; height: 620px; border: 0; }
   .visualization-print { display: none; }
+  .visualization-source { margin: 2rem 0 0; color: var(--muted); font-size: .8rem; line-height: 1.8; overflow-wrap: anywhere; }
+  .visualization-source cite { font-style: normal; }
+  .visualization-source span { display: block; }
   @media print {
     iframe { display: none !important; }
     .visualization-print { display: block; width: 100%; height: auto; }

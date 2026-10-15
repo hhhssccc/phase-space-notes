@@ -2,5 +2,9 @@
   "grover-subtraction": {
     "width": 736,
     "height": 601
+  },
+  "grover-counting": {
+    "width": 736,
+    "height": 606
   }
 }
