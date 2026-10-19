@@ -13,10 +13,6 @@ mathDisplay: plain
 sidenotes: []
 ---
 
-<figure class="lead-figure">
-  <img src="/phase-space-notes/figures/jones-polynomial-braids-and-link-invariants/lead.png" alt="晴空下，戴帽的旅人站在山林悬崖上，远处有山峰、木桥与瀑布" width="1672" height="941" loading="eager" decoding="async" />
-</figure>
-
 这是2026.9.19的研讨班讲稿，主要介绍的是Jones 1984的工作。
 
 ## 研究对象与出发点

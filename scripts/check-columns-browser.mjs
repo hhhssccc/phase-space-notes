@@ -35,7 +35,7 @@ try{
     const box=await page.locator('.entry-preview').first().boundingBox();
     await page.mouse.click(box.x+box.width/2,box.y+box.height/2);await page.waitForURL(/\/(articles|notes)\/[^/]+\/$/);
     assert.equal(await page.locator('.article-prose .entry-preview').count(),0,'no duplicate previews in body');
-    assert.equal(await page.locator('.lead-figure').count(),1,'original cover retained');
+    assert.equal(await page.locator('.lead-figure').count(),page.url().includes('/information-entropy-and-everything/')?1:0,'only the Hanekawa cover remains');
     await page.goto(server.url+route);
    }
    if(width!==320){await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`.qa/columns/${route.replaceAll('/','-')||'home'}-${width}-${theme}.png`,fullPage:true});}

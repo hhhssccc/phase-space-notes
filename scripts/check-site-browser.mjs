@@ -56,7 +56,7 @@ try {
       await equation.scrollIntoViewIfNeeded();await equation.tap();
     } else { await equation.hover();await trigger.click(); }
     await page.locator('[data-formula-menu]:visible').waitFor();
-    assert.equal(await equation.evaluate(el=>el.getBoundingClientRect().height),bounds.height,'menu must not change formula height');
+    assert.ok(Math.abs(await equation.evaluate(el=>el.getBoundingClientRect().height)-bounds.height)<0.01,'menu must not change formula height (subpixel rounding tolerance)');
     await noOverflow(page,'formula-menu');await shot(page,`formula-menu-${suffix}`);
     await page.locator('[data-formula-copy="tex"]').click();
     await page.waitForFunction(text=>window.__copied===text,tex);

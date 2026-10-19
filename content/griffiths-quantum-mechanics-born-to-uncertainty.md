@@ -22,10 +22,6 @@ sidenotes:
       这里的 $\tilde j=\Psi^*\partial_x\Psi-(\partial_x\Psi^*)\Psi$ 只是概率流表达式的括号部分；通常定义 $j=-\frac{i}{2m}\tilde j$，于是连续性方程写成 $\partial_t\rho+\partial_xj=0$。
 ---
 
-<figure class="lead-figure">
-  <img src="../../figures/griffiths-quantum-mechanics-born-to-uncertainty/lead.png?v=1" alt="白色背景中，一位金发、穿白金色服装的动漫人物双手在胸前比出三角形手势" width="1535" height="1024" loading="eager" decoding="async" />
-</figure>
-
 角动量、对称性、自旋等问题在[《近代物理导论》笔记](https://hhhssccc.github.io/phase-space-notes/tags/%E8%BF%91%E4%BB%A3%E7%89%A9%E7%90%86%E5%AF%BC%E8%AE%BA%E7%AC%94%E8%AE%B0%E7%B3%BB%E5%88%97/)里有更详细的讨论，这里略过。
 
 ## 第一章：波函数

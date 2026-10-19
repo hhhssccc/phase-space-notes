@@ -15,10 +15,6 @@ sidenotes:
     body: 上式默认 C 正向绕 a 一周。更一般地，如果 C 绕 a 的绕数为 Ind(C,a)，则右端应乘以该绕数。
 ---
 
-<figure class="lead-figure">
-  <img src="../../figures/laurent-expansion-from-orthogonality/lead.jpg" alt="蓝发动漫角色双手托腮，周围点缀星形图案" width="1280" height="824" loading="eager" decoding="async" />
-</figure>
-
 ## 从一个重要的积分开始
 
 考察积分

@@ -17,10 +17,6 @@ sidenotes:
     body: 正则：有“独特的重要性”，是“典范的”指数分布—— by Gibbs；微正则：正则里切一个微小的能量切片，$E\le E(x)<E+\delta E$；巨正则：$N$ 可变，状态空间“巨大”。
 ---
 
-<figure class="lead-figure">
-  <img src="../../figures/maximum-entropy-and-statistical-ensembles/lead.png?v=2" alt="冬日蓝调时分，长门有希独自站在空旷的街道上" width="1536" height="1024" loading="eager" decoding="async" />
-</figure>
-
 不知道多体系所有细节，怎么利用已有信息，给出好的 $p(x)$ $\Rightarrow$ 热力学？
 
 $$

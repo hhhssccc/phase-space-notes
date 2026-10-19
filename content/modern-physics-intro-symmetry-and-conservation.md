@@ -19,10 +19,6 @@ mathDisplay: plain
 sidenotes: []
 ---
 
-<figure class="lead-figure">
-  <img src="../../figures/modern-physics-intro-symmetry-and-conservation/lead.png?v=1" alt="白色背景中，一位金发、穿深色校服的动漫人物竖起食指作安静手势" width="1536" height="1024" loading="eager" decoding="async" />
-</figure>
-
 这是我 25 年暑假期间《近代物理导论》by. 王凯 的听课笔记，26 年暑假稍作整理。
 
 ## 第一章：绪论

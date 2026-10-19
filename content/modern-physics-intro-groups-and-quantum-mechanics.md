@@ -19,10 +19,6 @@ mathDisplay: plain
 sidenotes: []
 ---
 
-<figure class="lead-figure">
-  <img src="../../figures/modern-physics-intro-groups-and-quantum-mechanics/lead.png?v=1" alt="浅蓝背景中，一位蓝发、身着深蓝白色服装的动漫人物侧身托腮" width="1536" height="1024" loading="eager" decoding="async" />
-</figure>
-
 几个结果：
 
 $$

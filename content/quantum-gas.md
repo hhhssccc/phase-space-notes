@@ -13,10 +13,6 @@ mathDisplay: plain
 sidenotes: []
 ---
 
-<figure class="lead-figure">
-  <img src="../../figures/quantum-gas/lead.png?v=1" alt="暗色星空中，穿白色实验服的双叶理央以失重姿态漂浮" width="1536" height="1024" loading="eager" decoding="async" />
-</figure>
-
 ## 前置知识
 
 2 粒子态 $\longrightarrow$ 张量积

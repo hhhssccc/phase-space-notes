@@ -20,7 +20,7 @@ try {
     const html = await readFile(path.join(directory, file), 'utf8');
     visitCoverImages(fromHtml(html), () => routes.push(file.replaceAll('\\', '/').replace(/index.html$/, '')));
   }
-  assert.ok(routes.length > 0);
+  assert.deepEqual(routes, ['articles/information-entropy-and-everything/'], 'only the Hanekawa cover remains');
   browser = await chromium.launch({ headless: true, channel: 'msedge' });
   const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const page = await mobile.newPage();
@@ -38,7 +38,7 @@ try {
     const bytes = (await stat(target)).size;
     console.log(`${route}: ${bytes} bytes, mobile 960px cover`);
   }
-  const route = 'articles/jones-polynomial-braids-and-link-invariants/';
+  const route = 'articles/information-entropy-and-everything/';
   for (const theme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme: theme });
     await page.goto(server.url + route);

@@ -19,10 +19,6 @@ mathDisplay: plain
 sidenotes: []
 ---
 
-<figure class="lead-figure">
-  <img src="../../figures/group-theory-bedtime-story/lead.jpg?v=1" alt="白色背景中，两位动漫少女并肩相对，白色花叶从人物边缘向背景消散" width="1280" height="853" loading="eager" decoding="async" />
-</figure>
-
 ## 群的刻画
 
 群满足：

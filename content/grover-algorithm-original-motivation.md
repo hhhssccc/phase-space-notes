@@ -13,8 +13,6 @@ mathDisplay: plain
 sidenotes: []
 ---
 
-<figure class="lead-figure"><img src="/phase-space-notes/figures/grover-algorithm-original-motivation/lead.png" alt="冷灰色射电望远镜实景与橘雪莉" width="1672" height="941" /></figure>
-
 
 
 这是 2026.9.13 讨论班讲稿，主要参考了 Grover（2001）[^grover2001]。这篇文章不够严谨，但可以帮我们很好地理解 Grover 的初始 motivation，需要的前置知识只有线性代数，熟悉量子门的读者可直接从第 1 节开始。
