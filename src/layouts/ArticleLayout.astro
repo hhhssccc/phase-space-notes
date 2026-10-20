@@ -84,9 +84,9 @@ const effectiveMathDisplay = post.data.mathDisplay === 'auto'
       <div class="reading-toolbar print-hidden">
         <a data-resume-reading hidden></a>
         <button type="button" data-add-bookmark>夹一枚书签</button>
-        <button type="button" data-formula-mode aria-pressed="false" hidden>公式工具</button>
+        <button type="button" data-formula-index-open aria-haspopup="dialog" aria-controls="formula-index" hidden>本文公式</button>
+        <span class="formula-hint" data-formula-hint hidden>轻点公式可复制或摘到笔记</span>
         <span data-reading-status role="status"></span>
-        <span class="formula-hint" data-formula-hint hidden></span>
       </div>
       <SymbolGuide id={post.id} />
 

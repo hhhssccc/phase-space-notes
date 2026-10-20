@@ -1,15 +1,39 @@
 ---
 import '../features/reading/formulas.css';
 ---
-<div id="formula-menu" class="formula-menu print-hidden" data-formula-menu role="dialog" aria-label="公式工具" hidden>
-  <button type="button" data-formula-copy="tex">复制 LaTeX</button>
-  <button type="button" data-formula-copy="link">复制公式链接</button>
-  <span class="formula-feedback" data-formula-feedback role="status" aria-live="polite"></span>
-</div>
-<p class="visually-hidden print-hidden" data-formula-status role="status" aria-live="polite"></p>
+<section id="formula-menu" class="formula-menu print-hidden" data-formula-menu role="dialog" aria-labelledby="formula-menu-title" aria-describedby="formula-keyboard-help" hidden>
+  <div class="formula-menu-heading">
+    <div class="formula-heading-text"><span class="formula-position" data-formula-position></span><h2 id="formula-menu-title" data-formula-title>当前公式</h2></div>
+    <div class="formula-navigation">
+      <button type="button" data-formula-step="-1" aria-label="上一条公式">↑</button>
+      <button type="button" data-formula-step="1" aria-label="下一条公式">↓</button>
+      <button type="button" data-formula-close aria-label="关闭公式工具">×</button>
+    </div>
+  </div>
+  <div class="formula-actions">
+    <button type="button" class="formula-primary" data-formula-copy="tex">复制 LaTeX <kbd>C</kbd></button>
+    <button type="button" data-formula-copy="note">摘到笔记 <kbd>M</kbd></button>
+    <button type="button" data-formula-copy="link">复制链接 <kbd>L</kbd></button>
+  </div>
+  <div class="formula-secondary">
+    <details data-formula-source><summary>查看源码</summary><pre><code data-formula-code></code></pre></details>
+    <button type="button" data-formula-browse aria-haspopup="dialog" aria-controls="formula-index">本文公式</button>
+  </div>
+  <p class="formula-feedback" data-formula-feedback role="status" aria-live="polite"></p>
+  <p class="formula-keyboard-help" id="formula-keyboard-help">面板内 <kbd>↑</kbd> <kbd>↓</kbd> 切换公式 <span>·</span> <kbd>Esc</kbd> 返回阅读</p>
+</section>
+<dialog id="formula-index" class="formula-index print-hidden" data-formula-index aria-labelledby="formula-index-title">
+  <header class="formula-index-heading"><h2 id="formula-index-title">本文公式 <span data-formula-total></span></h2><button type="button" data-formula-index-close aria-label="关闭公式检索">×</button></header>
+  <label class="visually-hidden" for="formula-search">搜索公式源码、符号或上下文</label>
+  <input id="formula-search" type="search" placeholder="搜索符号、LaTeX 或上下文…" autocomplete="off" spellcheck="false" data-formula-search aria-controls="formula-results" aria-describedby="formula-search-status" />
+  <p class="formula-search-status" id="formula-search-status" data-formula-search-status role="status" aria-live="polite"></p>
+  <div class="formula-results" id="formula-results" data-formula-results></div>
+  <button type="button" class="formula-load-more" data-formula-more hidden>显示更多公式</button>
+  <p class="formula-keyboard-help"><kbd>↑</kbd> <kbd>↓</kbd> 选择 <span>·</span> <kbd>Enter</kbd> 定位 <span>·</span> <kbd>Esc</kbd> 关闭</p>
+</dialog>
 <dialog class="copy-dialog print-hidden" data-copy-dialog aria-labelledby="copy-dialog-title">
   <h2 id="copy-dialog-title">复制内容</h2><p>自动复制不可用，请选中下面的内容后复制。</p>
   <textarea aria-label="待复制内容" readonly></textarea>
-  <button type="button" data-copy-close>关闭</button>
+  <button type="button" data-copy-close>返回公式工具</button>
 </dialog>
 <script>import '../features/reading/formulas';</script>

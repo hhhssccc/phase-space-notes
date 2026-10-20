@@ -327,7 +327,7 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 - 页面交互通过 `src/lib/browser/lifecycle.ts` 注册，换页前清理。书房和音频会话是文档级生命周期，不能随每次换页销毁。
 - 主题和纸面状态统一在 `src/lib/browser/preferences.ts`；防闪烁脚本使用同一主题配置。不得在组件内另建状态来源。
 - 公开内容查询与引用检查统一通过 `src/lib/content/service.ts`；失效的 related、backlinks、专题、符号或实验引用须明确报错。schema 同时检查非空标题/说明/分类、修订日期顺序与仅文章可精选。
-- 公式工具默认不占公式下方一行；桌面悬停/键盘聚焦显示小入口，手机从文章顶部开启后轻点公式。同篇只开一个浮层，保持横滑、长按选择、稳定锚点和打印隐藏。不得用逐公式滚动测量维持浮层。
+- 公式工具（2026-10-19 用户确认）：电脑与手机都直接轻点独立公式，电脑显示共享快捷条，手机显示底部面板，不再要求先开启工具模式。支持原始 LaTeX、带出处的 Markdown 摘录、公式链接、源码展开和本文公式检索；方向键与 C/M/L 仅在工具获得焦点时生效。保留原生数学文本选择、横滑、长按、稳定锚点、键盘入口与打印隐藏，不改变正文排版。只在打开或切换时测量当前公式，不得逐公式滚动测量；同篇共用一个操作面板，站内换页清理。
 - `npm run build` 包含单元检查、类型检查、通用构建合同与特定文章回归。浏览器验证使用 `npm run validate:browser`；长文仍需已有带窗口 Edge 交互检查。
 - Markdown 资源 URL 在构建期按 base 解析，Pages 准备脚本只复制已验证产物。详细扩展方式和验证入口见 `docs/architecture.md`。
 
