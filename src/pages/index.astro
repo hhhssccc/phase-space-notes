@@ -26,7 +26,7 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
       </div>
     </section>
 
-    {entries[0] && <div class="home-latest"><span>最近发布</span><time datetime={entries[0].data.date.toISOString()}>{formatDate(entries[0].data.date, false)}</time><a href={entryUrl(entries[0])}>{entries[0].data.title}</a></div>}
+    {entries[0] && <div class="home-latest">{entries[0].id === 'persuaded-ai' && <a class="latest-cover" href={entryUrl(entries[0])} aria-label={entries[0].data.title}><EntryPreview entry={entries[0]} compact /></a>}<span>最近发布</span><time datetime={entries[0].data.date.toISOString()}>{formatDate(entries[0].data.date, false)}</time><a href={entryUrl(entries[0])}>{entries[0].data.title}</a></div>}
 
     <section class="home-section" aria-labelledby="featured-title">
       <div class="section-heading"><h2 id="featured-title">精选文章</h2><a href={withBase('/articles/')}>全部文章 →</a></div>
@@ -59,6 +59,7 @@ const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
 </BaseLayout>
 
 <style>
+  .home-latest .latest-cover { flex: 0 0 6rem; align-self: center; }
   .home-preview-row { grid-template-columns: 6rem minmax(0, 1fr); align-items: center; gap: 1.4rem; padding-block: 1rem; }
   .home-preview-row a { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; line-height: 1.5; }
   .home-preview-row .entry-meta { display: block; margin-top: .45rem; }

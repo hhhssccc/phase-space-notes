@@ -11,12 +11,17 @@ related: []
 backlinks: []
 ---
 
+<figure class="lead-figure">
+  <img src="/phase-space-notes/figures/persuaded-ai/text-vortex.webp" alt="" width="1440" height="901" loading="eager" />
+  <figcaption>文本的引力｜AI 生成插画。</figcaption>
+</figure>
+
 考虑现在 AI 的 attention 与上下文机制，他们很容易被逻辑严密的论文和其它由 AI 生成的防御性强的文本吸引注意力，所以，当你要求批评/总结论文时，他们总是倾向于支持作者的观点。这造成了两个结果：
 
 1. AI 难以对上下文里的文章发表真正有批判性的观点
 2. AI 纠错先前由别的 AI 提出的方案可能越纠越错
 
 <figure>
-  <img src="/phase-space-notes/figures/persuaded-ai/text-echo.svg" alt="纸页上的蓝色文字线条环绕橙色问号，构成文本回音的抽象意象" width="1200" height="600" loading="lazy" />
-  <figcaption>配图｜文本的回音。原创概念插图，非机制示意。</figcaption>
+  <img src="/phase-space-notes/figures/persuaded-ai/recursive-echo.webp" alt="两组蓝色纸页之间，橙色纸带交织成循环，表现文本反复回应的意象" width="1440" height="901" loading="lazy" />
+  <figcaption>回音之间｜AI 生成插画，非机制示意。</figcaption>
 </figure>
