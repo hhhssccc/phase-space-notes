@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+<title id="title">文本的回音</title><desc id="desc">蓝色文字线条在纸面与环形回音之间延伸，橙色问号位于留白中心。这是一幅关于判断的抽象插图。</desc>
+<rect width="1200" height="600" fill="#faf9f6"/>
+<g fill="none" stroke="#48799b" stroke-width="3" opacity=".18">
+<ellipse cx="740" cy="300" rx="316" ry="228"/>
+<ellipse cx="740" cy="300" rx="258" ry="184"/>
+<ellipse cx="740" cy="300" rx="200" ry="140"/>
+</g>
+<path d="M195 130h256l45 45v295H195z" fill="#fff"/>
+<path d="M451 130v45h45" fill="#edf2f5"/>
+<g fill="none" stroke="#48799b" stroke-width="8" stroke-linecap="round">
+<path d="M235 200h165M235 232h212M235 264h182M235 296h199M235 328h155M235 360h205M235 392h175"/>
+</g>
+<g fill="none" stroke="#48799b" stroke-width="6" stroke-linecap="round" opacity=".48">
+<path d="M549 153q133-75 271-12M604 189q110-45 205-5M882 223q53 67 20 135M950 207q60 90 19 193M617 418q103 43 194-3M567 463q149 61 286-9"/>
+</g>
+<path d="M695 264c0-55 89-61 89-7 0 35-45 33-45 72" fill="none" stroke="#c67a42" stroke-width="14" stroke-linecap="round"/>
+<circle cx="739" cy="369" r="8" fill="#c67a42"/>
+</svg>
