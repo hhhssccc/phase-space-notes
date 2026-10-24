@@ -10,6 +10,15 @@ export interface ReadingPath {
 // reading suggestion, not a claim that the articles form a complete course.
 export const readingPaths: ReadingPath[] = [
   {
+    id: 'mathematical-functions', title: '函数展开与特殊函数',
+    question: '怎样从展开、积分表示和递推关系认识数学物理中的函数？',
+    prerequisites: '微积分、复数、级数与基本复分析；渐近推导还需熟悉 Taylor 展开和高斯积分。',
+    steps: [
+      { id: 'laurent-expansion-from-orthogonality', purpose: '从正交性理解 Laurent 展开及其系数的提取。' },
+      { id: 'special-functions', purpose: '沿积分表示、递推与乘积公式，整理 Gamma、Beta 及其渐近性质和应用。' },
+    ],
+  },
+  {
     id: 'entropy-and-ensembles', title: '从信息熵到量子气体',
     question: '已知的信息怎样决定统计分布？粒子的量子性质又怎样改变它？',
     prerequisites: '概率、微积分与拉格朗日乘子法；量子气体部分还需了解全同粒子。',
