@@ -45,7 +45,7 @@ function instrument({ forceSoftware }) {
   };
   wrap(window.WebGLRenderingContext?.prototype, 'drawElements', 'webgl');
   wrap(window.WebGL2RenderingContext?.prototype, 'drawElements', 'webgl');
-  wrap(window.CanvasRenderingContext2D?.prototype, 'clearRect', 'software');
+  wrap(window.CanvasRenderingContext2D?.prototype, 'putImageData', 'software');
 }
 
 async function settle(page) {
@@ -57,7 +57,9 @@ async function ready(page) {
   await page.locator(`${selector} [data-gamma-preset="oblique"]:enabled`).waitFor();
   await settle(page);
   assert.equal(await page.locator(selector).count(), 1, 'one Gamma viewer per homepage');
-  assert.ok(['webgl', 'canvas2d'].includes(await page.locator(selector).getAttribute('data-gamma-renderer')));
+  const renderer = await page.locator(selector).getAttribute('data-gamma-renderer');
+  assert.ok(['webgl', 'canvas2d'].includes(renderer));
+  assert.ok(await page.evaluate(kind => window.__gammaQA[kind === 'webgl' ? 'webgl' : 'software'] > 0, renderer), 'active renderer has presented at least one surface frame');
   assert.equal(await page.evaluate(() => devicePixelRatio), 1, 'QA screenshots use device scale 1');
   assert.equal(await page.evaluate(() => visualViewport.scale), 1, 'mobile page is not zoomed');
 }
