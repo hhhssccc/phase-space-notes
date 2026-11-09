@@ -148,7 +148,19 @@ function specialFunctions() {
     text(535, 112, '6', orange, 22) + text(320, 387, 'Γ(n) = (n − 1)!', orange, 26);
 }
 
+function collisionHistory() {
+  const layers = [309, 214, 119].map(y => line(65, y, 542, y, gray, 2));
+  return layers.join('') +
+    path('M88 345 L220 250 L171 152 L260 56', blue, 7) +
+    path('M313 345 L220 250 L371 161 L324 56', orange, 7) +
+    path('M466 345 L371 161 L509 56', blue, 7) +
+    dot(220, 250, ink, 10) + dot(371, 161, ink, 10) +
+    text(570, 318, '0', ink, 25) + text(570, 223, 'τ', ink, 25) +
+    text(570, 128, '2τ', ink, 25);
+}
+
 export const previewDiagrams: Record<string, { label: string; draw: () => string }> = {
+  'hard-sphere-boltzmann-equation': { label: '三条粒子轨迹在两个时间层中先后碰撞', draw: collisionHistory },
   'special-functions': {label:'Gamma 函数与整数阶乘',draw:specialFunctions},
   'grover-subtraction': {label:'QiGA 的四组振幅',draw:qiga},
   'grover-counting': {label:'QiGA-2 的逐位计数树',draw:qigaTree},
