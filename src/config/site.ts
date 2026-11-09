@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: '渐近自由',
   title: '渐近自由｜物理笔记与长文',
-  description: '从模型出发，向结构深入。读书时记下的推导、问题和偶尔想明白的事情。',
+  description: '从现象出发，向结构深入。读书时记下的推导、问题和偶尔想明白的事情。',
   author: 'AsyaInTheCosmicStatic',
   language: 'zh-CN',
   nav: [
