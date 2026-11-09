@@ -1,69 +1,81 @@
 ---
-import '../styles/home-latest.css';
-import { getCollection } from 'astro:content';
-import EntryPreview from '../components/EntryPreview.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/front-page.css';
+import GammaPlate from '../components/GammaPlate.astro';
+import HomeSections from '../components/HomeSections.astro';
+import EntryPreview from '../components/EntryPreview.astro';
 import { siteConfig } from '../config/site';
-import { byNewest, entryUrl, readingMinutes, formatDate, withBase } from '../lib/content';
+import { pathsFor } from '../config/reading-paths';
+import { byNewest, entryUrl, readingMinutes, withBase } from '../lib/content';
+import { getPublicContent } from '../lib/content/service';
+import { contentKinds } from '../lib/content-kinds.mjs';
 
-const entries = (await getCollection('articles', ({ data }) => !data.draft)).sort(byNewest);
-const featured = entries.filter((entry) => entry.data.type === 'essay' && entry.data.featured).slice(0, 3);
-const notes = entries.filter((entry) => entry.data.type === 'note').slice(0, 4);
+const { entries } = await getPublicContent();
+entries.sort(byNewest);
+const [lead] = entries;
+const leadPath = lead && pathsFor(lead.id)[0];
+const issueDate = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'long', timeZone: 'UTC' });
 ---
 
 <BaseLayout pageKind="home">
-  <div class="home-page">
-    <section class="home-hero" aria-labelledby="home-title">
-      <div class="home-intro">
-        <p class="eyebrow">渐近自由</p>
-        <h1 id="home-title"><span>从现象出发，</span><span>向结构深入。</span></h1>
-        <p class="home-lede">读书时记下的推导、问题和偶尔想明白的事情。</p>
-        <div class="home-actions">
-          <a class="home-start-link" href="#featured-title">阅读精选</a>
-          <a class="home-browse-link" href={withBase('/articles/')}>浏览文章</a>
+  {lead && (
+    <figure class:list={['lead-plate', { 'gamma-cover': lead.id === 'special-functions' }]}>
+      <a href={entryUrl(lead)} aria-label={`阅读《${lead.data.title}》`}>
+        {lead.id === 'special-functions' ? <GammaPlate /> : <EntryPreview entry={lead} sizes="100vw" loading="eager" />}
+      </a>
+      {lead.id === 'special-functions' && <figcaption>Γ 函数的复平面模曲面 · 高度为 ln(1 + |Γ(z)|)，极点处截高。</figcaption>}
+    </figure>
+  )}
+  <div class="journal-page">
+    {lead && (
+      <section class="lead-columns" aria-labelledby="lead-title">
+        <div class="lead-copy">
+          <p class="lead-subject"><span>{lead.data.category}</span>{contentKinds[lead.data.type].label}</p>
+          <h2 id="lead-title"><a href={entryUrl(lead)}>{lead.data.title}</a></h2>
+          <p class="lead-credit">{siteConfig.author}<span>·</span>{readingMinutes(lead.body || '')} 分钟</p>
+          <p class="lead-dek">{lead.data.description}</p>
+          <div class="lead-actions">
+            <a class="lead-read" href={entryUrl(lead)}><span aria-hidden="true">›</span>{lead.data.type === 'visualization' ? '进入演算室' : `阅读${contentKinds[lead.data.type].label}`}</a>
+            <span class="lead-date">最近发布 <time datetime={lead.data.date.toISOString()}>{issueDate.format(lead.data.date)}</time></span>
+          </div>
         </div>
-        <p class="home-byline">{siteConfig.author}</p>
-      </div>
-    </section>
-
-    {entries[0] && <div class="home-latest">{entries[0].id === 'persuaded-ai' && <a class="latest-cover" href={entryUrl(entries[0])} aria-label={entries[0].data.title}><EntryPreview entry={entries[0]} compact /></a>}<span>最近发布</span><time datetime={entries[0].data.date.toISOString()}>{formatDate(entries[0].data.date, false)}</time><a href={entryUrl(entries[0])}>{entries[0].data.title}</a></div>}
-
-    <section class="home-section" aria-labelledby="featured-title">
-      <div class="section-heading"><h2 id="featured-title">精选文章</h2><a href={withBase('/articles/')}>全部文章 →</a></div>
-      <ol class="featured-list">
-        {featured.map((entry) => (
-          <li class="home-preview-row">
-            <EntryPreview entry={entry} compact />
-            <div><a href={entryUrl(entry)}>{entry.data.title}</a>
-            <span class="entry-meta">{entry.data.category} · {readingMinutes(entry.body || '')} 分钟</span></div>
-          </li>
-        ))}
-      </ol>
-    </section>
-
-    {notes.length > 0 && (
-      <section class="home-section" aria-labelledby="notes-title">
-        <div class="section-heading"><h2 id="notes-title">近期笔记</h2><a href={withBase('/notes/')}>全部笔记 →</a></div>
-        <ol class="note-list">
-          {notes.map((entry) => (
-            <li class="home-preview-row"><EntryPreview entry={entry} compact /><div><time datetime={entry.data.date.toISOString()}>{String(entry.data.date.getMonth() + 1).padStart(2, '0')}.{String(entry.data.date.getDate()).padStart(2, '0')}</time><a href={entryUrl(entry)}>{entry.data.title}</a></div></li>
-          ))}
-        </ol>
+        {leadPath && (
+          <aside class="lead-path" aria-labelledby="lead-path-title">
+            <p class="path-label">相关专题</p>
+            <h2 id="lead-path-title"><a href={withBase(`/paths/#${leadPath.id}`)}>{leadPath.title}</a></h2>
+            <p>{leadPath.question}</p>
+            <a class="path-link" href={withBase(`/paths/#${leadPath.id}`)}>沿这条路线读<span aria-hidden="true"> →</span></a>
+          </aside>
+        )}
       </section>
     )}
-    <section class="home-columns" aria-label="更多栏目">
-      <a href={withBase('/reflections/')}><span class="eyebrow">REFLECTIONS</span><h2>杂感</h2><p>推导之外，生活之中。<br />最近的感想与偶然的收获。</p></a>
-      <a href={withBase('/lab/')}><span class="eyebrow">THE VISUAL LAB</span><h2>演算室</h2><p>用代码把想法画出来。<br />调一调参数，看看会发生什么。</p></a>
+    <HomeSections entries={entries} leadId={lead?.id ?? ''} />
+    <section class="home-colophon" aria-labelledby="journal-motto">
+      <h2 id="journal-motto"><span>从现象出发，</span><span>向结构深入。</span></h2>
+      <div>
+        <p>读书时记下的推导、问题和偶尔想明白的事情。</p>
+        <p class="home-signature">{siteConfig.author}</p>
+        <nav aria-label="继续浏览">
+          {entries.some(entry => entry.id !== lead?.id && entry.data.featured) && <a href="#featured-title">阅读精选</a>}
+          <a href={withBase('/articles/')}>浏览文章</a>
+        </nav>
+      </div>
     </section>
   </div>
 </BaseLayout>
 
-<style>
-  .home-latest .latest-cover { flex: 0 0 6rem; align-self: center; }
-  .home-preview-row { grid-template-columns: 6rem minmax(0, 1fr); align-items: center; gap: 1.4rem; padding-block: 1rem; }
-  .home-preview-row a { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; line-height: 1.5; }
-  .home-preview-row .entry-meta { display: block; margin-top: .45rem; }
-  .home-preview-row time { display: block; margin-bottom: .3rem; }
-  @media (max-width: 48rem) { .home-preview-row { gap: 1rem; } .home-preview-row a { font-size: 1.05rem; } }
-  @media print { .home-preview-row { grid-template-columns: 1fr; } }
-</style>
+<script>
+  import { registerPageFeature } from '../lib/browser/lifecycle';
+
+  registerPageFeature('cover-header', () => {
+    const cover = document.querySelector('.gamma-cover > a');
+    const header = document.querySelector<HTMLElement>('.journal-header');
+    if (!cover || !header || !('IntersectionObserver' in window)) return;
+    header.classList.add('cover-aware');
+    const observer = new IntersectionObserver(([entry]) => {
+      header.classList.toggle('past-cover', !entry.isIntersecting);
+    }, { rootMargin: '-80px 0px 0px' });
+    observer.observe(cover);
+    return () => observer.disconnect();
+  });
+</script>

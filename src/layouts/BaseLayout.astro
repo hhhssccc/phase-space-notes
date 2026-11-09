@@ -93,7 +93,7 @@ const articleStructuredData = pageKind === 'article' && publishedTime
     data-feature-mermaid={String(siteConfig.features.mermaid)}
     data-feature-lightbox={String(siteConfig.features.lightbox)}
   >
-    <SiteHeader />
+    <SiteHeader home={pageKind === 'home'} />
     <main id="main-content">
       <slot />
     </main>
