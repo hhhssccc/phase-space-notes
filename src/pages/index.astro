@@ -4,62 +4,47 @@ import '../styles/front-page.css';
 import GammaPlate from '../components/GammaPlate.astro';
 import HomeSections from '../components/HomeSections.astro';
 import EntryPreview from '../components/EntryPreview.astro';
-import { siteConfig } from '../config/site';
-import { pathsFor } from '../config/reading-paths';
-import { byNewest, entryUrl, readingMinutes, withBase } from '../lib/content';
+import { byNewest, entryUrl } from '../lib/content';
 import { getPublicContent } from '../lib/content/service';
-import { contentKinds } from '../lib/content-kinds.mjs';
 
 const { entries } = await getPublicContent();
 entries.sort(byNewest);
 const [lead] = entries;
-const leadPath = lead && pathsFor(lead.id)[0];
+const leadDescription = lead?.id === 'special-functions'
+  ? lead.data.description.replace(/的手写笔记(?=。?$)/u, '')
+  : lead?.data.description;
 const issueDate = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'long', timeZone: 'UTC' });
 ---
 
 <BaseLayout pageKind="home">
   {lead && (
-    <figure class:list={['lead-plate', { 'gamma-cover': lead.id === 'special-functions' }]}>
-      <a href={entryUrl(lead)} aria-label={`阅读《${lead.data.title}》`}>
-        {lead.id === 'special-functions' ? <GammaPlate /> : <EntryPreview entry={lead} sizes="100vw" loading="eager" />}
-      </a>
-      {lead.id === 'special-functions' && <figcaption>Γ 函数的复平面模曲面 · 高度为 ln(1 + |Γ(z)|)，极点处截高。</figcaption>}
-    </figure>
+    <div class:list={['lead-plate', { 'gamma-cover': lead.id === 'special-functions' }]}>
+      {lead.id === 'special-functions' ? <GammaPlate /> : (
+        <a href={entryUrl(lead)} aria-label={`阅读《${lead.data.title}》`}>
+          <EntryPreview entry={lead} sizes="100vw" loading="eager" />
+        </a>
+      )}
+    </div>
   )}
   <div class="journal-page">
     {lead && (
-      <section class="lead-columns" aria-labelledby="lead-title">
+      <section class="lead-story-heading" aria-labelledby="lead-title">
         <div class="lead-copy">
-          <p class="lead-subject"><span>{lead.data.category}</span>{contentKinds[lead.data.type].label}</p>
-          <h2 id="lead-title"><a href={entryUrl(lead)}>{lead.data.title}</a></h2>
-          <p class="lead-credit">{siteConfig.author}<span>·</span>{readingMinutes(lead.body || '')} 分钟</p>
-          <p class="lead-dek">{lead.data.description}</p>
-          <div class="lead-actions">
-            <a class="lead-read" href={entryUrl(lead)}><span aria-hidden="true">›</span>{lead.data.type === 'visualization' ? '进入演算室' : `阅读${contentKinds[lead.data.type].label}`}</a>
-            <span class="lead-date">最近发布 <time datetime={lead.data.date.toISOString()}>{issueDate.format(lead.data.date)}</time></span>
+          <div class="lead-heading">
+            <p class="lead-meta">
+              <span>{lead.data.category}</span>
+              <time datetime={lead.data.date.toISOString()}><span class="visually-hidden">最近发布于</span>{issueDate.format(lead.data.date)}</time>
+            </p>
+            <h2 id="lead-title"><a href={entryUrl(lead)}>{lead.data.title}</a></h2>
           </div>
+          <p class="lead-dek">{leadDescription}</p>
         </div>
-        {leadPath && (
-          <aside class="lead-path" aria-labelledby="lead-path-title">
-            <p class="path-label">相关专题</p>
-            <h2 id="lead-path-title"><a href={withBase(`/paths/#${leadPath.id}`)}>{leadPath.title}</a></h2>
-            <p>{leadPath.question}</p>
-            <a class="path-link" href={withBase(`/paths/#${leadPath.id}`)}>沿这条路线读<span aria-hidden="true"> →</span></a>
-          </aside>
-        )}
       </section>
     )}
     <HomeSections entries={entries} leadId={lead?.id ?? ''} />
     <section class="home-colophon" aria-labelledby="journal-motto">
       <h2 id="journal-motto"><span>从现象出发，</span><span>向结构深入。</span></h2>
-      <div>
-        <p>读书时记下的推导、问题和偶尔想明白的事情。</p>
-        <p class="home-signature">{siteConfig.author}</p>
-        <nav aria-label="继续浏览">
-          {entries.some(entry => entry.id !== lead?.id && entry.data.featured) && <a href="#featured-title">阅读精选</a>}
-          <a href={withBase('/articles/')}>浏览文章</a>
-        </nav>
-      </div>
+      <p>读书时记下的推导、问题和偶尔想明白的事情。</p>
     </section>
   </div>
 </BaseLayout>
@@ -68,7 +53,7 @@ const issueDate = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'long', timeZone
   import { registerPageFeature } from '../lib/browser/lifecycle';
 
   registerPageFeature('cover-header', () => {
-    const cover = document.querySelector('.gamma-cover > a');
+    const cover = document.querySelector('.gamma-cover');
     const header = document.querySelector<HTMLElement>('.journal-header');
     if (!cover || !header || !('IntersectionObserver' in window)) return;
     header.classList.add('cover-aware');

@@ -9,27 +9,36 @@ const featured = remaining.filter(entry => entry.data.type === 'essay' && entry.
 const labs = remaining.filter(entry => entry.data.type === 'visualization').slice(0, 2);
 const notes = remaining.filter(entry => entry.data.type === 'note').slice(0, 4);
 const reflections = remaining.filter(entry => entry.data.type === 'reflection').slice(0, 3);
-const [labLead, labNext] = labs;
-const [noteLead, ...noteRest] = notes;
-const [reflectionLead, ...reflectionRest] = reflections;
+
+// Only the home-page display is shortened; the published title remains the
+// accessible name and the article's source title is untouched.
+function noteTitle(entry: ArticleEntry) {
+  const series = entry.data.title.match(/《([^》]+)》.*?(?:听课笔记|速通笔记)\s*(\d+)\s*[：:]\s*(.+)$/);
+  return series
+    ? { label: `${series[1]} · 笔记 ${series[2]}`, title: series[3] }
+    : { label: entry.data.category, title: entry.data.title };
+}
+function labTitle(entry: ArticleEntry) {
+  const parts = entry.data.title.match(/^([^：:]+)[：:]\s*(.+)$/);
+  return parts
+    ? { label: parts[1], title: parts[2] }
+    : { label: entry.data.category, title: entry.data.title };
+}
 ---
 
-<div class:list={['home-sections', { 'without-sidebar': !noteLead && !reflectionLead }]}>
+<div class:list={['home-sections', { 'without-sidebar': !notes.length && !reflections.length }]}>
   <div class="story-flow">
     {featured.length > 0 && (
       <section class="featured-section" aria-labelledby="featured-title">
-        <header class="stream-heading">
-          <h2 id="featured-title">精选文章</h2>
-          <a class="column-link" href={withBase('/articles/')}>全部文章<span aria-hidden="true">↗</span></a>
-        </header>
-        <ol class="feature-grid">
-          {featured.map((entry, index) => (
-            <li class:list={['feature-item', { 'feature-wide': index === 2 }]}>
-              <a class="feature-link" href={entryUrl(entry)} aria-labelledby={`featured-${entry.id}`}>
-                <span class="feature-visual"><EntryPreview entry={entry} sizes="(max-width: 40rem) calc(100vw - 40px), (max-width: 64rem) 44vw, 360px" /></span>
-                <div class="feature-copy">
-                  <span class="stream-meta"><span class="entry-subject">{entry.data.category}</span><span>{readingMinutes(entry.body || '')} 分钟</span></span>
-                  <h3 id={`featured-${entry.id}`}>{entry.data.title}</h3>
+        <header class="stream-heading"><h2 id="featured-title"><a href={withBase('/articles/')}>精选文章</a></h2></header>
+        <ol class="illustrated-grid feature-grid">
+          {featured.map(entry => (
+            <li class="illustrated-item">
+              <a class="story-link feature-link" href={entryUrl(entry)} aria-label={entry.data.title}>
+                <span class="story-visual"><EntryPreview entry={entry} sizes="(max-width: 40rem) calc(100vw - 40px), (max-width: 64rem) 44vw, 360px" /></span>
+                <div class="story-copy">
+                  <span class="stream-meta"><span class="entry-subject">{entry.data.category}</span><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time><span>{readingMinutes(entry.body || '')} 分钟</span></span>
+                  <h3>{entry.data.title}</h3>
                 </div>
               </a>
             </li>
@@ -38,76 +47,68 @@ const [reflectionLead, ...reflectionRest] = reflections;
       </section>
     )}
 
-    {labLead && (
+    {labs.length > 0 && (
       <section class="lab-section" aria-labelledby="home-lab-title">
-        <header class="stream-heading">
-          <h2 id="home-lab-title">演算室</h2>
-          <a class="column-link" href={withBase('/lab/')}>全部图解<span aria-hidden="true">↗</span></a>
-        </header>
-        <div class="lab-spread">
-          <a class="lab-main-link" href={entryUrl(labLead)} aria-labelledby={`lab-${labLead.id}`}>
-            <span class="lab-main-visual"><EntryPreview entry={labLead} sizes="(max-width: 40rem) calc(100vw - 40px), (max-width: 64rem) 48vw, 420px" /></span>
-            <div class="lab-main-copy">
-              <span class="stream-meta"><span class="entry-subject">{labLead.data.category}</span></span>
-              <h3 id={`lab-${labLead.id}`}>{labLead.data.title}</h3>
-              <p>{labLead.data.description}</p>
-              <span class="lab-open">打开交互图解<span aria-hidden="true">→</span></span>
-            </div>
-          </a>
-          {labNext && (
-            <a class="lab-next" href={entryUrl(labNext)} aria-labelledby={`lab-${labNext.id}`}>
-              <span class="lab-next-visual"><EntryPreview entry={labNext} sizes="(max-width: 40rem) 96px, 80px" /></span>
-              <div>
-                <h3 id={`lab-${labNext.id}`}>{labNext.data.title}</h3>
-                <span class="lab-next-action">打开图解<span aria-hidden="true">↗</span></span>
-              </div>
-            </a>
-          )}
-        </div>
+        <header class="stream-heading"><h2 id="home-lab-title"><a href={withBase('/lab/')}>演算室</a></h2></header>
+        <ol class="illustrated-grid lab-grid">
+          {labs.map(entry => {
+            const display = labTitle(entry);
+            return (
+              <li class="illustrated-item">
+                <a class="story-link lab-link" href={entryUrl(entry)} aria-label={entry.data.title}>
+                  <span class="story-visual"><EntryPreview entry={entry} sizes="(max-width: 40rem) calc(100vw - 40px), (max-width: 64rem) 44vw, 360px" /></span>
+                  <div class="story-copy">
+                    <span class="stream-meta"><span class="entry-subject">{display.label}</span><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time></span>
+                    <h3 aria-label={entry.data.title}>{display.title}</h3>
+                    <p>{entry.data.description}</p>
+                  </div>
+                </a>
+              </li>
+            );
+          })}
+        </ol>
       </section>
     )}
   </div>
 
-  {(noteLead || reflectionLead) && (
+  {(notes.length > 0 || reflections.length > 0) && (
     <aside class="journal-sidebar" aria-label="笔记与杂感">
-      {noteLead && (
+      {notes.length > 0 && (
         <section class="notes-section" aria-labelledby="home-notes-title">
-          <header class="sidebar-heading"><h2 id="home-notes-title">近期笔记</h2></header>
-          <a class="note-lead" href={entryUrl(noteLead)} aria-labelledby={`note-${noteLead.id}`}>
-            <span class="note-cover"><EntryPreview entry={noteLead} sizes="(max-width: 40rem) calc(100vw - 40px), (max-width: 64rem) 43vw, 280px" /></span>
-            <span class="stream-meta"><span class="entry-subject">{noteLead.data.category}</span><time datetime={noteLead.data.date.toISOString()}>{formatDate(noteLead.data.date, false)}</time></span>
-            <h3 id={`note-${noteLead.id}`}>{noteLead.data.title}</h3>
-          </a>
-          {noteRest.length > 0 && (
-            <ol class="notes-index">
-              {noteRest.map(entry => (
-                <li><a class="note-link" href={entryUrl(entry)} aria-labelledby={`note-${entry.id}`}>
-                  <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time>
-                  <h3 id={`note-${entry.id}`}>{entry.data.title}</h3>
-                </a></li>
-              ))}
-            </ol>
-          )}
-          <a class="sidebar-more" href={withBase('/notes/')}>全部笔记<span aria-hidden="true">→</span></a>
+          <header class="sidebar-heading"><h2 id="home-notes-title"><a href={withBase('/notes/')}>近期笔记</a></h2></header>
+          <ol class="notes-index">
+            {notes.map(entry => {
+              const display = noteTitle(entry);
+              return (
+                <li>
+                  <a class="note-link" href={entryUrl(entry)} aria-label={entry.data.title}>
+                    <div class="note-copy">
+                      <span class="note-meta"><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time><span>{display.label}</span></span>
+                      <h3 aria-label={entry.data.title}>{display.title}</h3>
+                    </div>
+                    <span class="note-visual"><EntryPreview entry={entry} sizes="80px" /></span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
         </section>
       )}
 
-      {reflectionLead && (
+      {reflections.length > 0 && (
         <section class="reflections-section" aria-labelledby="home-reflections-title">
-          <header class="sidebar-heading"><h2 id="home-reflections-title">杂感</h2></header>
-          <a class="reflection-lead" href={entryUrl(reflectionLead)} aria-labelledby={`reflection-${reflectionLead.id}`}>
-            <time datetime={reflectionLead.data.date.toISOString()}>{formatDate(reflectionLead.data.date)}</time>
-            <h3 id={`reflection-${reflectionLead.id}`}>{reflectionLead.data.title}</h3>
-            <p>{reflectionLead.data.description}</p>
-          </a>
-          {reflectionRest.length > 0 && (
-            <ol class="reflection-index">
-              {reflectionRest.map(entry => (
-                <li><a href={entryUrl(entry)} aria-labelledby={`reflection-${entry.id}`}><h3 id={`reflection-${entry.id}`}>{entry.data.title}</h3></a></li>
-              ))}
-            </ol>
-          )}
-          <a class="sidebar-more" href={withBase('/reflections/')}>全部杂感<span aria-hidden="true">→</span></a>
+          <header class="sidebar-heading"><h2 id="home-reflections-title"><a href={withBase('/reflections/')}>杂感</a></h2></header>
+          <ol class="reflection-index">
+            {reflections.map(entry => (
+              <li>
+                <a class="reflection-link" href={entryUrl(entry)} aria-label={entry.data.title}>
+                  <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time>
+                  <h3>{entry.data.title}</h3>
+                  <p>{entry.data.description}</p>
+                </a>
+              </li>
+            ))}
+          </ol>
         </section>
       )}
     </aside>
@@ -126,160 +127,100 @@ const [reflectionLead, ...reflectionRest] = reflections;
   }
   .home-sections.without-sidebar { grid-template-columns: 1fr; }
   .home-sections a { text-decoration: none; }
-  .home-sections h3 { margin: 0; font-family: var(--serif); font-weight: 650; line-height: 1.5; text-wrap: pretty; transition: color var(--ease); }
+  .home-sections time { font-family: var(--latin-sans), var(--sans); font-variant-numeric: tabular-nums; }
+  .home-sections h3 { margin: 0; color: var(--ink); font-family: var(--serif); font-weight: 650; line-height: 1.55; text-wrap: pretty; }
   .home-sections ol { margin: 0; padding: 0; list-style: none; }
   .home-sections li, .home-sections section, .home-sections a > div, .story-flow { min-width: 0; }
-  .stream-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.6rem; }
+  .stream-heading { margin-bottom: 1.6rem; }
   .stream-heading h2 { margin: 0; font-family: var(--serif); font-size: 1.42rem; font-weight: 650; line-height: 1.4; }
-  .column-link { display: inline-flex; align-items: center; flex-shrink: 0; gap: .45rem; color: var(--muted); font-size: .72rem; line-height: 1.5; transition: color var(--ease); }
-  .column-link span { font-family: var(--sans); font-size: .9rem; transition: transform var(--ease); }
-  .column-link:hover, .column-link:focus-visible { color: var(--editorial-accent, #a6602b); }
-  .column-link:hover span { transform: translate(2px, -2px); }
+  .stream-heading a:hover, .stream-heading a:focus-visible, .sidebar-heading a:hover, .sidebar-heading a:focus-visible { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .22em; }
   .stream-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: .7rem; color: var(--muted); font-size: .66rem; line-height: 1.6; }
-  .entry-subject { padding-bottom: .14rem; border-bottom: 1px solid var(--editorial-accent, #a6602b); color: var(--ink-soft); font-size: .65rem; font-weight: 600; letter-spacing: .1em; }
+  .entry-subject { color: var(--muted); font-size: .65rem; font-weight: 600; letter-spacing: .08em; }
   #featured-title { scroll-margin-top: 6rem; }
-  .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3.6rem 2.2rem; }
-  .feature-link { display: block; }
-  .feature-visual { display: block; overflow: hidden; margin-bottom: 1.35rem; background: #fff; }
-  .feature-visual :global(.entry-preview), .note-cover :global(.entry-preview), .lab-main-visual :global(.entry-preview) { border-radius: 0; transition: transform var(--ease); }
-  .feature-link h3 { margin-top: .7rem; font-size: clamp(1.35rem, 1.9vw, 1.72rem); }
-  .feature-link:hover h3, .feature-link:focus-visible h3 { color: var(--editorial-accent, #a6602b); }
-  .feature-link:hover .feature-visual :global(.entry-preview) { transform: scale(1.025); }
-  .feature-wide { grid-column: 1 / -1; }
-  .feature-wide .feature-link { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; gap: 2rem; }
-  .feature-wide .feature-visual { margin: 0; }
-  .feature-wide h3 { font-size: clamp(1.5rem, 2.3vw, 2.05rem); }
-  .lab-section { margin-top: 3.6rem; padding-top: 2rem; border-top: 1px solid var(--rule-soft); }
-  .lab-spread { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-rows: 1fr auto; align-items: start; gap: 1.5rem 2rem; }
-  .lab-main-link {
-    display: grid;
-    grid-area: 1 / 1 / 3 / -1;
-    grid-template-columns: subgrid;
-    grid-template-rows: subgrid;
-    align-self: stretch;
-  }
-  .lab-main-visual { display: flex; grid-column: 1; grid-row: 1 / 3; align-items: center; align-self: stretch; overflow: hidden; background: #fff; }
-  .lab-main-copy { grid-column: 2; padding-top: .2rem; }
-  .lab-main-copy h3 { margin-top: .65rem; font-size: clamp(1.25rem, 1.7vw, 1.55rem); line-height: 1.55; }
-  .lab-main-copy p { margin: .8rem 0 1rem; color: var(--ink-soft); font-size: .79rem; line-height: 1.9; }
-  .lab-open { display: inline-flex; align-items: center; gap: .7rem; color: var(--editorial-accent, #a6602b); font-size: .71rem; }
-  .lab-open span { transition: transform var(--ease); }
-  .lab-main-link:hover h3, .lab-main-link:focus-visible h3 { color: var(--editorial-accent, #a6602b); }
-  .lab-main-link:hover .lab-main-visual :global(.entry-preview) { transform: scale(1.025); }
-  .lab-main-link:hover .lab-open span { transform: translateX(3px); }
-  .lab-next { display: grid; position: relative; grid-area: 2 / 2; grid-template-columns: 4.8rem minmax(0, 1fr); align-items: center; gap: .8rem; padding-top: 1.2rem; border-top: 1px solid var(--rule-soft); }
-  .lab-next-visual { display: block; overflow: hidden; }
-  .lab-next-visual :global(.entry-preview) { border-radius: 0; }
-  .lab-next h3 { font-size: .94rem; line-height: 1.65; }
-  .lab-next-action { display: inline-flex; align-items: center; gap: .45rem; margin-top: .4rem; color: var(--muted); font-size: .65rem; }
-  .lab-next:hover h3, .lab-next:focus-visible h3 { color: var(--editorial-accent, #a6602b); }
+  .illustrated-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.7rem 2.2rem; }
+  .illustrated-item { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 0; }
+  .story-link { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 0; }
+  .story-visual { display: block; overflow: hidden; margin-bottom: 1.15rem; background: #fff; }
+  .story-visual :global(.entry-preview), .note-visual :global(.entry-preview) { border-radius: 0; }
+  .story-copy h3 { margin-top: .65rem; font-size: clamp(1.3rem, 1.8vw, 1.6rem); }
+  .story-link:hover h3, .story-link:focus-visible h3, .note-link:hover h3, .note-link:focus-visible h3, .reflection-link:hover h3, .reflection-link:focus-visible h3 { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .22em; }
+  .lab-section { margin-top: 3.3rem; padding-top: 1.9rem; border-top: 1px solid var(--rule-soft); }
+  .lab-link h3 { font-size: clamp(1.25rem, 1.65vw, 1.45rem); }
+  .lab-link p { margin: .75rem 0 0; color: var(--ink-soft); font-size: .79rem; line-height: 1.9; }
   .journal-sidebar { min-width: 0; padding-inline-start: var(--journal-gutter, clamp(2rem, 4.6vw, 4.2rem)); border-left: 1px solid var(--rule-soft); }
-  .sidebar-heading { margin-bottom: 1.55rem; }
+  .sidebar-heading { margin-bottom: .65rem; }
   .sidebar-heading h2 { margin: 0; font-family: var(--sans); font-size: 1.18rem; font-weight: 700; line-height: 1.7; }
-  .note-lead { display: block; }
-  .note-cover { display: block; overflow: hidden; margin-bottom: 1.1rem; background: #fff; }
-  .note-lead h3 { margin-top: .65rem; font-size: 1.17rem; line-height: 1.6; }
-  .note-lead:hover h3, .note-lead:focus-visible h3 { color: var(--editorial-accent, #a6602b); }
-  .note-lead:hover .note-cover :global(.entry-preview) { transform: scale(1.025); }
-  .home-sections .notes-index { padding-top: .7rem; }
-  .note-link { display: block; padding-block: .95rem; }
-  .note-link time, .reflection-lead time, .note-lead time { color: var(--muted); font-family: var(--latin-sans), var(--sans); font-size: .65rem; font-variant-numeric: tabular-nums; line-height: 1.7; }
-  .note-link h3 { margin-top: .25rem; font-size: .95rem; line-height: 1.65; }
-  .note-link:hover h3, .note-link:focus-visible h3 { color: var(--editorial-accent, #a6602b); }
-  .sidebar-more { display: inline-flex; align-items: center; gap: .7rem; margin-top: .8rem; color: var(--ink-soft); font-size: .72rem; font-weight: 600; }
-  .sidebar-more span { color: var(--editorial-accent, #a6602b); transition: transform var(--ease); }
-  .sidebar-more:hover { color: var(--editorial-accent, #a6602b); }
-  .sidebar-more:hover span { transform: translateX(3px); }
-  .reflections-section { margin-top: 2.6rem; padding-top: 1.6rem; border-top: 1px solid var(--rule); }
-  .reflections-section .sidebar-heading { margin-bottom: 1.15rem; }
-  .reflection-lead { display: block; }
-  .reflection-lead h3 { margin-top: .6rem; font-size: 1.2rem; line-height: 1.65; }
-  .reflection-lead p { margin: .8rem 0 .5rem; color: var(--muted); font-size: .76rem; line-height: 1.9; }
-  .reflection-lead:hover h3, .reflection-lead:focus-visible h3 { color: var(--editorial-accent, #a6602b); }
-  .reflection-index a { display: block; padding-block: .85rem; }
-  .reflection-index h3 { font-size: .95rem; line-height: 1.65; }
-  .reflection-index a:hover h3, .reflection-index a:focus-visible h3 { color: var(--editorial-accent, #a6602b); }
+  .note-link { display: grid; grid-template-columns: minmax(0, 1fr) 5rem; align-items: start; gap: .75rem; padding-block: 1.05rem; }
+  .note-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .45rem; margin-bottom: .35rem; color: var(--muted); font-size: .6rem; line-height: 1.65; }
+  .note-meta time { flex-shrink: 0; font-family: var(--latin-sans), var(--sans); font-variant-numeric: tabular-nums; }
+  .note-link h3 { font-size: .97rem; line-height: 1.65; }
+  .note-visual { display: block; width: 5rem; overflow: hidden; background: #fff; }
+  .reflections-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
+  .reflection-link { display: block; padding-block: .95rem; }
+  .reflection-link time { display: block; margin-bottom: .35rem; color: var(--muted); font-family: var(--latin-sans), var(--sans); font-size: .64rem; font-variant-numeric: tabular-nums; line-height: 1.7; }
+  .reflection-link h3 { font-size: 1.02rem; line-height: 1.7; }
+  .reflection-link p { margin: .6rem 0 0; color: var(--muted); font-size: .76rem; line-height: 1.9; }
 
+  @media (min-width: 40.001rem) {
+    .feature-grid:has(> li:nth-child(3):last-child) > li:first-child { display: block; grid-column: 1 / -1; grid-row: auto; }
+    .feature-grid:has(> li:nth-child(3):last-child) > li:first-child .feature-link {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: auto;
+      column-gap: clamp(1.5rem, 2.5vw, 2.2rem);
+      align-items: center;
+    }
+    .feature-grid:has(> li:nth-child(3):last-child) > li:first-child .story-visual { margin: 0; }
+  }
   @media (max-width: 72rem) {
-    .feature-grid { column-gap: 1.5rem; }
-    .feature-wide .feature-link { gap: 1.5rem; }
-    .lab-spread { column-gap: 1.5rem; }
-    .lab-next { grid-template-columns: 4rem minmax(0, 1fr); gap: .65rem; }
+    .illustrated-grid { column-gap: 1.5rem; }
+    .note-link { gap: .65rem; }
+    .note-link h3 { font-size: .93rem; }
   }
   @media (max-width: 64rem) {
     .home-sections { display: block; padding-top: 1.6rem; }
     .stream-heading { margin-bottom: 1.5rem; }
-    .feature-grid { gap: 2.8rem 2rem; }
-    .feature-link h3 { font-size: 1.6rem; }
-    .feature-wide h3 { font-size: 2rem; }
-    .lab-section { margin-top: 3rem; padding-top: 1.8rem; }
-    .lab-spread { gap: 1.4rem 2rem; }
-    .lab-main-copy h3 { font-size: 1.6rem; }
-    .lab-main-copy p { font-size: .84rem; }
-    .lab-next { grid-template-columns: 5rem minmax(0, 1fr); gap: 1rem; }
-    .lab-next h3 { font-size: 1.03rem; }
-    .journal-sidebar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 3rem; margin-top: 3.2rem; padding: 1.8rem 0 0; border-top: 1px solid var(--rule); border-left: 0; }
-    .sidebar-heading { margin-bottom: 1.3rem; }
+    .illustrated-grid { gap: 2.5rem 2rem; }
+    .story-copy h3 { font-size: 1.5rem; }
+    .lab-link h3 { font-size: 1.4rem; }
+    .lab-link p { font-size: .83rem; }
+    .lab-section { margin-top: 2.8rem; padding-top: 1.8rem; }
+    .journal-sidebar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 3rem; margin-top: 3rem; padding: 1.8rem 0 0; border-top: 1px solid var(--rule); border-left: 0; }
+    .note-link h3 { font-size: 1.02rem; }
     .reflections-section { margin: 0; padding: 0 0 0 2rem; border-top: 0; border-left: 1px solid var(--rule-soft); }
-    .reflection-lead h3 { font-size: 1.35rem; }
-    .note-link h3, .reflection-index h3 { font-size: 1.02rem; }
-    .reflection-lead p { font-size: .81rem; }
+    .reflection-link h3 { font-size: 1.08rem; }
   }
   @media (max-width: 40rem) {
     .home-sections { padding-top: 1.35rem; }
-    .stream-heading { gap: .7rem; margin-bottom: 1.35rem; }
+    .stream-heading { margin-bottom: 1.65rem; }
     .stream-heading h2 { font-size: 1.3rem; }
-    .column-link { gap: .35rem; font-size: .7rem; }
-    .feature-grid { grid-template-columns: 1fr; row-gap: 2.5rem; }
-    .feature-visual { margin-bottom: 1rem; }
-    .feature-link h3 { margin-top: .55rem; font-size: 1.5rem; }
-    .feature-wide { grid-column: auto; }
-    .feature-wide .feature-link { display: block; }
-    .feature-wide .feature-visual { margin-bottom: 1rem; }
-    .feature-wide h3 { font-size: 1.5rem; }
-    .lab-section { margin-top: 2.7rem; padding-top: 1.6rem; }
-    .lab-spread { grid-template-columns: 1fr; grid-template-rows: auto; gap: 1.3rem; }
-    .lab-main-link { grid-area: auto; grid-template-columns: 1fr; grid-template-rows: auto; gap: 1.15rem; }
-    .lab-main-visual { grid-column: 1; grid-row: auto; }
-    .lab-main-copy { grid-column: 1; padding-top: 0; }
-    .lab-main-copy h3 { margin-top: .5rem; font-size: 1.5rem; }
-    .lab-main-copy p { margin-top: .7rem; font-size: .81rem; }
-    .lab-next { grid-area: auto; grid-template-columns: 6rem minmax(0, 1fr); gap: 1rem; padding-top: 1.1rem; }
-    .lab-next h3 { font-size: 1.02rem; }
-    .journal-sidebar { grid-template-columns: 1fr; gap: 2.4rem; margin-top: 2.7rem; padding-top: 1.6rem; }
-    .note-lead h3 { font-size: 1.35rem; }
-    .home-sections .notes-index { padding-top: .65rem; }
-    .note-link { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); align-items: baseline; gap: .7rem; padding-block: .95rem; }
-    .note-link h3 { margin: 0; font-size: 1.03rem; }
-    .note-link time { font-size: .68rem; }
-    .sidebar-more { margin-top: .65rem; }
-    .reflections-section { padding: 1.5rem 0 0; border-top: 1px solid var(--rule); border-left: 0; }
-    .reflection-lead h3 { font-size: 1.45rem; }
+    .illustrated-grid { grid-template-columns: 1fr; row-gap: 3rem; }
+    .story-visual { margin-bottom: 1.55rem; }
+    .story-copy h3 { margin-top: .8rem; font-size: 1.45rem; line-height: 1.65; }
+    .lab-link h3 { font-size: 1.35rem; }
+    .lab-section { margin-top: 3rem; padding-top: 1.85rem; }
+    .lab-link p { margin-top: .85rem; font-size: .81rem; }
+    .journal-sidebar { grid-template-columns: 1fr; gap: 2.6rem; margin-top: 3rem; padding-top: 1.85rem; }
+    .sidebar-heading { margin-bottom: 1rem; }
+    .note-link { grid-template-columns: minmax(0, 1fr) 5rem; gap: 1.1rem; padding-block: 1.25rem; }
+    .note-link h3 { font-size: 1.08rem; line-height: 1.75; }
+    .note-meta { gap: .25rem .6rem; margin-bottom: .55rem; font-size: .65rem; line-height: 1.75; }
+    .reflections-section { padding: 1.85rem 0 0; border-top: 1px solid var(--rule); border-left: 0; }
+    .reflection-link { padding-block: 1.2rem; }
+    .reflection-link time { margin-bottom: .55rem; }
+    .reflection-link h3 { font-size: 1.12rem; }
+    .reflection-link p { margin-top: .75rem; }
   }
-  @media screen and (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-      .feature-visual, .lab-main-visual {
-        animation: illustration-enter linear both;
-        animation-timeline: view();
-        animation-range: entry 0% entry 80%;
-      }
-      @keyframes illustration-enter {
-        from { opacity: .82; translate: 0 .85rem; }
-        to { opacity: 1; translate: 0 0; }
-      }
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .feature-link:hover .feature-visual :global(.entry-preview), .lab-main-link:hover .lab-main-visual :global(.entry-preview), .note-lead:hover .note-cover :global(.entry-preview), .column-link:hover span, .lab-main-link:hover .lab-open span, .sidebar-more:hover span { transform: none; }
+  @media (max-width: 22rem) {
+    .story-copy h3 { font-size: 1.35rem; }
+    .lab-link h3 { font-size: 1.28rem; }
   }
   @media print {
-    .home-sections, .feature-grid, .feature-wide .feature-link, .journal-sidebar { display: block; }
-    .feature-item { margin-block: 1rem; }
-    .feature-visual, .lab-main-visual, .lab-next-visual, .note-cover, .column-link, .lab-open, .lab-next-action, .sidebar-more { display: none; }
+    .home-sections, .illustrated-grid, .illustrated-item, .story-link, .journal-sidebar { display: block; }
+    .illustrated-item { margin-block: 1rem; }
+    .story-visual, .note-visual { display: none; }
     .lab-section { margin-top: 2rem; padding-top: 1rem; }
-    .lab-spread, .lab-main-link { display: block; }
-    .lab-next { display: block; margin-top: 1rem; }
     .journal-sidebar { margin-top: 2rem; padding: 1rem 0 0; border-left: 0; }
+    .note-link { display: block; }
     .reflections-section { margin-top: 1.5rem; padding: 1rem 0 0; border-left: 0; }
   }
 </style>

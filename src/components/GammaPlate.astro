@@ -1,343 +1,99 @@
 ---
-/**
- * An original mathematical cover, evaluated at build time. No canvas, external
- * artwork, or client script is involved. The height is log(1 + |Gamma(z)|).
- *
- * Gamma is meromorphic with simple poles at 0, -1, -2, ... (DLMF 5.2).
- * The reflection identity is also discussed in content/special-functions.md.
- * https://dlmf.nist.gov/5.2  https://dlmf.nist.gov/5.5#E3
- */
+import { createGammaPoster } from '../features/gamma-surface/poster';
+
 interface Props {
   class?: string;
   idPrefix?: string;
   decorative?: boolean;
 }
-
-const { class: className, idPrefix = 'gamma-plate', decorative = false } = Astro.props;
-const paint = (name: string) => `url(#${idPrefix}-${name})`;
-
-// Lanczos (g = 7), evaluated in logarithmic modulus. Reflection moves the
-// left half-plane into Re(z) >= 1/2 and avoids a complex logarithm branch cut.
-const coefficients = [
-  0.99999999999980993,
-  676.5203681218851,
-  -1259.1392167224028,
-  771.32342877765313,
-  -176.61502916214059,
-  12.507343278686905,
-  -0.13857109526572012,
-  9.9843695780195716e-6,
-  1.5056327351493116e-7,
+const { class: className, idPrefix = 'gamma-surface' } = Astro.props;
+const [poster, mobilePoster] = await Promise.all([createGammaPoster(), createGammaPoster(true)]);
+const presets = [
+  { name: 'oblique', label: '斜视', icon: 'M12 3 21 8v9l-9 5-9-5V8l9-5Zm0 9 9-4M12 12 3 8m9 4v10' },
+  { name: 'top', label: '俯视', icon: 'M4 4h16v16H4zM4 12h16M12 4v16' },
+  { name: 'side', label: '侧视', icon: 'M3 20h18M4 19l4-7 3 4 4-12 5 15' },
 ];
-
-function logAbsGamma(x: number, y: number): number {
-  if (x < 0.5) {
-    const sineModulus = Math.hypot(Math.sin(Math.PI * x), Math.sinh(Math.PI * y));
-    return Math.log(Math.PI) - Math.log(sineModulus) - logAbsGamma(1 - x, -y);
-  }
-
-  let real = coefficients[0];
-  let imaginary = 0;
-  for (let k = 1; k < coefficients.length; k += 1) {
-    const denominatorReal = x + k - 1;
-    const denominator = denominatorReal ** 2 + y ** 2;
-    real += coefficients[k] * denominatorReal / denominator;
-    imaginary -= coefficients[k] * y / denominator;
-  }
-  const tReal = x + 6.5;
-  return 0.5 * Math.log(2 * Math.PI)
-    + (x - 0.5) * Math.log(Math.hypot(tReal, y))
-    - y * Math.atan2(y, tReal) - tReal
-    + Math.log(Math.hypot(real, imaginary));
-}
-
-const ceiling = 3.1;
-function height(x: number, y: number): number {
-  // Do not evaluate Gamma at a pole. The finite plotting ceiling represents
-  // the surface cut by a horizontal plane; it is not a finite pole value.
-  if (x <= 0 && Math.abs(y) < 1e-10 && Math.abs(x - Math.round(x)) < 1e-10) return ceiling;
-  const logarithm = logAbsGamma(x, y);
-  return Math.min(ceiling, logarithm > 20 ? logarithm : Math.log1p(Math.exp(logarithm)));
-}
-
-type Point = { x: number; y: number };
-const xMin = -3.45;
-const xMax = 3.1;
-const yMin = -2.45;
-const yMax = 2.45;
-const uMin = xMin + yMin;
-const uMax = xMax + yMax;
-const vMin = xMin - yMax;
-const vMax = xMax - yMin;
-
-// u = Re(z) + Im(z) points away from the viewer. Painting successive strips
-// gives the mesh real occlusion; back lines do not show through the peaks.
-function project(u: number, v: number): Point {
-  const x = (u + v) / 2;
-  const y = (u - v) / 2;
-  return { x: 920 + 142 * v, y: 495 - 32 * u - 104 * height(x, y) };
-}
-
-const fixed = (value: number) => value.toFixed(1);
-const coordinate = (point: Point) => `${fixed(point.x)},${fixed(point.y)}`;
-const path = (points: Point[]) => points.map((point, index) => `${index ? 'L' : 'M'}${coordinate(point)}`).join('');
-const unique = (values: number[]) => [...new Set(values.map((value) => Number(value.toFixed(5))))].sort((a, b) => a - b);
-
-// Finer samples near each pole retain the narrow throats without increasing
-// the mesh density over the whole picture.
-const poleSamples = [-3, -2, -1, 0].flatMap((pole) => [
-  -0.1, -0.045, -0.022, -0.01, -0.004, 0, 0.004, 0.01, 0.022, 0.045, 0.1,
-].map((offset) => pole + offset));
-const depths = unique([
-  ...Array.from({ length: 77 }, (_, index) => uMin + (uMax - uMin) * index / 76),
-  ...poleSamples,
-]).reverse();
-const samples = unique([
-  ...Array.from({ length: 104 }, (_, index) => vMin + (vMax - vMin) * index / 103),
-  ...poleSamples,
-]);
-const realLines = unique([
-  ...Array.from({ length: 53 }, (_, index) => xMin + (xMax - xMin) * index / 52),
-  ...[-3, -2, -1, 0].flatMap((pole) => [-0.04, 0, 0.04].map((offset) => pole + offset)),
-]);
-const imaginaryLines = unique([
-  ...Array.from({ length: 43 }, (_, index) => yMin + (yMax - yMin) * index / 42),
-  -0.075, -0.04, -0.018, 0, 0.018, 0.04, 0.075,
-]);
-
-function bounds(u: number): [number, number] {
-  return [Math.max(2 * xMin - u, u - 2 * yMax), Math.min(2 * xMax - u, u - 2 * yMin)];
-}
-
-// Subpixel simplification removes redundant points on quiet areas of the
-// surface. The maximum deviation is 0.22 viewBox units, below one screen pixel.
-function simplify(points: Point[], tolerance = 0.22): Point[] {
-  if (points.length <= 2) return points;
-  const first = points[0];
-  const last = points[points.length - 1];
-  const dx = last.x - first.x;
-  const dy = last.y - first.y;
-  const length = Math.hypot(dx, dy) || 1;
-  let largest = 0;
-  let split = 0;
-  for (let index = 1; index < points.length - 1; index += 1) {
-    const distance = Math.abs(dy * (points[index].x - first.x) - dx * (points[index].y - first.y)) / length;
-    if (distance > largest) {
-      largest = distance;
-      split = index;
-    }
-  }
-  if (largest <= tolerance) return [first, last];
-  return [...simplify(points.slice(0, split + 1), tolerance).slice(0, -1), ...simplify(points.slice(split), tolerance)];
-}
-
-function row(u: number): Point[] {
-  const [left, right] = bounds(u);
-  return simplify([left, ...samples.filter((v) => v > left && v < right), right].map((v) => project(u, v)));
-}
-
-const rows = depths.map(row);
-const bands = depths.slice(1).map((u, index) => {
-  const previous = depths[index];
-  const currentRow = rows[index + 1];
-  const previousRow = rows[index];
-  const [left, right] = bounds(u);
-  const [oldLeft, oldRight] = bounds(previous);
-  const meridians = [
-    ...realLines.map((x) => [2 * x - previous, 2 * x - u]),
-    ...imaginaryLines.map((y) => [previous - 2 * y, u - 2 * y]),
-  ].filter(([before, after]) => before >= oldLeft && before <= oldRight && after >= left && after <= right)
-    .map(([before, after]) => `M${coordinate(project(previous, before))}L${coordinate(project(u, after))}`).join('');
-  return {
-    fill: `${path(previousRow)}${path([...currentRow].reverse()).replace(/^M/, 'L')}Z`,
-    mesh: meridians,
-    delay: `${Math.round(index * 19)}ms`,
-  };
-});
-
-// For every screen abscissa, the smallest projected ordinate is the visible
-// upper silhouette. Retain only the part belonging to the pole at z = 0.
-// The animated stroke therefore follows the plotted surface, with no hidden
-// lines drawn over a foreground fold.
-let connected = false;
-const mainSilhouette = Array.from({ length: 181 }, (_, index) => -0.68 + 1.36 * index / 180)
-  .map((v) => {
-    let best: { point: Point; u: number } | undefined;
-    for (const u of depths) {
-      const [left, right] = bounds(u);
-      if (v < left || v > right) continue;
-      const point = project(u, v);
-      if (!best || point.y < best.point.y) best = { point, u };
-    }
-    if (!best || best.u + v <= -1 || Math.hypot((best.u + v) / 2, (best.u - v) / 2) > 0.95) return undefined;
-    return best.point;
-  })
-  .map((point) => {
-    if (!point) {
-      connected = false;
-      return '';
-    }
-    const command = `${connected ? 'L' : 'M'}${coordinate(point)}`;
-    connected = true;
-    return command;
-  }).join('');
-
-const nearEdges = [
-  Array.from({ length: 90 }, (_, index) => {
-    const x = xMin + (xMax - xMin) * index / 89;
-    return project(x + yMin, x - yMin);
-  }),
-  Array.from({ length: 90 }, (_, index) => {
-    const y = yMax - (yMax - yMin) * index / 89;
-    return project(xMin + y, xMin - y);
-  }),
-];
-const title = 'Gamma 函数的复平面模曲面';
-const description = '平面坐标为复数 z 的实部与虚部，高度为 ln(1 + |Γ(z)|)。图中四峰从右向左依次对应极点 z = 0、−1、−2、−3；极点向上发散，图中在高度 3.1 截断。色彩为光照示意。';
 ---
 
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 1600 672"
-  width="1600"
-  height="672"
-  class:list={['gamma-plate', className]}
-  role={decorative ? undefined : 'img'}
-  aria-hidden={decorative ? 'true' : undefined}
-  aria-labelledby={decorative ? undefined : `${idPrefix}-title ${idPrefix}-description`}
-  focusable="false"
->
-  <title id={`${idPrefix}-title`}>{title}</title>
-  <desc id={`${idPrefix}-description`}>{description}</desc>
-  <defs>
-    <linearGradient id={`${idPrefix}-background`} x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#10162f" />
-      <stop offset="0.54" stop-color="#121d38" />
-      <stop offset="1" stop-color="#0b142c" />
-    </linearGradient>
-    <radialGradient id={`${idPrefix}-atmosphere`} cx="58%" cy="41%" r="65%">
-      <stop offset="0" stop-color="#455e79" stop-opacity="0.22" />
-      <stop offset="1" stop-color="#15203b" stop-opacity="0" />
-    </radialGradient>
-    <linearGradient id={`${idPrefix}-surface`} gradientUnits="userSpaceOnUse" x1="500" y1="150" x2="1000" y2="660">
-      <stop offset="0" stop-color="#c7a58b" />
-      <stop offset="0.24" stop-color="#a96e57" />
-      <stop offset="0.46" stop-color="#6a5a63" />
-      <stop offset="0.7" stop-color="#356b7b" />
-      <stop offset="1" stop-color="#164358" />
-    </linearGradient>
-    <linearGradient id={`${idPrefix}-ink`} gradientUnits="userSpaceOnUse" x1="550" y1="140" x2="1060" y2="650">
-      <stop offset="0" stop-color="#fff2d6" />
-      <stop offset="0.24" stop-color="#ffceaa" />
-      <stop offset="0.52" stop-color="#e4b299" />
-      <stop offset="0.78" stop-color="#a1d7dc" />
-      <stop offset="1" stop-color="#73b6ca" />
-    </linearGradient>
-    <linearGradient id={`${idPrefix}-edge`} gradientUnits="userSpaceOnUse" x1="150" y1="440" x2="1510" y2="650">
-      <stop offset="0" stop-color="#80c5cf" stop-opacity="0.15" />
-      <stop offset="0.5" stop-color="#a9d2d2" stop-opacity="0.8" />
-      <stop offset="1" stop-color="#83adbb" stop-opacity="0.15" />
-    </linearGradient>
-  </defs>
-
-  <rect width="1600" height="672" fill={paint('background')} />
-  <rect width="1600" height="672" fill={paint('atmosphere')} />
-
-  <g class="gamma-surface" stroke-linejoin="round" stroke-linecap="round">
-    {bands.map((band) => (
-      <>
-        <path d={band.fill} fill={paint('surface')} stroke={paint('surface')} stroke-width="0.9" />
-        <path class="gamma-wire" style={`--etch-delay: ${band.delay}`} d={band.mesh} fill="none" stroke={paint('ink')} stroke-width="1.4" />
-      </>
+<div class:list={['gamma-plate', className]} data-gamma-viewer role="group" aria-label="Gamma 函数曲面" aria-describedby={`${idPrefix}-help`}>
+  <div class="gamma-scene" data-gamma-scene>
+  <picture class="gamma-poster" data-gamma-fallback>
+    <source media="screen and (max-width: 48rem)" srcset={mobilePoster} />
+    <img src={poster} width="1600" height="672" alt="灰白釉面的 Gamma 函数曲面与四个高峰" decoding="sync" fetchpriority="high" />
+  </picture>
+  <canvas class="gamma-canvas" data-gamma-canvas tabindex="0" aria-label="Gamma 曲面，可用方向键旋转"></canvas>
+  <span class="gamma-mark" aria-hidden="true">Γ(z)</span>
+  <span class="gamma-hint" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m8 13-2-2a2 2 0 0 0-3 2l5 7h9l4-8a2 2 0 0 0-3-2l-1 2V5a2 2 0 0 0-4 0v6-8a2 2 0 0 0-4 0v10" /></svg>
+    拖动旋转
+  </span>
+  </div>
+  <div class="gamma-controls" role="toolbar" aria-label="曲面视角">
+    {presets.map((preset) => (
+      <button type="button" data-gamma-preset={preset.name} aria-pressed={preset.name === 'oblique' ? 'true' : 'false'} disabled>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={preset.icon} /></svg>
+        <span>{preset.label}</span>
+      </button>
     ))}
-    <path d={nearEdges.map(path).join('')} fill="none" stroke={paint('edge')} stroke-width="1.5" />
-    <path class="gamma-contour" d={mainSilhouette} fill="none" stroke="#fff2d6" stroke-width="5.2" pathLength="1" stroke-dasharray="1" />
-  </g>
+    <button type="button" data-gamma-reset aria-label="恢复默认视角" disabled>
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2 7M3 5v6h6" /></svg>
+      <span>复位</span>
+    </button>
+  </div>
+  <span class="gamma-accessible" id={`${idPrefix}-help`}>可拖动旋转，使用视角按钮切换斜视、俯视和侧视。极点附近使用有限截高。</span>
+  <span class="gamma-accessible" data-gamma-status role="status" aria-live="polite"></span>
+</div>
 
-  <g class="gamma-notation" fill="#eee5d3">
-    <text x="100" y="168" class="gamma-name">Γ(z)</text>
-    <text x="103" y="205" class="gamma-height">ln(1 + |Γ(z)|)</text>
-    <text x="1510" y="150" text-anchor="end" class="gamma-domain">z ∈ ℂ</text>
-    <path class="gamma-pole-guide" d="M926,171L985,131H1050" fill="none" stroke="#eee5d3" stroke-opacity="0.7" stroke-width="1.2" />
-    <text x="1066" y="142" class="gamma-pole"><tspan font-style="italic">z</tspan> = 0</text>
-  </g>
-</svg>
+<script>
+  import '../features/gamma-surface/viewer';
+</script>
 
 <style>
   .gamma-plate {
-    display: block;
+    position: relative;
     width: 100%;
-    height: auto;
     max-width: 100%;
-    aspect-ratio: 50 / 21;
     overflow: hidden;
     isolation: isolate;
+    color: #ebe9e4;
+    background: radial-gradient(ellipse at 53% 39%, #2a2c30 0%, #191b1f 37%, #0d0f12 78%);
   }
-
-  .gamma-wire {
-    opacity: 0.8;
-    animation: gamma-etch 1.05s ease-out both;
-    animation-delay: var(--etch-delay);
-  }
-
-  .gamma-contour {
-    opacity: 0;
-    animation: gamma-trace 2.7s ease-in-out both;
-    animation-delay: 0.25s;
-  }
-
-  .gamma-notation {
-    font-family: var(--serif, 'Source Serif 4', Georgia, serif);
-    pointer-events: none;
-  }
-
-  .gamma-name {
-    font-size: 60px;
-    font-style: italic;
-    letter-spacing: -1.5px;
-  }
-
-  .gamma-height {
-    font-size: 27px;
-    letter-spacing: 0.6px;
-    opacity: 0.66;
-  }
-
-  .gamma-domain {
-    font-size: 34px;
-    opacity: 0.65;
-  }
-
-  .gamma-pole {
-    font-size: 34px;
-  }
-
-  @keyframes gamma-etch {
-    0%, 100% { opacity: 0.8; }
-    38% { opacity: 1; }
-  }
-
-  @keyframes gamma-trace {
-    0% { opacity: 0; stroke-dashoffset: 1; }
-    12% { opacity: 1; }
-    76% { opacity: 1; stroke-dashoffset: 0; }
-    100% { opacity: 0; stroke-dashoffset: 0; }
-  }
-
+  .gamma-scene { position: relative; aspect-ratio: 50 / 21; overflow: hidden; }
+  .gamma-poster, .gamma-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+  .gamma-poster img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .gamma-canvas { opacity: 0; cursor: grab; touch-action: pan-y pinch-zoom; outline-offset: -4px; }
+  .gamma-canvas:focus-visible { outline: 2px solid #cbc7bd; }
+  [data-gamma-ready='true'] .gamma-canvas { opacity: 1; }
+  [data-gamma-ready='true'] .gamma-poster { visibility: hidden; }
+  [data-gamma-dragging='true'] .gamma-canvas { cursor: grabbing; }
+  .gamma-mark { position: absolute; top: clamp(6.2rem, 8vw, 8rem); left: clamp(1.5rem, 6.7vw, 8rem); font-family: var(--serif, Georgia, serif); font-size: clamp(1.25rem, 2.6vw, 2.7rem); font-style: italic; line-height: 1; opacity: 0.8; pointer-events: none; }
+  .gamma-hint { position: absolute; bottom: 1.6rem; left: clamp(1.5rem, 6.7vw, 8rem); display: inline-flex; align-items: center; gap: .5rem; color: #d7dfdc; font-size: .8rem; letter-spacing: .04em; pointer-events: none; }
+  .gamma-plate:not([data-gamma-ready='true']) .gamma-hint { display: none; }
+  .gamma-plate:not([data-gamma-ready='true']) .gamma-controls { visibility: hidden; pointer-events: none; }
+  .gamma-controls { position: absolute; right: clamp(1.4rem, 6.7vw, 8rem); bottom: 1.1rem; z-index: 2; display: flex; gap: .15rem; padding: .3rem; border: 0; background: transparent; }
+  .gamma-controls button { display: inline-flex; align-items: center; justify-content: center; gap: .42rem; min-height: 2.75rem; padding: .45rem .65rem; border: 0; border-radius: .35rem; color: #dfe1df; background: transparent; font: inherit; font-size: .8rem; white-space: nowrap; cursor: pointer; }
+  .gamma-controls button:hover { background: rgb(240 238 216 / 9%); }
+  .gamma-controls button[aria-pressed='true'] { color: #f1efeb; background: rgb(238 236 228 / 7%); }
+  .gamma-controls button:focus-visible { outline: 2px solid #cbc7bd; outline-offset: 1px; }
+  .gamma-controls button:disabled { cursor: default; opacity: .45; }
+  .gamma-accessible { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
   @media (max-width: 48rem) {
-    /* One surface and one viewBox: the phone composition is translated,
-       never stretched, and retains all four poles at the same scale. */
-    .gamma-surface { transform: translateY(-64px); }
-    .gamma-name { transform: translateY(-65px); font-size: 64px; }
-    .gamma-height, .gamma-domain, .gamma-pole, .gamma-pole-guide { display: none; }
+    .gamma-scene { aspect-ratio: 4 / 3; }
+    .gamma-mark { top: 1.3rem; left: 1.25rem; font-size: 1.35rem; }
+    .gamma-hint { top: 1.45rem; right: 1.25rem; bottom: auto; left: auto; font-size: .7rem; gap: .35rem; opacity: .7; }
+    .gamma-controls { position: relative; inset: auto; justify-content: center; gap: .4rem; min-height: 3rem; padding: 0 1rem; background: #0d0f12; }
+    .gamma-controls button { min-width: 4.1rem; min-height: 2.75rem; padding: .4rem .65rem; border-radius: 0; font-size: .78rem; gap: .3rem; }
+    .gamma-controls button[aria-pressed='true'] { background: transparent; text-decoration: underline; text-decoration-color: #9a9b97; text-underline-offset: .45rem; }
+    .gamma-controls button[data-gamma-preset] svg { display: none; }
+    .gamma-controls button[data-gamma-reset] { min-width: 2.75rem; margin-left: .5rem; }
+    .gamma-controls button[data-gamma-reset] span { display: none; }
+    .gamma-controls svg { width: 16px; height: 16px; }
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .gamma-wire, .gamma-contour { animation: none; }
-  }
-
   @media print {
     .gamma-plate { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-    .gamma-wire, .gamma-contour { animation: none; }
+    .gamma-scene { aspect-ratio: 50 / 21; }
+    .gamma-plate .gamma-poster { visibility: visible; }
+    .gamma-canvas, .gamma-controls, .gamma-hint { display: none; }
+    .gamma-mark { top: 1.5rem; }
   }
 </style>
