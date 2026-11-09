@@ -8,6 +8,7 @@ type: essay
 category: 统计力学
 tags: [主题一, 主题二]
 featured: false
+# 本次发布仅进栏目、保留当前头条时，添加 homeLeadEligible: false。
 # draft 必填；仅通过发布检查后改为 false。
 draft: true
 related: []

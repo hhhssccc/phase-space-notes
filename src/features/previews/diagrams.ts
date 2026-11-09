@@ -22,6 +22,22 @@ function grover() {
   }).join('') + path('M303 198h32m-11-10 11 10-11 10', ink, 3);
 }
 
+function groverSuccess() {
+  const theta = Math.asin(1 / 8);
+  const peak = Math.floor(Math.PI / (4 * theta));
+  const points = Array.from({ length: 13 }, (_, t) => {
+    const probability = Math.sin((2 * t + 1) * theta) ** 2;
+    return { x: 88 + 38 * t, y: 297 - 211 * probability };
+  });
+  const guide = points.map(({ x, y }, t) => `${t ? 'L' : 'M'}${x} ${y}`).join(' ');
+  return line(75, 297, 580, 297) + line(88, 297, 88, 65) +
+    line(88, 86, 544, 86, gray, 1.5) + path(guide, blue, 3) +
+    points.map(({ x, y }, t) => dot(x, y, t === peak ? orange : blue, t === peak ? 9 : 6)).join('') +
+    [0, 3, 6, 9, 12].map(t => text(points[t].x, 330, String(t), ink, 21)).join('') +
+    text(59, 93, '1', ink, 21) + text(65, 53, 'Pₜ', ink, 28) +
+    text(577, 321, 't', ink, 25) + text(325, 378, 'M/N = 1/64', ink, 23);
+}
+
 function group() {
   return [165, 475].map((cx, i) =>
     `<rect x="${cx - 70}" y="130" width="140" height="140" fill="#f3f8ff" stroke="${blue}" stroke-width="5"/>` +
@@ -137,6 +153,7 @@ export const previewDiagrams: Record<string, { label: string; draw: () => string
   'grover-subtraction': {label:'QiGA 的四组振幅',draw:qiga},
   'grover-counting': {label:'QiGA-2 的逐位计数树',draw:qigaTree},
   'grover-algorithm-original-motivation': {label:'Grover 搜索的一步振幅放大',draw:grover},
+  'grover-search-model-and-cost': {label:'64 个候选项中有 1 个解时，成功概率在第 6 次迭代达到首个峰值',draw:groverSuccess},
   'group-theory-bedtime-story': {label:'正方形旋转与循环群',draw:group},
   'information-entropy-and-everything': {label:'二元信息熵',draw:entropy},
   'jones-polynomial-braids-and-link-invariants': {label:'三次交叉的二股辫子',draw:braid},

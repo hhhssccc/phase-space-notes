@@ -9,7 +9,7 @@ import { getPublicContent } from '../lib/content/service';
 
 const { entries } = await getPublicContent();
 entries.sort(byNewest);
-const [lead] = entries;
+const lead = entries.find(entry => entry.data.homeLeadEligible);
 const leadDescription = lead?.id === 'special-functions'
   ? lead.data.description.replace(/的手写笔记(?=。?$)/u, '')
   : lead?.data.description;
@@ -33,7 +33,7 @@ const issueDate = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'long', timeZone
           <div class="lead-heading">
             <p class="lead-meta">
               <span>{lead.data.category}</span>
-              <time datetime={lead.data.date.toISOString()}><span class="visually-hidden">最近发布于</span>{issueDate.format(lead.data.date)}</time>
+              <time datetime={lead.data.date.toISOString()}><span class="visually-hidden">发布于</span>{issueDate.format(lead.data.date)}</time>
             </p>
             <h2 id="lead-title"><a href={entryUrl(lead)}>{lead.data.title}</a></h2>
           </div>

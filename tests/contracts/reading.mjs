@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { readingPaths } from '../../src/config/reading-paths.ts';
 import { articleLabs } from '../../src/features/physics-lab/registry.ts';
 const output = process.env.RENDER_OUTPUT_DIR || 'dist';
@@ -27,5 +28,15 @@ for (const slug of Object.keys(articleLabs)) {
   assert.ok(html.includes('本文符号与约定'));
 }
 const home = await readFile(`${output}/index.html`, 'utf8');
-assert.ok(home.includes('最近发布') && home.includes(index[0].url));
-console.log('READING_TOOLS_PASS: search anchors, reading controls, unique equation IDs, routes, legacy article-end labs absent and latest content.');
+let expectedLead;
+for (const entry of index) {
+  const slug = entry.url.split('/').filter(Boolean).at(-1);
+  const source = await readFile(`content/${slug}.md`, 'utf8');
+  if (parseFrontmatter(source).frontmatter.homeLeadEligible !== false) {
+    expectedLead = entry.url;
+    break;
+  }
+}
+const displayedLead = home.match(/id="lead-title"[^>]*>\s*<a[^>]*href="([^"]+)"/)?.[1];
+assert.equal(displayedLead, expectedLead, 'The homepage leads with the newest eligible public entry');
+console.log('READING_TOOLS_PASS: search anchors, reading controls, unique equation IDs, routes, legacy article-end labs absent and eligible homepage lead.');

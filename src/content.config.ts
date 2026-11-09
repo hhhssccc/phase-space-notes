@@ -15,6 +15,7 @@ const articles = defineCollection({
     category: z.string().trim().min(1),
     tags: z.array(z.string()).default([]),
     featured: z.boolean().default(false),
+    homeLeadEligible: z.boolean().default(true),
     draft: z.boolean(),
     related: z.array(z.string()).default([]),
     backlinks: z.array(z.string()).default([]),

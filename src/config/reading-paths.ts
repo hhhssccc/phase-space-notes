@@ -47,6 +47,7 @@ export const readingPaths: ReadingPath[] = [
       { id: 'griffiths-quantum-mechanics-born-to-uncertainty', purpose: '回顾波函数、Born 诠释与不确定性。' },
       { id: 'modern-physics-intro-groups-and-quantum-mechanics', purpose: '按需回读 Hilbert 空间、测量与时间演化。' },
       { id: 'grover-algorithm-original-motivation', purpose: '沿原始构思理解 Grover 搜索与振幅放大。' },
+      { id: 'grover-search-model-and-cost', purpose: '从两次反射推导多解搜索的成功概率，再比较单次运行和重试的成本。' },
     ],
   },
 ];

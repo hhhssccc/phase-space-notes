@@ -112,6 +112,7 @@ sidenotes:
 | `category` | 必填，只选一个稳定学科名称，如“统计力学”“量子力学”“理论力学”。 |
 | `tags` | 建议 2–6 个中文标签；复用已有标签，避免同义词分裂。 |
 | `featured` | 仅 `essay` 可设为 `true`；首页最多保留 3 篇精选。 |
+| `homeLeadEligible` | 可选，默认 `true`。当作者指定新稿进入栏目并保留当前头条时，将新稿设为 `false`。编辑源稿用 `blog_home_lead_eligible` 对应。 |
 | `draft` | 必填；写作和检查阶段必须为 `true`；通过发布检查后才能改为 `false`，遗漏字段时构建失败。 |
 | `related` | 相关内容的文件 ID，不含路径和 `.md`。只填写确实相关且已存在的内容。 |
 | `backlinks` | 明确链接到本文的内容 ID。新增 WikiLink 后同步检查是否应更新。 |
@@ -276,7 +277,7 @@ blog_url: https://hhhssccc.github.io/phase-space-notes/articles/information-entr
 
 日常发布沿用首页现有版式。编辑入口是目标稿件的 Frontmatter 和配图。主荐由 `src/pages/index.astro` 生成，其余四栏由 `src/components/HomeSections.astro` 生成，均读取同一批公开内容。
 
-**先确定新稿的位置。** 校准 `type`、`date`、`category` 和 `description`。首页按首次公开日期降序取一篇主荐，同日按稳定 ID 排序。旧文补录保留实际首次公开日期，后续修订写 `updated`。四栏从排除当前主荐的有序列表取稿，保留已有精选决定。
+**先确定新稿的位置。** 校准 `type`、`date`、`category` 和 `description`。首页在允许担任主荐的稿件中按首次公开日期降序取一篇，同日按稳定 ID 排序。旧文补录保留实际首次公开日期，后续修订写 `updated`。四栏从排除当前主荐的有序列表取稿，保留已有精选决定。
 
 | 栏目 | 收录规则 | 同栏每篇均显示 |
 | --- | --- | --- |
