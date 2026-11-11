@@ -3,6 +3,9 @@ const trigger = document.querySelector<HTMLButtonElement>('[data-study-open]');
 const drawer = document.querySelector<HTMLElement>('[data-study-drawer]');
 const backdrop = document.querySelector<HTMLElement>('[data-study-backdrop]');
 const closeButton = document.querySelector<HTMLButtonElement>('[data-study-close]');
+const roomScroll = drawer?.querySelector<HTMLElement>('[data-room-scroll]');
+const roomLinks = Array.from(drawer?.querySelectorAll<HTMLButtonElement>('[data-room-jump]') ?? []);
+const roomSections = Array.from(drawer?.querySelectorAll<HTMLElement>('[data-room-section]') ?? []);
 let body = document.body;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -11,11 +14,41 @@ let invokingTrigger: HTMLElement | null = null;
 let closeTimer: number | undefined;
 let isOpen = false;
 const previousInertStates = new Map<Element, boolean>();
+let navigationFrame = 0;
+const markRoomSection = (id: string) => {
+  roomLinks.forEach(button => {
+    if (button.dataset.roomJump === id) button.setAttribute('aria-current', 'location');
+    else button.removeAttribute('aria-current');
+  });
+};
+const syncRoomNavigation = () => {
+  navigationFrame = 0;
+  if (!isOpen || !roomScroll || !roomSections.length) return;
+  const top = roomScroll.getBoundingClientRect().top;
+  let current = roomSections[0];
+  for (const section of roomSections) {
+    if (section.getBoundingClientRect().top <= top + 72) current = section;
+    else break;
+  }
+  if (roomScroll.scrollTop + roomScroll.clientHeight >= roomScroll.scrollHeight - 2) current = roomSections[roomSections.length - 1];
+  markRoomSection(current.dataset.roomSection || 'reading');
+};
+roomLinks.forEach(button => button.addEventListener('click', () => {
+  if (!roomScroll) return;
+  const section = roomSections.find(element => element.dataset.roomSection === button.dataset.roomJump);
+  if (!section) return;
+  roomScroll.scrollTo({ top: Math.max(0, roomScroll.scrollTop + section.getBoundingClientRect().top - roomScroll.getBoundingClientRect().top - 16), behavior: 'instant' });
+  markRoomSection(button.dataset.roomJump || 'reading');
+  section.querySelector<HTMLElement>('h3[tabindex], h4[tabindex]')?.focus({ preventScroll: true });
+}));
+roomScroll?.addEventListener('scroll', () => {
+  if (!navigationFrame && isOpen) navigationFrame = requestAnimationFrame(syncRoomNavigation);
+}, { passive: true });
 
 const focusableElements = () => {
   if (!drawer) return [];
   return Array.from(drawer.querySelectorAll<HTMLElement>(
-    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
   )).filter((element) => !element.hidden && element.getClientRects().length > 0);
 };
 
@@ -79,6 +112,7 @@ const openDrawer = (invoker: HTMLElement | null = null) => {
       drawer.dataset.open = '';
       backdrop.dataset.open = '';
       focusDrawer();
+      syncRoomNavigation();
     });
   });
 };
@@ -86,6 +120,8 @@ const openDrawer = (invoker: HTMLElement | null = null) => {
 const closeDrawer = () => {
   if (!drawer || !backdrop || !trigger || !isOpen) return;
   isOpen = false;
+  if (navigationFrame) cancelAnimationFrame(navigationFrame);
+  navigationFrame = 0;
   drawer.removeAttribute('data-open');
   backdrop.removeAttribute('data-open');
   drawer.setAttribute('aria-hidden', 'true');

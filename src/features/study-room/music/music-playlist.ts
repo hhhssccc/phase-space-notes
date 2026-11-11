@@ -121,7 +121,12 @@ export function setupPlaylist(root: HTMLElement, audio: HTMLAudioElement, contro
   });
   const updateMute = () => {
     mute.setAttribute('aria-pressed', String(audio.muted));
-    mute.textContent = audio.muted ? '取消静音' : '静音';
+    const text = audio.muted ? '取消静音' : '静音';
+    mute.setAttribute('aria-label', text);
+    mute.setAttribute('title', text);
+    const label = root.querySelector('[data-mute-label]');
+    if (label) label.textContent = text;
+    else mute.textContent = text;
   };
   mute.addEventListener('click', () => { audio.muted = !audio.muted; updateMute(); save(); }, { signal: lifetimeSignal });
   root.querySelector('[data-music-volume]')?.addEventListener('input', () => { audio.muted = false; updateMute(); save(); }, { signal: lifetimeSignal });

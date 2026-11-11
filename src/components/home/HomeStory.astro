@@ -1,0 +1,59 @@
+---
+import StoryPlate from './StoryPlate.astro';
+import { entryUrl, formatDate, type ArticleEntry } from '../../lib/content';
+
+interface Props {
+  entry: ArticleEntry;
+  kind: 'knot' | 'entropy' | 'laurent';
+}
+const { entry, kind } = Astro.props;
+---
+
+<article class:list={['home-story', `home-story-${kind}`]} data-home-entry={entry.id}>
+  <a class="story-plate-link" href={entryUrl(entry)} aria-label={entry.data.title}>
+    <StoryPlate kind={kind} />
+  </a>
+  <div class="home-story-caption">
+    <p class="home-story-meta">
+      <span>{entry.data.category}</span>
+      <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date)}</time>
+    </p>
+    <h2><a href={entryUrl(entry)}>{entry.data.title}</a></h2>
+    <p class="home-story-dek">{entry.data.description}</p>
+  </div>
+</article>
+
+<style>
+  .home-story { margin-block: clamp(4.5rem, 7vw, 7rem); }
+  .story-plate-link { display: block; }
+  .story-plate-link:focus-visible { outline-offset: -5px; }
+  .home-story-knot .story-plate-link:focus-visible { outline-color: #fff; }
+  .home-story-caption {
+    position: relative;
+    width: min(51rem, 83%);
+    margin: -3rem auto 0;
+    padding: 2.5rem clamp(1.5rem, 4vw, 4rem) 0;
+    background: var(--paper);
+    text-align: center;
+  }
+  .home-story-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: .85rem; margin: 0 0 1.15rem; color: var(--muted); font: .75rem/1.6 var(--latin-sans),var(--sans); }
+  .home-story-meta span { font-weight: 600; color: var(--ink-soft); }
+  .home-story-meta time { font-variant-numeric: tabular-nums; }
+  h2 { margin: 0; font: 650 clamp(2rem, 3.4vw, 3.1rem)/1.45 var(--serif); letter-spacing: -.025em; text-wrap: pretty; }
+  h2 a { text-decoration: none; }
+  h2 a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+  .home-story-dek { max-width: 38em; margin: 1.3rem auto 0; color: var(--ink-soft); font: 400 1.07rem/1.95 var(--serif); text-wrap: pretty; }
+  @media (max-width: 40rem) {
+    .home-story { margin-block: 3.5rem; }
+    .home-story-caption { width: 100%; margin: 0; padding: 1.8rem var(--journal-inset) 0; text-align: left; }
+    .home-story-meta { justify-content: flex-start; margin-bottom: 1rem; font-size: .72rem; }
+    h2 { font-size: clamp(1.65rem, 6.6vw, 2.1rem); line-height: 1.55; }
+    .home-story-dek { margin-top: 1rem; font-size: 1rem; line-height: 1.85; }
+  }
+  @media print {
+    .home-story { break-inside: avoid; margin: 1rem 0; }
+    .story-plate-link { display: none; }
+    .home-story-caption { width: 100%; margin: 0; padding: 0; text-align: left; }
+    .home-story-meta { justify-content: flex-start; }
+  }
+</style>

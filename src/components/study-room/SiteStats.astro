@@ -1,110 +1,51 @@
 ---
 import type { SiteStats } from '../../lib/site-stats';
-
-interface Props {
-  stats: SiteStats;
-}
-
+interface Props { stats: SiteStats; }
 const { stats } = Astro.props;
-const formatNumber = new Intl.NumberFormat('zh-CN');
-const formatDate = new Intl.DateTimeFormat('zh-CN', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  timeZone: 'UTC',
-});
-
-const rows = [
-  ['文章数', formatNumber.format(stats.articleCount)],
-  ['笔记数', formatNumber.format(stats.noteCount)],
-  ['杂感数', formatNumber.format(stats.reflectionCount)],
-  ['可视化数', formatNumber.format(stats.visualizationCount)],
-  ['总字数', formatNumber.format(stats.totalWords)],
-  ['总阅读时长', `${formatNumber.format(stats.totalReadingMinutes)} 分钟`],
-  ['分类数', formatNumber.format(stats.categoryCount)],
-  ['标签数', formatNumber.format(stats.tagCount)],
-  ['最近更新时间', stats.latestUpdated ? formatDate.format(stats.latestUpdated) : '暂无'],
-] as const;
+const number = new Intl.NumberFormat('zh-CN');
+const date = new Intl.DateTimeFormat('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', timeZone:'UTC' });
+const kinds = [
+  { label:'文章', count:stats.articleCount, tone:1 },
+  { label:'笔记', count:stats.noteCount, tone:2 },
+  { label:'杂感', count:stats.reflectionCount, tone:3 },
+  { label:'图解', count:stats.visualizationCount, tone:4 },
+];
+const total = kinds.reduce((sum,item) => sum + item.count,0);
 ---
-
 <section class="site-stats" aria-labelledby="site-stats-title">
-  <h3 id="site-stats-title">内容统计</h3>
-  <dl>
-    {rows.map(([label, value]) => (
-      <div class="stat-row">
-        <dt>{label}</dt>
-        <dd>{value}</dd>
-      </div>
-    ))}
+  <h4 id="site-stats-title">内容统计</h4>
+  <dl class="stat-totals">
+    <div><dt>公开内容</dt><dd>{number.format(total)}<small>篇</small></dd></div>
+    <div><dt>累计字数</dt><dd>{number.format(stats.totalWords)}<small>字</small></dd></div>
   </dl>
-  <p class="privacy-note">内容统计，不记录访客数据。</p>
+  <div class="composition" role="img" aria-label={kinds.map(item => item.label + item.count + '篇').join('，')}>
+    {kinds.filter(item => item.count > 0).map(item => <span class={'tone-' + item.tone} style={'flex: ' + item.count}></span>)}
+  </div>
+  <dl class="stat-kinds">{kinds.map(item => <div><dt><i class={'tone-' + item.tone} aria-hidden="true"></i>{item.label}</dt><dd>{number.format(item.count)}</dd></div>)}</dl>
+  <dl class="stat-meta"><div><dt>阅读时长</dt><dd>{number.format(stats.totalReadingMinutes)} 分钟</dd></div><div><dt>分类</dt><dd>{stats.categoryCount}</dd></div><div><dt>标签</dt><dd>{stats.tagCount}</dd></div></dl>
+  <footer><span>最近更新 {stats.latestUpdated ? date.format(stats.latestUpdated) : '暂无'}</span><span>只统计内容，不记录访客</span></footer>
 </section>
-
 <style>
-  .site-stats {
-    min-width: 0;
-    color: var(--ink);
-  }
-
-  h3 {
-    margin: 0 0 0.6rem;
-    font-family: var(--serif);
-    font-size: 1.15rem;
-    font-weight: 650;
-    letter-spacing: 0;
-  }
-
-  dl {
-    margin: 0;
-
-  }
-
-  .stat-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 0.75rem;
-    padding: 0.55rem 0;
-
-  }
-
-  .stat-row:last-child {
-    border-bottom: 0;
-  }
-
-  dt {
-    min-width: 0;
-    color: var(--muted);
-    font-size: 0.85rem;
-    letter-spacing: 0.045em;
-  }
-
-  dd {
-    margin: 0;
-    color: var(--ink-soft);
-    font-family: var(--latin-sans), var(--sans);
-    font-size: 0.84rem;
-    font-variant-numeric: tabular-nums lining-nums;
-    font-weight: 620;
-    letter-spacing: 0.015em;
-    text-align: right;
-    white-space: nowrap;
-  }
-
-  .privacy-note {
-    margin: 0.55rem 0 0;
-    color: var(--muted);
-    font-size: 0.75rem;
-    line-height: 1.55;
-  }
-
-  @media (max-width: 22rem) {
-    .stat-row {
-      gap: 0.5rem;
-    }
-
-    dd {
-      font-size: 0.8rem;
-    }
-  }
+  .site-stats { min-width: 0; padding: 1.2rem; border-radius: .7rem; background: var(--paper-soft); color: var(--ink); }
+  h4 { margin: 0 0 1rem; font-size: .86rem; font-weight: 650; }
+  dl { margin: 0; }
+  .stat-totals { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1rem; }
+  .stat-totals dt { color: var(--muted); font-size: .72rem; }
+  .stat-totals dd { margin: .3rem 0 0; font-family: var(--latin-serif),var(--serif); font-size: clamp(1.6rem,3vw,2.2rem); font-weight: 550; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  dd small { margin-left: .35rem; font-family: var(--sans); font-size: .65rem; color: var(--muted); font-weight: 400; }
+  .composition { display: flex; gap: 3px; height: .45rem; margin: 1.2rem 0 .85rem; overflow: hidden; border-radius: 3px; background: var(--rule-soft); }
+  .tone-1 { background: var(--ink); }
+  .tone-2 { background: color-mix(in srgb,var(--ink) 62%,var(--paper)); }
+  .tone-3 { background: color-mix(in srgb,var(--ink) 36%,var(--paper)); }
+  .tone-4 { background: color-mix(in srgb,var(--ink) 18%,var(--paper)); }
+  .stat-kinds { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .5rem; }
+  .stat-kinds dt { display: flex; align-items: center; gap: .35rem; color: var(--muted); font-size: .68rem; }
+  .stat-kinds i { display: block; width: .4rem; height: .4rem; border-radius: 50%; }
+  .stat-kinds dd { margin: .25rem 0 0 .75rem; font-family: var(--latin-sans),var(--sans); font-size: .9rem; font-weight: 620; }
+  .stat-meta { display: flex; flex-wrap: wrap; gap: .55rem 1.2rem; margin-top: 1.2rem; }
+  .stat-meta div { display: flex; align-items: baseline; gap: .45rem; font-size: .7rem; }
+  .stat-meta dt { color: var(--muted); }
+  .stat-meta dd { margin: 0; font-variant-numeric: tabular-nums; }
+  footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .35rem; margin-top: .9rem; color: var(--muted); font-size: .63rem; line-height: 1.7; }
+  @media(max-width:22rem) { .site-stats { padding: 1rem; } .stat-totals { gap: .6rem; grid-template-columns: 1fr 1.35fr; } .stat-kinds { gap: .3rem; } }
 </style>

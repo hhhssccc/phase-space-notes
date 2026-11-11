@@ -28,7 +28,7 @@ const issueDate = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'long', timeZone
   )}
   <div class="journal-page">
     {lead && (
-      <section class="lead-story-heading" aria-labelledby="lead-title">
+      <section class="lead-story-heading" aria-labelledby="lead-title" data-home-entry={lead.id}>
         <div class="lead-copy">
           <div class="lead-heading">
             <p class="lead-meta">
@@ -41,12 +41,8 @@ const issueDate = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'long', timeZone
         </div>
       </section>
     )}
-    <HomeSections entries={entries} leadId={lead?.id ?? ''} />
-    <section class="home-colophon" aria-labelledby="journal-motto">
-      <h2 id="journal-motto"><span>从现象出发，</span><span>向结构深入。</span></h2>
-      <p>读书时记下的推导、问题和偶尔想明白的事情。</p>
-    </section>
   </div>
+  <HomeSections entries={entries} leadId={lead?.id ?? ''} />
 </BaseLayout>
 
 <script>

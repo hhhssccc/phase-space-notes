@@ -1,388 +1,114 @@
 ---
 import { musicConfig } from '../../config/music';
 import { withBase } from '../../lib/content';
-
 const track = musicConfig.tracks[0] ?? null;
 const selfHostedSource = track?.source.kind === 'self-hosted' ? track.source : null;
-const initialStatus = '默认暂停，点击播放开始聆听。';
+const playable = musicConfig.tracks.filter(item => item.source.kind === 'self-hosted');
+function durationLabel(note: string) {
+  const clock = note.match(/^(\d+:\d\d)/);
+  if (clock) return clock[1];
+  const approximate = note.match(/约\s*(\d+)\s*分\s*(\d+)\s*秒/);
+  return approximate ? '约' + approximate[1] + ':' + approximate[2].padStart(2,'0') : '';
+}
 ---
-
-{track && (
-  <div
-    class="music-player"
-    data-music-player
-    data-state="idle"
-    data-track-title={track.title}
-    data-track-kind={track.source.kind}
-    data-default-volume={String(musicConfig.defaultVolume)}
-    data-volume-storage-key={musicConfig.volumeStorageKey}
-    data-startup-timeout={String(musicConfig.startupTimeoutMs)}
-    aria-label={`${track.title}音乐播放器`}
-  >
-  <div class="track-row">
-    <button
-      class="play-button"
-      type="button"
-      data-music-toggle
-      aria-label={`播放${track.title}`}
-      aria-pressed="false"
-      aria-describedby="music-player-status"
-    >
-      <span class="control-symbol" aria-hidden="true"></span>
-      <span data-control-label>播放</span>
-    </button>
-
-    <div class="track-copy">
-      <p class="track-title">{track.title}</p>
+{track && <div class="music-player" data-music-player data-state="idle" data-track-title={track.title} data-track-kind={track.source.kind} data-default-volume={String(musicConfig.defaultVolume)} data-volume-storage-key={musicConfig.volumeStorageKey} data-startup-timeout={String(musicConfig.startupTimeoutMs)} aria-label={track.title + '音乐播放器'}>
+  <div class="player-main">
+    <div class="track-row">
+      <div class="track-emblem" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1"><circle cx="24" cy="24" r="20" /><circle cx="24" cy="24" r="14" /><circle cx="24" cy="24" r="8" /><circle cx="24" cy="24" r="2" /></svg></div>
+      <div class="track-copy"><p class="track-title">{track.title}</p><p class="track-caption">曲目 <span data-track-number>01</span> / {String(playable.length || musicConfig.tracks.length).padStart(2,'0')}</p></div>
+      <span class="playing-indicator" aria-hidden="true"><i></i><i></i><i></i></span>
     </div>
-
-    <div class="waveform" aria-hidden="true">
-      <span style="--bar: 0.62; --delay: -0.12s;"></span>
-      <span style="--bar: 1; --delay: -0.44s;"></span>
-      <span style="--bar: 0.78; --delay: -0.28s;"></span>
-      <span style="--bar: 0.48; --delay: -0.62s;"></span>
-      <span style="--bar: 0.86; --delay: -0.36s;"></span>
-    </div>
-  </div>
-
-  <p class="track-description">{track.description}</p>
-
-  {selfHostedSource && <>
-    <div class="progress-row">
-      <output data-elapsed>0:00</output>
-      <input data-seek type="range" min="0" max="0" step="1" value="0" disabled aria-label="播放进度" />
-      <output data-duration>--:--</output>
-    </div>
+    <p class="track-description">{track.description}</p>
     <div class="transport-row">
-      <button type="button" data-previous aria-label="上一首">上一首</button>
-      <button type="button" data-next aria-label="下一首">下一首</button>
-      <select data-play-mode aria-label="播放模式">
-        <option value="list">列表循环</option>
-        <option value="one">单曲循环</option>
-        <option value="shuffle">随机播放</option>
-        <option value="order">顺序播放</option>
-      </select>
-      <button type="button" data-mute aria-pressed="false">静音</button>
+      {selfHostedSource && <button type="button" class="icon-button" data-previous aria-label="上一首" title="上一首"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5h2v14H5zM18 5v14L8 12z" /></svg></button>}
+      <button class="play-button" type="button" data-music-toggle aria-label={'播放' + track.title} aria-pressed="false" aria-describedby="music-player-status"><span class="control-symbol" aria-hidden="true"></span><span class="visually-hidden" data-control-label>播放</span></button>
+      {selfHostedSource && <button type="button" class="icon-button" data-next aria-label="下一首" title="下一首"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 5h2v14h-2zM6 5v14l10-7z" /></svg></button>}
     </div>
-    <div class="player-options">
-      <label>定时停止
-        <select data-sleep aria-label="定时停止">
-          <option value="0">关闭</option>
-          <option value="15">15 分钟</option>
-          <option value="30">30 分钟</option>
-          <option value="60">60 分钟</option>
-          <option value="end">本曲结束</option>
-        </select>
-      </label>
-      <span data-sleep-status></span>
+    {selfHostedSource && <div class="progress-row"><input data-seek type="range" min="0" max="0" step="1" value="0" disabled aria-label="播放进度" /><div class="time-row"><output data-elapsed>0:00</output><output data-duration>--:--</output></div></div>}
+    <div class="volume-row">
+      {selfHostedSource ? <button type="button" class="icon-button mute-button" data-mute aria-pressed="false" aria-label="静音" title="静音"><svg class="sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m11 4-5 4H3v8h3l5 4V4Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" /></svg><svg class="sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m11 4-5 4H3v8h3l5 4V4Zm4 5 6 6m0-6-6 6" /></svg><span class="visually-hidden" data-mute-label>静音</span></button> : <label for="study-music-volume">音量</label>}
+      <input id="study-music-volume" data-music-volume type="range" min="0" max="100" step="1" value={musicConfig.defaultVolume} aria-label="音量" aria-describedby="music-volume-value" />
+      <output id="music-volume-value" data-music-volume-value for="study-music-volume">{musicConfig.defaultVolume}%</output>
     </div>
-    <details class="playlist">
-      <summary>播放列表 · {musicConfig.tracks.filter(item => item.source.kind === 'self-hosted').length} 首</summary>
-      <ol>
-        {musicConfig.tracks.map((item, index) => item.source.kind === 'self-hosted' && <li>
-          <button type="button" data-select-track={index} aria-current={index === 0 ? 'true' : undefined}>
-            <span>{item.title}</span><small>{item.subtitle}</small>
-          </button>
-        </li>)}
-      </ol>
-    </details>
-  </>}
-
-  <div class="volume-row">
-    <label for="study-music-volume">音量</label>
-    <input
-      id="study-music-volume"
-      data-music-volume
-      type="range"
-      min="0"
-      max="100"
-      step="1"
-      value={musicConfig.defaultVolume}
-      aria-describedby="music-volume-value"
-    />
-    <output id="music-volume-value" data-music-volume-value for="study-music-volume">
-      {musicConfig.defaultVolume}%
-    </output>
+    {selfHostedSource && <div class="player-options">
+      <label><span>播放顺序</span><select data-play-mode aria-label="播放模式"><option value="list">列表循环</option><option value="one">单曲循环</option><option value="shuffle">随机播放</option><option value="order">顺序播放</option></select></label>
+      <label><span>定时停止</span><select data-sleep aria-label="定时停止"><option value="0">关闭</option><option value="15">15 分钟</option><option value="30">30 分钟</option><option value="60">60 分钟</option><option value="end">本曲结束</option></select></label>
+      <span class="sleep-status" data-sleep-status></span>
+    </div>}
+    <p class="player-status" id="music-player-status" data-music-status role="status" aria-live="polite">默认暂停，点击播放开始聆听。</p>
+    <p class="player-error" data-music-error role="alert" hidden></p>
+    <details class="track-source"><summary>曲目来源</summary><p class="source-note"><span>{track.sourceNote}</span>{track.sourceUrl && <a href={track.sourceUrl} target="_blank" rel="external noopener noreferrer">{track.sourceLabel ?? '来源页面'}</a>}</p></details>
   </div>
-
-  <p class="player-status" id="music-player-status" data-music-status role="status" aria-live="polite">
-    {initialStatus}
-  </p>
-  <p class="player-error" data-music-error role="alert" hidden></p>
-  <p class="source-note">
-    <span>{track.sourceNote}</span>
-    {track.sourceUrl && (
-      <>
-        <span aria-hidden="true"> · </span>
-        <a href={track.sourceUrl} target="_blank" rel="external noopener noreferrer">
-          {track.sourceLabel ?? '来源页面'}
-        </a>
-      </>
-    )}
-  </p>
-  {selfHostedSource && (
-    <audio data-music-audio preload="none">
-      <source src={withBase(selfHostedSource.src)} type={selfHostedSource.mimeType} />
-    </audio>
-  )}
-  </div>
-)}
-
-<script>
-  import { initializeMusic } from '../../features/study-room/music';
-  initializeMusic();
-</script>
-
+  {selfHostedSource && <details class="playlist" open><summary><span>播放列表</span><small>{playable.length} 首</small></summary><ol>{musicConfig.tracks.map((item,index) => item.source.kind === 'self-hosted' && <li><button type="button" data-select-track={index} aria-current={index === 0 ? 'true' : undefined}><span class="track-index" aria-hidden="true">{String(index + 1).padStart(2,'0')}</span><span class="playlist-copy"><span>{item.title}</span><small>{/[\u3400-\u9fff]/.test(item.subtitle) ? item.subtitle : '器乐'}</small></span><span class="track-length">{durationLabel(item.sourceNote)}</span><i class="selected-track" aria-hidden="true"></i></button></li>)}</ol></details>}
+  {selfHostedSource && <audio data-music-audio preload="none"><source src={withBase(selfHostedSource.src)} type={selfHostedSource.mimeType} /></audio>}
+</div>}
+<script>import { initializeMusic } from '../../features/study-room/music'; initializeMusic();</script>
 <style>
-  .progress-row {
-    display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
-    gap: 0.4rem;
-    align-items: center;
-    margin-top: 0.7rem;
-    font: 0.65rem var(--mono);
-    font-variant-numeric: tabular-nums;
-  }
-  .progress-row input { width: 100%; min-width: 0; height: 2rem; accent-color: var(--ink); }
-  .progress-row output:last-child { text-align: right; }
-  .transport-row, .player-options { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.5rem; }
-  .transport-row button, select {
-    min-height: 2.3rem; max-width: 100%; padding: 0.35rem 0.5rem;
-    border: 1px solid var(--rule); border-radius: 0.5rem; background: var(--paper); color: var(--ink);
-    font: inherit; font-size: 0.7rem; cursor: pointer;
-  }
-  .transport-row button:hover, .playlist button:hover { background: var(--rule); }
-  .player-options { color: var(--muted); font-size: 0.66rem; justify-content: space-between; }
-  .player-options label { display: flex; align-items: center; gap: 0.5rem; }
-  .playlist { border-top: 1px solid var(--rule); margin-top: 0.8rem; font-size: 0.72rem; }
-  .playlist summary { padding-block: 0.6rem; cursor: pointer; }
-  .playlist ol { margin: 0; padding: 0; list-style: none; max-height: 13rem; overflow-y: auto; }
-  .playlist button { width: 100%; padding: 0.65rem 0.4rem; border: 0; text-align: left; background: transparent; color: var(--ink); cursor: pointer; font: inherit; }
-  .playlist button[aria-current='true'] { border-left: 2px solid var(--ink); font-weight: 650; background: var(--rule); }
-  .playlist small { display: block; color: var(--muted); font-size: 0.6rem; font-weight: 400; }
-  button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-  .music-player {
-    min-width: 0;
-    padding: 1.1rem;
-    border-radius: 0.85rem;
-    background: var(--paper-soft);
-  }
-
-  [data-music-audio] {
-    display: none;
-  }
-
-  .track-row {
-    display: grid;
-    grid-template-columns: 3.35rem minmax(0, 1fr) 2.7rem;
-    align-items: center;
-    gap: 0.7rem;
-  }
-
-  .play-button {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    width: 3.35rem;
-    min-height: 3.85rem;
-    place-items: center;
-    padding: 0.48rem 0.2rem 0.38rem;
-    border: 0;
-    border-radius: 0.75rem;
-    background: var(--ink);
-    color: var(--paper);
-    cursor: pointer;
-    font-size: 0.58rem;
-    font-weight: 650;
-    letter-spacing: 0.08em;
-    line-height: 1;
-  }
-
-  .play-button:hover {
-    background: var(--ink-soft);
-  }
-
-  .play-button:disabled {
-    cursor: wait;
-    opacity: 0.62;
-  }
-
-  .control-symbol {
-    position: relative;
-    display: block;
-    width: 1rem;
-    height: 1rem;
-  }
-
-  .control-symbol::before {
-    position: absolute;
-    top: 0.08rem;
-    left: 0.25rem;
-    width: 0;
-    height: 0;
-    border-top: 0.42rem solid transparent;
-    border-bottom: 0.42rem solid transparent;
-    border-left: 0.67rem solid currentColor;
-    content: '';
-  }
-
-  [data-state='playing'] .control-symbol::before {
-    top: 0.12rem;
-    left: 0.17rem;
-    width: 0.62rem;
-    height: 0.76rem;
-    border: 0;
-    background: linear-gradient(90deg, currentColor 0 0.22rem, transparent 0.22rem 0.4rem, currentColor 0.4rem);
-  }
-
-  .track-copy {
-    min-width: 0;
-  }
-
-  .track-kicker,
-  .track-subtitle {
-    margin: 0;
-    color: var(--muted);
-    font-family: var(--latin-sans), var(--sans);
-    font-size: 0.68rem;
-    letter-spacing: 0.11em;
-    line-height: 1.4;
-  }
-
-  .track-title {
-    margin: 0.13rem 0 0.08rem;
-    font-family: var(--serif);
-    font-size: 1.12rem;
-    font-weight: 650;
-    letter-spacing: 0.08em;
-    line-height: 1.3;
-  }
-
-  .waveform {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.17rem;
-    height: 2.25rem;
-    padding-right: 0.05rem;
-  }
-
-  .waveform span {
-    width: 0.18rem;
-    height: calc(1.55rem * var(--bar));
-    max-height: 100%;
-    background: var(--rule);
-    transform: scaleY(0.3);
-    transform-origin: center;
-  }
-
-  [data-state='playing'] .waveform span {
-    background: var(--ink-soft);
-    animation: quiet-wave 1.16s ease-in-out infinite alternate;
-    animation-delay: var(--delay);
-  }
-
-  .track-description {
-    margin: 0.7rem 0 0;
-    color: var(--muted);
-    font-size: 0.8rem;
-    line-height: 1.65;
-  }
-
-  .source-note a {
-    color: inherit;
-    text-decoration: none;
-    border-radius: 0.25rem;
-  }
-  .source-note a:hover { color: var(--ink); }
-
-  .volume-row {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) 2.4rem;
-    align-items: center;
-    gap: 0.62rem;
-    margin-top: 0.82rem;
-  }
-
-  .volume-row label,
-  .volume-row output {
-    color: var(--muted);
-    font-family: var(--latin-sans), var(--sans);
-    font-size: 0.75rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .volume-row output {
-    text-align: right;
-  }
-
-  .volume-row input {
-    width: 100%;
-    min-width: 0;
-    height: 1.8rem;
-    margin: 0;
-    accent-color: var(--ink);
-    cursor: pointer;
-  }
-
-  .player-status {
-    min-height: 1.35rem;
-    margin: 0.52rem 0 0;
-    color: var(--ink-soft);
-    font-size: 0.75rem;
-    line-height: 1.55;
-  }
-
-  .player-status::before {
-    display: inline-block;
-    width: 0.38rem;
-    height: 0.38rem;
-    margin-right: 0.4rem;
-    border: 1px solid currentColor;
-    border-radius: 50%;
-    content: '';
-    vertical-align: 0.03rem;
-  }
-
-  [data-state='playing'] .player-status::before {
-    background: currentColor;
-  }
-
-  .player-error {
-    margin: 0.35rem 0 0;
-    padding-left: 0.55rem;
-    border-left: 2px solid currentColor;
-    color: var(--ink);
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-
-  .source-note {
-    margin: 0.52rem 0 0;
-    color: var(--muted);
-    font-size: 0.58rem;
-    line-height: 1.5;
-  }
-
-  @keyframes quiet-wave {
-    from { transform: scaleY(0.28); }
-    to { transform: scaleY(1); }
-  }
-
-  @media (max-width: 22rem) {
-    .track-row {
-      grid-template-columns: 3.1rem minmax(0, 1fr) 2.25rem;
-      gap: 0.55rem;
-    }
-
-    .play-button {
-      width: 3.1rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    [data-state='playing'] .waveform span {
-      animation: none;
-      transform: scaleY(var(--bar));
-    }
-  }
+  .music-player { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,.95fr); gap: 1.4rem; min-width: 0; padding: 1.2rem; border-radius: .8rem; background: var(--paper-soft); }
+  .player-main { min-width: 0; }
+  [data-music-audio] { display: none; }
+  .track-row { display: grid; grid-template-columns: 3.2rem minmax(0,1fr) 1.1rem; align-items: center; gap: .75rem; }
+  .track-emblem { color: var(--ink-soft); }
+  .track-emblem svg { display: block; width: 3.2rem; height: 3.2rem; }
+  .track-copy { min-width: 0; }
+  .track-title { margin: 0; font-family: var(--serif); font-size: 1.35rem; font-weight: 620; line-height: 1.5; overflow-wrap: anywhere; }
+  .track-caption { margin: .15rem 0 0; color: var(--muted); font-family: var(--latin-sans),var(--sans); font-size: .65rem; font-variant-numeric: tabular-nums; }
+  .track-description { min-height: 2.8rem; margin: .85rem 0 .65rem; color: var(--muted); font-size: .75rem; line-height: 1.8; }
+  .playing-indicator { display: flex; gap: 2px; align-items: center; height: 1.2rem; }
+  .playing-indicator i { width: 2px; height: 35%; background: var(--muted); }
+  .playing-indicator i:nth-child(2) { height: 75%; }
+  [data-state='playing'] .playing-indicator { color: var(--ink); }
+  [data-state='playing'] .playing-indicator i { background: var(--ink); }
+  .transport-row { display: flex; align-items: center; justify-content: center; gap: 1.3rem; }
+  .icon-button { display: inline-grid; flex: none; place-items: center; width: 2.75rem; height: 2.75rem; padding: .65rem; border: 0; border-radius: 50%; color: var(--ink-soft); background: transparent; cursor: pointer; }
+  .icon-button:hover { background: var(--rule-soft); color: var(--ink); }
+  .icon-button svg { display: block; width: 1.2rem; height: 1.2rem; }
+  .play-button { display: grid; place-items: center; flex: none; width: 3.5rem; height: 3.5rem; padding: 0; border: 0; border-radius: 50%; color: var(--paper); background: var(--ink); cursor: pointer; }
+  .play-button:hover { background: var(--ink-soft); }
+  .play-button:disabled { opacity: .55; cursor: wait; }
+  .control-symbol { position: relative; display: block; width: 1.15rem; height: 1.2rem; }
+  .control-symbol::before { position: absolute; top: .12rem; left: .2rem; width: 0; height: 0; border-top: .48rem solid transparent; border-bottom: .48rem solid transparent; border-left: .76rem solid currentColor; content: ''; }
+  [data-state='playing'] .control-symbol::before { top: .12rem; left: .15rem; width: .8rem; height: .96rem; border: 0; background: linear-gradient(90deg,currentColor 0 .27rem,transparent .27rem .5rem,currentColor .5rem); }
+  [data-state='starting'] .control-symbol::before,[data-state='waiting'] .control-symbol::before { top: .2rem; left: .18rem; width: .8rem; height: .8rem; border: 0; background: currentColor; }
+  .progress-row { margin-top: .65rem; }
+  .progress-row input { display: block; width: 100%; min-width: 0; height: 1.6rem; margin: 0; accent-color: var(--ink); cursor: pointer; }
+  .time-row { display: flex; justify-content: space-between; gap: 1rem; color: var(--muted); font: .65rem var(--mono); font-variant-numeric: tabular-nums; }
+  .volume-row { display: grid; grid-template-columns: 2.75rem minmax(0,1fr) 2.7rem; align-items: center; gap: .35rem; margin-top: .45rem; }
+  .volume-row input { display: block; min-width: 0; width: 100%; height: 2rem; margin: 0; accent-color: var(--ink); cursor: pointer; }
+  .volume-row output { color: var(--muted); font-size: .7rem; font-variant-numeric: tabular-nums; text-align: right; }
+  .mute-button .sound-off { display: none; }
+  .mute-button[aria-pressed='true'] .sound-on { display: none; }
+  .mute-button[aria-pressed='true'] .sound-off { display: block; }
+  .player-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .5rem .8rem; margin-top: .6rem; }
+  .player-options label { min-width: 0; color: var(--muted); font-size: .66rem; }
+  .player-options label > span { display: block; margin-bottom: .35rem; }
+  select { width: 100%; min-width: 0; min-height: 2.75rem; padding: .45rem .4rem; border: 0; border-radius: .4rem; background: var(--paper); color: var(--ink); font: inherit; font-size: .72rem; cursor: pointer; }
+  .sleep-status { grid-column: 1/-1; color: var(--muted); font-size: .68rem; }
+  .sleep-status:empty { display: none; }
+  .player-status { margin: .75rem 0 0; color: var(--muted); font-size: .68rem; line-height: 1.7; }
+  .player-status::before { display: inline-block; width: .35rem; height: .35rem; margin-right: .4rem; border: 1px solid currentColor; border-radius: 50%; content: ''; }
+  [data-state='playing'] .player-status::before { background: currentColor; }
+  .player-error { margin: .45rem 0 0; color: var(--ink); font-size: .7rem; line-height: 1.7; }
+  .track-source { margin-top: .7rem; color: var(--muted); font-size: .65rem; }
+  .track-source summary { width: fit-content; padding-block: .25rem; cursor: pointer; }
+  .source-note { margin: .3rem 0 0; font-size: .63rem; line-height: 1.7; }
+  .source-note a { display: inline-block; margin-left: .5rem; color: var(--ink-soft); }
+  .playlist { min-width: 0; padding-left: 1.1rem; border-left: 1px solid var(--rule); }
+  .playlist summary { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; min-height: 2rem; margin-bottom: .45rem; color: var(--ink); font-size: .85rem; font-weight: 650; cursor: pointer; }
+  .playlist summary small { color: var(--muted); font-size: .65rem; font-weight: 400; }
+  .playlist ol { max-height: 24rem; margin: 0; padding: 0 .2rem 0 0; overflow-y: auto; list-style: none; scrollbar-width: thin; }
+  .playlist li { margin: 0; }
+  .playlist button { position: relative; display: grid; grid-template-columns: 1.1rem minmax(0,1fr) auto; align-items: center; gap: .65rem; width: 100%; min-height: 3rem; padding: .65rem .55rem; border: 0; border-radius: .45rem; background: transparent; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+  .playlist button:hover { background: var(--rule-soft); }
+  .playlist button[aria-current='true'] { background: var(--paper); }
+  .track-index { color: var(--muted); font-family: var(--latin-sans); font-size: .65rem; font-variant-numeric: tabular-nums; }
+  .playlist-copy { min-width: 0; }
+  .playlist-copy > span { display: block; font-size: .8rem; line-height: 1.5; }
+  .playlist-copy small { display: block; margin-top: .15rem; color: var(--muted); font-size: .63rem; line-height: 1.5; }
+  .track-length { color: var(--muted); font: .6rem var(--mono); white-space: nowrap; }
+  .selected-track { display: none; position: absolute; top: 1rem; left: .15rem; width: 2px; height: 1rem; border-radius: 1px; background: var(--ink); }
+  [aria-current='true'] .selected-track { display: block; }
+  button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  @media(max-width:54rem) { .music-player { grid-template-columns: minmax(0,1fr); gap: 1rem; } .playlist { border-left: 0; border-top: 1px solid var(--rule); padding: 1rem 0 0; } .playlist ol { max-height: 18rem; } .track-description { min-height: 0; } }
+  @media(max-width:22rem) { .music-player { padding: .9rem; } .track-title { font-size: 1.2rem; } .track-row { gap: .6rem; } .player-options { gap: .5rem; } .playlist button { gap: .5rem; } }
 </style>

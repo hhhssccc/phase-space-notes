@@ -2,6 +2,8 @@ import type { MusicTrack } from '../../../config/music';
 export function renderTrack(root: HTMLElement, track: MusicTrack, index: number) {
   root.dataset.trackTitle = track.title;
   root.setAttribute('aria-label', `${track.title}音乐播放器`);
+  const number = root.querySelector('[data-track-number]');
+  if (number) number.textContent = String(index + 1).padStart(2, '0');
   root.querySelector('[data-music-toggle]')?.setAttribute('aria-label', `播放${track.title}`);
   for (const [selector, text] of [
     ['.track-title', track.title], ['.track-kicker', track.kicker],

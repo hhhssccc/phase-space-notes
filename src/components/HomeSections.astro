@@ -1,18 +1,30 @@
 ---
 import EntryPreview from './EntryPreview.astro';
-import { entryUrl, formatDate, readingMinutes, withBase, type ArticleEntry } from '../lib/content';
+import HomeStory from './home/HomeStory.astro';
+import { entryUrl, formatDate, withBase, type ArticleEntry } from '../lib/content';
 
 interface Props { entries: ArticleEntry[]; leadId: string; }
 const { entries, leadId } = Astro.props;
 const remaining = entries.filter(entry => entry.id !== leadId);
 const featured = remaining.filter(entry => entry.data.type === 'essay' && entry.data.featured).slice(0, 3);
-const labs = remaining.filter(entry => entry.data.type === 'visualization').slice(0, 2);
-const notes = remaining.filter(entry => entry.data.type === 'note').slice(0, 4);
-const reflections = remaining.filter(entry => entry.data.type === 'reflection').slice(0, 3);
+const selected = new Set([leadId, ...featured.map(entry => entry.id)]);
 
-// Only the home-page display is shortened; the published title remains the
-// accessible name and the article's source title is untouched.
-function noteTitle(entry: ArticleEntry) {
+// Reserve the article-specific spreads before filling the shorter lists.
+function reserve(id: string) {
+  const entry = remaining.find(candidate => candidate.id === id && !selected.has(id));
+  if (entry) selected.add(id);
+  return entry;
+}
+const knot = reserve('jones-polynomial-braids-and-link-invariants');
+const entropy = reserve('information-entropy-and-everything');
+const laurent = reserve('laurent-expansion-from-orthogonality');
+const notes = remaining.filter(entry => entry.data.type === 'note' && !selected.has(entry.id)).slice(0, 4);
+notes.forEach(entry => selected.add(entry.id));
+const further = remaining.filter(entry => ['essay', 'note'].includes(entry.data.type) && !selected.has(entry.id)).slice(0, 4);
+const labs = remaining.filter(entry => entry.data.type === 'visualization').slice(0, 2);
+const reflections = remaining.filter(entry => entry.data.type === 'reflection').slice(0, 4);
+
+function displayTitle(entry: ArticleEntry) {
   const series = entry.data.title.match(/《([^》]+)》.*?(?:听课笔记|速通笔记)\s*(\d+)\s*[：:]\s*(.+)$/);
   return series
     ? { label: `${series[1]} · 笔记 ${series[2]}`, title: series[3] }
@@ -26,19 +38,20 @@ function labTitle(entry: ArticleEntry) {
 }
 ---
 
-<div class:list={['home-sections', { 'without-sidebar': !notes.length && !reflections.length }]}>
-  <div class="story-flow">
+<div class="home-sections">
+  <div class:list={['opening-feed', 'feed-inset', {'without-sidebar': !notes.length}]}>
     {featured.length > 0 && (
       <section class="featured-section" aria-labelledby="featured-title">
         <header class="stream-heading"><h2 id="featured-title"><a href={withBase('/articles/')}>精选文章</a></h2></header>
         <ol class="illustrated-grid feature-grid">
           {featured.map(entry => (
-            <li class="illustrated-item">
+            <li class="illustrated-item" data-home-entry={entry.id}>
               <a class="story-link feature-link" href={entryUrl(entry)} aria-label={entry.data.title}>
-                <span class="story-visual"><EntryPreview entry={entry} sizes="(max-width: 40rem) calc(100vw - 40px), (max-width: 64rem) 44vw, 360px" /></span>
+                <span class="story-visual"><EntryPreview entry={entry} sizes="(max-width: 40rem) 88vw, 360px" /></span>
                 <div class="story-copy">
-                  <span class="stream-meta"><span class="entry-subject">{entry.data.category}</span><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time><span>{readingMinutes(entry.body || '')} 分钟</span></span>
+                  <span class="stream-meta"><span>{entry.data.category}</span><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time></span>
                   <h3>{entry.data.title}</h3>
+                  <p>{entry.data.description}</p>
                 </div>
               </a>
             </li>
@@ -46,45 +59,19 @@ function labTitle(entry: ArticleEntry) {
         </ol>
       </section>
     )}
-
-    {labs.length > 0 && (
-      <section class="lab-section" aria-labelledby="home-lab-title">
-        <header class="stream-heading"><h2 id="home-lab-title"><a href={withBase('/lab/')}>演算室</a></h2></header>
-        <ol class="illustrated-grid lab-grid">
-          {labs.map(entry => {
-            const display = labTitle(entry);
-            return (
-              <li class="illustrated-item">
-                <a class="story-link lab-link" href={entryUrl(entry)} aria-label={entry.data.title}>
-                  <span class="story-visual"><EntryPreview entry={entry} sizes="(max-width: 40rem) calc(100vw - 40px), (max-width: 64rem) 44vw, 360px" /></span>
-                  <div class="story-copy">
-                    <span class="stream-meta"><span class="entry-subject">{display.label}</span><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time></span>
-                    <h3 aria-label={entry.data.title}>{display.title}</h3>
-                    <p>{entry.data.description}</p>
-                  </div>
-                </a>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
-    )}
-  </div>
-
-  {(notes.length > 0 || reflections.length > 0) && (
-    <aside class="journal-sidebar" aria-label="笔记与杂感">
-      {notes.length > 0 && (
-        <section class="notes-section" aria-labelledby="home-notes-title">
-          <header class="sidebar-heading"><h2 id="home-notes-title"><a href={withBase('/notes/')}>近期笔记</a></h2></header>
+    {notes.length > 0 && (
+      <aside class="journal-sidebar" aria-labelledby="home-notes-title">
+        <section class="notes-section">
+          <header class="stream-heading"><h2 id="home-notes-title"><a href={withBase('/notes/')}>近期笔记</a></h2></header>
           <ol class="notes-index">
             {notes.map(entry => {
-              const display = noteTitle(entry);
+              const display = displayTitle(entry);
               return (
-                <li>
+                <li data-home-entry={entry.id}>
                   <a class="note-link" href={entryUrl(entry)} aria-label={entry.data.title}>
                     <div class="note-copy">
                       <span class="note-meta"><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time><span>{display.label}</span></span>
-                      <h3 aria-label={entry.data.title}>{display.title}</h3>
+                      <h3>{display.title}</h3>
                     </div>
                     <span class="note-visual"><EntryPreview entry={entry} sizes="80px" /></span>
                   </a>
@@ -93,134 +80,147 @@ function labTitle(entry: ArticleEntry) {
             })}
           </ol>
         </section>
-      )}
+      </aside>
+    )}
+  </div>
 
-      {reflections.length > 0 && (
-        <section class="reflections-section" aria-labelledby="home-reflections-title">
-          <header class="sidebar-heading"><h2 id="home-reflections-title"><a href={withBase('/reflections/')}>杂感</a></h2></header>
-          <ol class="reflection-index">
-            {reflections.map(entry => (
-              <li>
-                <a class="reflection-link" href={entryUrl(entry)} aria-label={entry.data.title}>
-                  <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time>
-                  <h3>{entry.data.title}</h3>
+  {knot && <HomeStory entry={knot} kind="knot" />}
+
+  {further.length > 0 && (
+    <section class="further-section feed-inset" aria-label="更多物理与数学文章">
+      <ol class="illustrated-grid further-grid">
+        {further.map(entry => {
+          const display = displayTitle(entry);
+          return (
+            <li class="illustrated-item" data-home-entry={entry.id}>
+              <a class="story-link" href={entryUrl(entry)} aria-label={entry.data.title}>
+                <span class="story-visual"><EntryPreview entry={entry} sizes="(max-width: 40rem) 88vw, 520px" /></span>
+                <div class="story-copy">
+                  <span class="stream-meta"><span>{display.label}</span><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time></span>
+                  <h3>{display.title}</h3>
                   <p>{entry.data.description}</p>
-                </a>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-    </aside>
+                </div>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  )}
+
+  {entropy && <HomeStory entry={entropy} kind="entropy" />}
+
+  {labs.length > 0 && (
+    <section class="lab-section feed-inset" aria-labelledby="home-lab-title">
+      <header class="stream-heading"><h2 id="home-lab-title"><a href={withBase('/lab/')}>演算室</a></h2></header>
+      <ol class="illustrated-grid lab-grid">
+        {labs.map(entry => {
+          const display = labTitle(entry);
+          return (
+            <li class="illustrated-item" data-home-entry={entry.id}>
+              <a class="story-link lab-link" href={entryUrl(entry)} aria-label={entry.data.title}>
+                <span class="story-visual"><EntryPreview entry={entry} sizes="(max-width: 40rem) 88vw, 520px" /></span>
+                <div class="story-copy">
+                  <span class="stream-meta"><span>{display.label}</span><time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time></span>
+                  <h3>{display.title}</h3>
+                  <p>{entry.data.description}</p>
+                </div>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  )}
+
+  {laurent && <HomeStory entry={laurent} kind="laurent" />}
+
+  {reflections.length > 0 && (
+    <section class="reflections-section feed-inset" aria-labelledby="home-reflections-title">
+      <header class="stream-heading"><h2 id="home-reflections-title"><a href={withBase('/reflections/')}>杂感</a></h2></header>
+      <ol class="reflection-index">
+        {reflections.map(entry => (
+          <li data-home-entry={entry.id}>
+            <a class="reflection-link" href={entryUrl(entry)} aria-label={entry.data.title}>
+              <time datetime={entry.data.date.toISOString()}>{formatDate(entry.data.date, false)}</time>
+              <h3>{entry.data.title}</h3>
+              <p>{entry.data.description}</p>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
   )}
 </div>
 
 <style>
-  .home-sections {
-    display: grid;
-    grid-template-columns: var(--journal-columns, minmax(0, 2.28fr) minmax(0, 1fr));
-    column-gap: var(--journal-gutter, clamp(2rem, 4.6vw, 4.2rem));
-    align-items: start;
-    min-width: 0;
-    padding-top: 1.45rem;
-    border-top: 1px solid var(--rule-soft);
-  }
-  .home-sections.without-sidebar { grid-template-columns: 1fr; }
+  .home-sections { padding-bottom: 4rem; }
+  .feed-inset { padding-inline: var(--journal-inset); }
+  .opening-feed { display: grid; grid-template-columns: var(--journal-columns); gap: var(--journal-gutter); align-items: start; }
+  .opening-feed.without-sidebar { grid-template-columns: 1fr; }
+  .featured-section, .journal-sidebar { min-width: 0; padding-top: 1.6rem; border-top: 1px solid var(--rule); }
+  .journal-sidebar { padding-inline-start: 2rem; border-left: 1px solid var(--rule-soft); }
   .home-sections a { text-decoration: none; }
-  .home-sections time { font-family: var(--latin-sans), var(--sans); font-variant-numeric: tabular-nums; }
-  .home-sections h3 { margin: 0; color: var(--ink); font-family: var(--serif); font-weight: 650; line-height: 1.55; text-wrap: pretty; }
   .home-sections ol { margin: 0; padding: 0; list-style: none; }
-  .home-sections li, .home-sections section, .home-sections a > div, .story-flow { min-width: 0; }
-  .stream-heading { margin-bottom: 1.6rem; }
-  .stream-heading h2 { margin: 0; font-family: var(--serif); font-size: 1.42rem; font-weight: 650; line-height: 1.4; }
-  .stream-heading a:hover, .stream-heading a:focus-visible, .sidebar-heading a:hover, .sidebar-heading a:focus-visible { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .22em; }
-  .stream-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: .7rem; color: var(--muted); font-size: .66rem; line-height: 1.6; }
-  .entry-subject { color: var(--muted); font-size: .65rem; font-weight: 600; letter-spacing: .08em; }
-  #featured-title { scroll-margin-top: 6rem; }
-  .illustrated-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.7rem 2.2rem; }
+  .home-sections li, .story-copy, .note-copy { min-width: 0; }
+  .home-sections h3 { margin: 0; font-family: var(--serif); font-weight: 650; line-height: 1.55; text-wrap: pretty; }
+  .home-sections time { flex-shrink: 0; font-family: var(--latin-sans),var(--sans); font-variant-numeric: tabular-nums; }
+  .stream-heading { margin-bottom: 2rem; }
+  .stream-heading h2 { margin: 0; font: 650 1.5rem/1.4 var(--serif); }
+  .stream-heading a:hover { text-decoration: underline; text-underline-offset: .25em; }
+  .illustrated-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 3rem 2.5rem; }
   .illustrated-item { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 0; }
   .story-link { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 0; }
-  .story-visual { display: block; overflow: hidden; margin-bottom: 1.15rem; background: #fff; }
-  .story-visual :global(.entry-preview), .note-visual :global(.entry-preview) { border-radius: 0; }
-  .story-copy h3 { margin-top: .65rem; font-size: clamp(1.3rem, 1.8vw, 1.6rem); }
-  .story-link:hover h3, .story-link:focus-visible h3, .note-link:hover h3, .note-link:focus-visible h3, .reflection-link:hover h3, .reflection-link:focus-visible h3 { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .22em; }
-  .lab-section { margin-top: 3.3rem; padding-top: 1.9rem; border-top: 1px solid var(--rule-soft); }
-  .lab-link h3 { font-size: clamp(1.25rem, 1.65vw, 1.45rem); }
-  .lab-link p { margin: .75rem 0 0; color: var(--ink-soft); font-size: .79rem; line-height: 1.9; }
-  .journal-sidebar { min-width: 0; padding-inline-start: var(--journal-gutter, clamp(2rem, 4.6vw, 4.2rem)); border-left: 1px solid var(--rule-soft); }
-  .sidebar-heading { margin-bottom: .65rem; }
-  .sidebar-heading h2 { margin: 0; font-family: var(--sans); font-size: 1.18rem; font-weight: 700; line-height: 1.7; }
-  .note-link { display: grid; grid-template-columns: minmax(0, 1fr) 5rem; align-items: start; gap: .75rem; padding-block: 1.05rem; }
-  .note-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .45rem; margin-bottom: .35rem; color: var(--muted); font-size: .6rem; line-height: 1.65; }
-  .note-meta time { flex-shrink: 0; font-family: var(--latin-sans), var(--sans); font-variant-numeric: tabular-nums; }
-  .note-link h3 { font-size: .97rem; line-height: 1.65; }
-  .note-visual { display: block; width: 5rem; overflow: hidden; background: #fff; }
-  .reflections-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
-  .reflection-link { display: block; padding-block: .95rem; }
-  .reflection-link time { display: block; margin-bottom: .35rem; color: var(--muted); font-family: var(--latin-sans), var(--sans); font-size: .64rem; font-variant-numeric: tabular-nums; line-height: 1.7; }
-  .reflection-link h3 { font-size: 1.02rem; line-height: 1.7; }
-  .reflection-link p { margin: .6rem 0 0; color: var(--muted); font-size: .76rem; line-height: 1.9; }
-
+  .story-visual { display: block; overflow: hidden; margin-bottom: 1.45rem; background: #fff; }
+  .story-visual :global(.entry-preview),.note-visual :global(.entry-preview) { border-radius: 0; }
+  .stream-meta { display: flex; flex-wrap: wrap; gap: .75rem; color: var(--muted); font-size: .71rem; line-height: 1.7; }
+  .stream-meta > span { color: var(--ink-soft); font-weight: 600; }
+  .story-copy h3 { margin-top: .8rem; font-size: clamp(1.35rem,1.9vw,1.75rem); }
+  .story-copy p { margin: .9rem 0 0; color: var(--muted); font-size: .9rem; line-height: 1.9; }
+  .story-link:hover h3,.note-link:hover h3,.reflection-link:hover h3 { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .22em; }
+  .note-link { display: grid; grid-template-columns: minmax(0,1fr) 5rem; gap: 1rem; padding-block: 1.15rem; }
+  .note-meta { display: flex; flex-wrap: wrap; gap: .2rem .55rem; margin-bottom: .6rem; color: var(--muted); font-size: .67rem; line-height: 1.7; }
+  .note-link h3 { font-size: 1.03rem; line-height: 1.65; }
+  .note-visual { display: block; width: 5rem; overflow: hidden; align-self: center; }
+  .further-grid { column-gap: clamp(2rem,5vw,5rem); }
+  .further-grid .story-copy h3,.lab-grid .story-copy h3 { font-size: clamp(1.5rem,2.25vw,2rem); }
+  .lab-section > .stream-heading,.reflections-section > .stream-heading { padding-top: 1.8rem; border-top: 1px solid var(--rule); }
+  .lab-grid { column-gap: clamp(2rem,5vw,5rem); }
+  .lab-grid .story-visual { padding: 1rem; }
+  .reflection-index { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 2.75rem clamp(2rem,5vw,5rem); }
+  .reflection-link { display: block; }
+  .reflection-link time { display: block; margin-bottom: .75rem; color: var(--muted); font-size: .75rem; }
+  .reflection-link h3 { font-size: clamp(1.3rem,1.8vw,1.65rem); }
+  .reflection-link p { margin: .9rem 0 0; color: var(--muted); font-size: .9rem; line-height: 1.9; }
   @media (min-width: 40.001rem) {
-    .feature-grid:has(> li:nth-child(3):last-child) > li:first-child { display: block; grid-column: 1 / -1; grid-row: auto; }
-    .feature-grid:has(> li:nth-child(3):last-child) > li:first-child .feature-link {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-template-rows: auto;
-      column-gap: clamp(1.5rem, 2.5vw, 2.2rem);
-      align-items: center;
-    }
-    .feature-grid:has(> li:nth-child(3):last-child) > li:first-child .story-visual { margin: 0; }
-  }
-  @media (max-width: 72rem) {
-    .illustrated-grid { column-gap: 1.5rem; }
-    .note-link { gap: .65rem; }
-    .note-link h3 { font-size: .93rem; }
+    .feature-grid:has(>li:nth-child(3):last-child) > li:first-child { display: block; grid-column: 1/-1; grid-row: auto; }
+    .feature-grid:has(>li:nth-child(3):last-child) > li:first-child .feature-link { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: auto; column-gap: 2rem; align-items: center; }
+    .feature-grid:has(>li:nth-child(3):last-child) > li:first-child .story-visual { margin: 0; }
   }
   @media (max-width: 64rem) {
-    .home-sections { display: block; padding-top: 1.6rem; }
-    .stream-heading { margin-bottom: 1.5rem; }
-    .illustrated-grid { gap: 2.5rem 2rem; }
-    .story-copy h3 { font-size: 1.5rem; }
-    .lab-link h3 { font-size: 1.4rem; }
-    .lab-link p { font-size: .83rem; }
-    .lab-section { margin-top: 2.8rem; padding-top: 1.8rem; }
-    .journal-sidebar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 3rem; margin-top: 3rem; padding: 1.8rem 0 0; border-top: 1px solid var(--rule); border-left: 0; }
-    .note-link h3 { font-size: 1.02rem; }
-    .reflections-section { margin: 0; padding: 0 0 0 2rem; border-top: 0; border-left: 1px solid var(--rule-soft); }
-    .reflection-link h3 { font-size: 1.08rem; }
+    .opening-feed { grid-template-columns: 1fr; gap: 3rem; }
+    .journal-sidebar { border-left: 0; padding-inline-start: 0; }
+    .notes-index { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem 2rem; }
+    .illustrated-grid { column-gap: 2rem; }
   }
   @media (max-width: 40rem) {
-    .home-sections { padding-top: 1.35rem; }
-    .stream-heading { margin-bottom: 1.65rem; }
-    .stream-heading h2 { font-size: 1.3rem; }
+    .home-sections { padding-bottom: 2.5rem; }
     .illustrated-grid { grid-template-columns: 1fr; row-gap: 3rem; }
-    .story-visual { margin-bottom: 1.55rem; }
-    .story-copy h3 { margin-top: .8rem; font-size: 1.45rem; line-height: 1.65; }
-    .lab-link h3 { font-size: 1.35rem; }
-    .lab-section { margin-top: 3rem; padding-top: 1.85rem; }
-    .lab-link p { margin-top: .85rem; font-size: .81rem; }
-    .journal-sidebar { grid-template-columns: 1fr; gap: 2.6rem; margin-top: 3rem; padding-top: 1.85rem; }
-    .sidebar-heading { margin-bottom: 1rem; }
-    .note-link { grid-template-columns: minmax(0, 1fr) 5rem; gap: 1.1rem; padding-block: 1.25rem; }
-    .note-link h3 { font-size: 1.08rem; line-height: 1.75; }
-    .note-meta { gap: .25rem .6rem; margin-bottom: .55rem; font-size: .65rem; line-height: 1.75; }
-    .reflections-section { padding: 1.85rem 0 0; border-top: 1px solid var(--rule); border-left: 0; }
-    .reflection-link { padding-block: 1.2rem; }
-    .reflection-link time { margin-bottom: .55rem; }
-    .reflection-link h3 { font-size: 1.12rem; }
-    .reflection-link p { margin-top: .75rem; }
-  }
-  @media (max-width: 22rem) {
-    .story-copy h3 { font-size: 1.35rem; }
-    .lab-link h3 { font-size: 1.28rem; }
+    .stream-heading { margin-bottom: 1.5rem; }
+    .stream-heading h2 { font-size: 1.35rem; }
+    .story-copy h3,.further-grid .story-copy h3,.lab-grid .story-copy h3 { font-size: 1.5rem; }
+    .story-visual { margin-bottom: 1.35rem; }
+    .notes-index { grid-template-columns: 1fr; gap: 0; }
+    .note-link { padding-block: 1.25rem; }
+    .reflection-index { grid-template-columns: 1fr; gap: 2.3rem; }
+    .reflection-link h3 { font-size: 1.3rem; }
+    .lab-grid .story-visual { padding: 0; }
   }
   @media print {
-    .home-sections, .illustrated-grid, .illustrated-item, .story-link, .journal-sidebar { display: block; }
-    .illustrated-item { margin-block: 1rem; }
-    .story-visual, .note-visual { display: none; }
-    .lab-section { margin-top: 2rem; padding-top: 1rem; }
-    .journal-sidebar { margin-top: 2rem; padding: 1rem 0 0; border-left: 0; }
-    .note-link { display: block; }
-    .reflections-section { margin-top: 1.5rem; padding: 1rem 0 0; border-left: 0; }
+    .opening-feed,.illustrated-grid,.illustrated-item,.story-link,.reflection-index { display: block; }
+    .feed-inset { padding: 0; }
+    .story-visual,.note-visual { display: none; }
+    .journal-sidebar { padding: 0; border-left: 0; }
+    .illustrated-item,.reflection-index li { break-inside: avoid; margin-block: 1rem; }
   }
 </style>

@@ -1,0 +1,143 @@
+---
+import { entropyArt, knotArt, laurentArt } from './story-geometry';
+
+interface Props {
+  kind: 'knot' | 'entropy' | 'laurent';
+  idPrefix?: string;
+}
+const { kind, idPrefix = `story-plate-${Astro.props.kind}` } = Astro.props;
+const id = (suffix: string) => `${idPrefix}-${suffix}`;
+const paint = (suffix: string) => `url(#${id(suffix)})`;
+const labels = {
+  knot: '三次同向交叉的三叶结',
+  entropy: '同一相空间分布的细结构与粗粒化平均',
+  laurent: '同心围道与 Fourier 角向模式',
+};
+const descriptions = {
+  knot: '由二股辫子的三次同向交叉闭合得到的三叶结；三个交叉处清楚保留上下穿越关系。',
+  entropy: '左侧为可逆保面积映射拉伸、折叠后的细分布；右侧为同一分布在相同网格内的平均。两幅总概率相同，粗粒化抹去格内细节。',
+  laurent: '左侧为环域中的正向同心圆围道；右侧三组黑灰细线分别显示一、二、三阶角向 Fourier 模式的实部与虚部。蓝点对应同一角参数。',
+};
+---
+
+<div class:list={['story-plate', `story-plate--${kind}`]}>
+  <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="570" viewBox="0 0 1440 570" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby={`${id('title')} ${id('description')}`} focusable="false">
+    <title id={id('title')}>{labels[kind]}</title>
+    <desc id={id('description')}>{descriptions[kind]}</desc>
+    {kind === 'knot' ? <>
+      <defs>
+        <linearGradient id={id('silver')} gradientUnits="userSpaceOnUse" x1="220" y1="40" x2="1220" y2="560">
+          <stop offset="0" stop-color="#f0efea" />
+          <stop offset="0.28" stop-color="#acb0b0" />
+          <stop offset="0.6" stop-color="#e1e2dd" />
+          <stop offset="1" stop-color="#70767a" />
+        </linearGradient>
+        <path id={id('knot')} d={knotArt.outline} />
+        {knotArt.filaments.map((d, index) => <path id={id(`fiber-${index}`)} d={d} />)}
+        {knotArt.crossings.map((crossing, index) => <path id={id(`over-${index}`)} d={crossing.outline} />)}
+        {knotArt.crossings.map((crossing, index) => <path id={id(`occlusion-${index}`)} d={crossing.occlusion} />)}
+      </defs>
+      <rect width="1440" height="570" fill="#16181b" />
+      <g class="knot-shape" fill="none" stroke-linejoin="round" stroke-linecap="round">
+        <use href={`#${id('knot')}`} stroke="#050608" stroke-width="60" opacity=".62" />
+        <use href={`#${id('knot')}`} stroke={paint('silver')} stroke-width="46" />
+        {knotArt.filaments.map((_, index) => <use href={`#${id(`fiber-${index}`)}`} class="knot-fiber" />)}
+        {knotArt.crossings.map((crossing, index) => <g>
+          <use href={`#${id(`occlusion-${index}`)}`} stroke="#16181b" stroke-width="68" stroke-linecap="butt" />
+          <use href={`#${id(`occlusion-${index}`)}`} stroke="#050608" stroke-width="60" stroke-linecap="butt" opacity=".62" />
+          <use href={`#${id(`over-${index}`)}`} stroke={paint('silver')} stroke-width="46" stroke-linecap="butt" />
+          {crossing.filaments.map(d => <path d={d} class="knot-fiber" />)}
+        </g>)}
+        <circle cx={knotArt.marker[0]} cy={knotArt.marker[1]} r="4.5" fill="#ba7950" stroke="none" />
+      </g>
+    </> : kind === 'entropy' ? <>
+      <rect width="1440" height="570" class="plate-paper" />
+      <g class="entropy-panel entropy-fine">
+        <svg width="420" height="420" viewBox="0 0 128 128" class="entropy-field" aria-hidden="true">
+          <g fill="currentColor">{entropyArt.fineEllipses.map(transform => <ellipse cx="56.32" cy="60.16" rx="26.88" ry="43.52" transform={transform} />)}</g>
+          <path d={entropyArt.grid} class="entropy-grid" />
+          <rect x={entropyArt.selectedCell.x} y={entropyArt.selectedCell.y} width="8" height="8" class="entropy-cell" />
+        </svg>
+      </g>
+      <g class="entropy-panel entropy-coarse">
+        <svg width="420" height="420" viewBox="0 0 128 128" class="entropy-field" aria-hidden="true">
+          {entropyArt.bands.map(band => <path d={band.d} fill="currentColor" fill-opacity={band.opacity} />)}
+          <path d={entropyArt.grid} class="entropy-grid" />
+          <rect x={entropyArt.selectedCell.x} y={entropyArt.selectedCell.y} width="8" height="8" class="entropy-cell" />
+        </svg>
+      </g>
+    </> : <>
+      <rect width="1440" height="570" class="plate-paper" />
+      <g class="laurent-circles" fill="none">
+        <path d="M215 0a215 215 0 1 0-430 0 215 215 0 1 0 430 0ZM115 0a115 115 0 1 0-230 0 115 115 0 1 0 230 0Z" fill="currentColor" fill-rule="evenodd" opacity=".025" />
+        <path d="M-235 0H235M0-235V235" class="laurent-axis" />
+        {[115, 140, 195, 215].map(radius => <circle r={radius} class="laurent-ring" />)}
+        <circle r="168" class="laurent-contour" />
+        <path d={laurentArt.phaseLine} class="laurent-phase" />
+        <path d={laurentArt.direction} class="laurent-contour" />
+        <path d={laurentArt.directionTip} class="laurent-contour" />
+        <circle r="2.8" fill="currentColor" />
+        <circle cx={laurentArt.phasePoint[0]} cy={laurentArt.phasePoint[1]} r="5" class="laurent-sample" />
+      </g>
+      <g class="laurent-modes" fill="none">
+        {laurentArt.modes.map((mode, index) => <>
+          <path d={`M0 ${mode.center}H420`} class="laurent-axis" />
+          <path d={mode.imaginary} class="laurent-imaginary" />
+          <path d={mode.real} class="laurent-real" />
+          {index === 1 && <circle cx={mode.sample[0]} cy={mode.sample[1]} r="4.7" class="laurent-sample" />}
+        </>)}
+      </g>
+    </>}
+  </svg>
+</div>
+
+<style>
+  .story-plate {
+    --story-paper: var(--paper-soft, #f6f6f3);
+    --story-ink: var(--ink-soft, #35383c);
+    --story-rule: var(--rule, #c9c9c4);
+    --story-accent: #6e8994;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 48 / 19;
+    overflow: hidden;
+    isolation: isolate;
+    color: var(--story-ink);
+    background: var(--story-paper);
+  }
+  .story-plate > svg { display: block; width: 100%; height: 100%; }
+  .story-plate--knot { background: #16181b; }
+  .plate-paper { fill: var(--story-paper); }
+  .knot-shape, .entropy-panel, .laurent-circles, .laurent-modes { transform-origin: 0 0; }
+  .knot-fiber { fill: none; stroke: #f5f4ec; stroke-width: 1.05; opacity: .28; }
+  .entropy-field { overflow: hidden; }
+  .entropy-fine { transform: translate(210px, 75px); }
+  .entropy-coarse { transform: translate(810px, 75px); }
+  .entropy-grid { fill: none; stroke: var(--story-rule); stroke-width: .14; }
+  .entropy-cell { fill: none; stroke: var(--story-accent); stroke-width: .5; }
+  .laurent-circles { transform: translate(420px, 285px); }
+  .laurent-modes { transform: translate(810px, 285px); }
+  .laurent-axis { fill: none; stroke: var(--story-rule); stroke-width: 1; opacity: .8; }
+  .laurent-ring { stroke: var(--story-rule); stroke-width: 1; }
+  .laurent-contour { stroke: currentColor; stroke-width: 2.15; }
+  .laurent-phase { stroke: currentColor; stroke-width: 1; opacity: .35; }
+  .laurent-imaginary { stroke: currentColor; stroke-width: 1.25; opacity: .34; }
+  .laurent-real { stroke: currentColor; stroke-width: 2.15; }
+  .laurent-sample { fill: var(--story-accent); stroke: var(--story-paper); stroke-width: 1.5; }
+  @media (max-width: 48rem) {
+    .story-plate { aspect-ratio: 4 / 3; }
+    .knot-shape { transform: translateX(720px) scaleX(.66) translateX(-720px); }
+    .entropy-fine { transform: translate(360px, 126px) scale(.76); }
+    .entropy-coarse { transform: translate(760px, 126px) scale(.76); }
+    .laurent-circles { transform: translate(540px, 285px) scale(.78); }
+    .laurent-modes { transform: translate(750px, 285px) scale(.75); }
+  }
+  @media print {
+    .story-plate { aspect-ratio: 48 / 19; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .knot-shape { transform: none; }
+    .entropy-fine { transform: translate(210px, 75px); }
+    .entropy-coarse { transform: translate(810px, 75px); }
+    .laurent-circles { transform: translate(420px, 285px); }
+    .laurent-modes { transform: translate(810px, 285px); }
+  }
+</style>

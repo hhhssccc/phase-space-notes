@@ -1,8 +1,58 @@
-.reading-shelf { padding: 1.1rem 0; }
-.reading-shelf h3 { font-family: var(--serif); margin: 0; font-size: 1.15rem; }
-.reading-shelf ol { list-style: none; padding: 0; margin: .8rem 0; }
-.reading-shelf li { margin: .8rem 0; }
-.reading-shelf li a { display: block; font-family: var(--serif); font-size: .95rem; }
-.reading-shelf li small { display: block; font-size: .75rem; color: var(--muted); overflow-wrap: anywhere; }
-.shelf-note, .shelf-empty { color: var(--muted); font-size: .78rem; }
-@media print{.reading-shelf{display:none!important}}
+.reading-shelf { min-width: 0; }
+.shelf-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.shelf-kicker { margin: 0 0 .35rem; color: var(--muted); font-size: .76rem; }
+.reading-shelf h3 { margin: 0; font-family: var(--serif); font-size: 1.65rem; font-weight: 620; line-height: 1.4; }
+.shelf-heading-icon { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%; color: var(--ink-soft); background: var(--paper-soft); }
+.shelf-heading-icon svg { width: 1.5rem; height: 1.5rem; }
+.reading-shelf ol { list-style: none; padding: 0; margin: 0; }
+.shelf-history { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .75rem; }
+.reading-shelf .shelf-record { position: relative; min-width: 0; padding: .9rem 2.8rem .9rem .9rem; border-radius: .7rem; background: var(--paper-soft); }
+.shelf-history .shelf-record:first-child { grid-column: 1/-1; }
+.shelf-record > a { display: grid; grid-template-columns: 4rem minmax(0,1fr); align-items: center; gap: .85rem; color: var(--ink); text-decoration: none; }
+.shelf-history .shelf-record:first-child > a { grid-template-columns: 6rem minmax(0,1fr); }
+.shelf-cover { display: grid; place-items: center; width: 100%; aspect-ratio: 8/5; border-radius: .25rem; overflow: hidden; background: #fff; color: #555; }
+.shelf-cover img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.shelf-cover svg { width: 1.65rem; height: 1.65rem; }
+.shelf-copy { display: block; min-width: 0; }
+.shelf-category { display: block; margin-bottom: .25rem; color: var(--muted); font-size: .65rem; }
+.shelf-record-title { display: block; font-family: var(--serif); font-size: .96rem; font-weight: 620; line-height: 1.5; overflow-wrap: anywhere; }
+.shelf-history .shelf-record:first-child .shelf-record-title { font-size: 1.18rem; }
+.shelf-section { display: block; margin-top: .3rem; color: var(--muted); font-size: .72rem; line-height: 1.55; overflow-wrap: anywhere; }
+.shelf-progress { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: .6rem; margin-top: .55rem; }
+.shelf-progress progress { display: block; width: 100%; height: 3px; border: 0; border-radius: 3px; overflow: hidden; background: var(--rule-soft); accent-color: var(--ink-soft); }
+.shelf-progress progress::-webkit-progress-bar { background: var(--rule-soft); }
+.shelf-progress progress::-webkit-progress-value { background: var(--ink-soft); }
+.shelf-progress progress::-moz-progress-bar { background: var(--ink-soft); }
+.shelf-progress small { color: var(--muted); font-family: var(--latin-sans),var(--sans); font-size: .63rem; white-space: nowrap; }
+.shelf-record .shelf-remove { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; border: 0; border-radius: .4rem; color: var(--muted); background: transparent; cursor: pointer; }
+.shelf-remove svg { width: 13px; height: 13px; }
+.shelf-remove:hover { color: var(--ink); background: var(--rule-soft); }
+.shelf-save { display: inline-flex; align-items: center; gap: .5rem; max-width: 100%; min-height: 2.75rem; margin: 0 0 .7rem; padding: .55rem .85rem; border: 0; border-radius: .5rem; background: var(--ink); color: var(--paper); font: inherit; font-size: .8rem; cursor: pointer; }
+.shelf-save svg { width: 1.1rem; height: 1.1rem; }
+.shelf-save[hidden] { display: none; }
+.shelf-bookmarks { margin-top: 1.8rem; }
+.shelf-bookmarks summary { display: flex; align-items: center; gap: .65rem; min-height: 2.75rem; padding: .35rem 0; color: var(--ink); cursor: pointer; font-size: .9rem; font-weight: 650; }
+.shelf-bookmarks summary::after { content: '+'; margin-left: auto; color: var(--muted); font-size: 1.1rem; font-weight: 400; }
+.shelf-bookmarks[open] summary::after { content: '−'; }
+.bookmark-count { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; padding-inline: .25rem; border-radius: 50%; background: var(--paper-soft); color: var(--muted); font-size: .67rem; font-weight: 500; }
+.shelf-bookmarks ol { display: grid; gap: .45rem; margin-top: .5rem; }
+.shelf-bookmarks .shelf-record { background: none; padding-left: 0; }
+.shelf-bookmarks .shelf-record > a { grid-template-columns: 1.4rem minmax(0,1fr); }
+.shelf-bookmark-icon { width: 1.1rem; height: 1.1rem; align-self: start; margin-top: .25rem; color: var(--muted); }
+.shelf-bookmarks .shelf-progress { max-width: 22rem; }
+.reading-shelf .shelf-empty { grid-column: 1/-1; padding: 1.5rem 1.15rem; border-radius: .65rem; background: var(--paper-soft); color: var(--muted); font-size: .83rem; line-height: 1.8; }
+.shelf-empty a { display: block; width: fit-content; margin-top: .7rem; color: var(--ink); font-size: .8rem; }
+.shelf-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin-top: 1.3rem; }
+.shelf-note { margin: 0; color: var(--muted); font-size: .7rem; line-height: 1.7; }
+.shelf-feedback:empty { display: none; }
+.shelf-feedback { margin: .45rem 0; }
+.shelf-footer .text-control { font-size: .7rem; }
+@media (max-width: 42rem) {
+  .shelf-history { grid-template-columns: 1fr; gap: .6rem; }
+  .reading-shelf h3 { font-size: 1.4rem; }
+  .shelf-record > a, .shelf-history .shelf-record:first-child > a { grid-template-columns: 4.4rem minmax(0,1fr); gap: .7rem; }
+  .shelf-history .shelf-record:first-child .shelf-record-title { font-size: 1rem; }
+  .reading-shelf .shelf-record { padding-left: .75rem; }
+  .shelf-bookmarks .shelf-record { padding-left: 0; }
+}
+@media print { .reading-shelf { display:none!important; } }

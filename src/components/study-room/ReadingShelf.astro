@@ -1,13 +1,21 @@
 ---
 import '../../features/reading/shelf.css';
+import { entryUrl, withBase, type ArticleEntry } from '../../lib/content';
+import { entryPreview } from '../../lib/entry-preview';
+interface Props { entries: ArticleEntry[]; }
+const { entries } = Astro.props;
+const catalog = Object.fromEntries(entries.filter(entry => entry.data.type === 'essay' || entry.data.type === 'note').map(entry => {
+  const preview = entryPreview(entry);
+  return [entryUrl(entry), { title: entry.data.title, category: entry.data.category, preview: preview ? withBase(preview.variants[0].src) : undefined }];
+}));
 ---
-<section class="reading-shelf" aria-labelledby="reading-shelf-title">
-  <h3 id="reading-shelf-title">继续阅读</h3>
-  <p class="shelf-note" data-reading-storage-note>阅读位置与书签只保存在当前浏览器。</p>
-  <button type="button" class="text-control" data-add-bookmark data-shelf-bookmark hidden>为当前阅读位置夹一枚书签</button>
-  <p class="shelf-note" data-reading-status role="status"></p>
-  <ol data-reading-history><li class="shelf-empty">读过文章后，会在这里留下位置。</li></ol>
-  <details><summary>我的书签 <span data-bookmark-count></span></summary><ol data-reading-bookmarks><li class="shelf-empty">在文章中点“夹一枚书签”，保存当前读到的地方。</li></ol></details>
-  <button type="button" class="text-control" data-clear-reading hidden>清空阅读记录</button>
-  <p class="shelf-note" role="status" data-shelf-status></p>
+<section class="reading-shelf room-section" id="study-reading" data-room-section="reading" data-reading-browse-url={withBase('/articles/')} aria-labelledby="reading-shelf-title">
+  <div class="shelf-heading"><h3 id="reading-shelf-title" tabindex="-1">继续阅读</h3><span class="shelf-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1m0-15c3-2 6-2 9-1v15c-3-1-6-1-9 1V5Z" /></svg></span></div>
+  <button type="button" class="shelf-save" data-add-bookmark data-shelf-bookmark hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3Zm6 4v6m-3-3h6" /></svg>夹一枚当前书签</button>
+  <p class="shelf-note shelf-feedback" data-reading-status role="status"></p>
+  <ol class="shelf-history" data-reading-history><li class="shelf-empty">读过文章后，会在这里留下位置。<a href={withBase('/articles/')}>找一篇文章开始</a></li></ol>
+  <details class="shelf-bookmarks" open><summary><span>我的书签</span><span class="bookmark-count" data-bookmark-count>0</span></summary><ol data-reading-bookmarks><li class="shelf-empty">在文章中点“夹一枚书签”，保存当前读到的地方。</li></ol></details>
+  <footer class="shelf-footer"><p class="shelf-note" data-reading-storage-note>阅读位置与书签只保存在当前浏览器。</p><button type="button" class="text-control" data-clear-reading hidden>清空阅读记录</button></footer>
+  <p class="shelf-note shelf-feedback" role="status" data-shelf-status></p>
+  <script is:inline type="application/json" data-reading-catalog set:html={JSON.stringify(catalog).replaceAll('<', '\\u003c')}></script>
 </section>
